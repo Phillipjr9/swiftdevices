@@ -26,6 +26,11 @@ is byte-identical to what the CDN returned:
 | `public/manifest.json` | `e8675cc76274897d22d1a7cb3e38419d2c3842a919885683065a998eee07ae08` |
 | `public/logo.png` | `53642b92023005dcaf63fbf71200b89a17a5fc070e5855379afe4e0d1a893be6` |
 
+Those digests describe commit `d509987`. Later work on
+`feat/thanksgiving-2026-price-cut` edits `public/index.html` and adds
+`public/img/*.svg`; files touched there are no longer byte-identical to what the
+CDN served, and the table above should be read as the baseline, not the branch.
+
 ## What this does not include
 
 - **Firestore security rules.** They are server-side configuration and cannot be

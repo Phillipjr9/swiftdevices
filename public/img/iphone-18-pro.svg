@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300" role="img" aria-label="iPhone 18 Pro placeholder image">
+  <rect width="300" height="300" fill="#f8fafc"/>
+  <rect x="122" y="48" width="56" height="204" rx="15" fill="#1e293b"/>
+  <rect x="127" y="53" width="46" height="194" rx="12" fill="#334155"/>
+  <rect x="135" y="60" width="30" height="11" rx="6" fill="#0f172a"/>
+  <circle cx="150" cy="86" r="6.5" fill="#0f172a"/>
+  <circle cx="150" cy="103" r="6.5" fill="#0f172a"/>
+  <text x="150" y="286" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#64748b">iPhone 18 Pro</text>
+</svg>

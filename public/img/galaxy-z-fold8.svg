@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300" role="img" aria-label="Samsung Galaxy Z Fold8 placeholder image">
+  <rect width="300" height="300" fill="#f8fafc"/>
+  <rect x="88" y="48" width="60" height="204" rx="12" fill="#1f2430"/>
+  <rect x="152" y="48" width="60" height="204" rx="12" fill="#2b3242"/>
+  <rect x="146" y="48" width="8" height="204" fill="#6b7688"/>
+  <rect x="94" y="54" width="48" height="192" rx="9" fill="#3c4354"/>
+  <rect x="158" y="54" width="48" height="192" rx="9" fill="#454d61"/>
+  <text x="150" y="286" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#64748b">Galaxy Z Fold8</text>
+</svg>
