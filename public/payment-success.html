@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://www.gstatic.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://api.web3forms.com;">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: { blue: '#0066CC', light: '#00A8E8', dark: '#0a1628', accent: '#FF6B35', purple: '#6366f1' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .dark body, .dark .bg-gray-50 { background: #0f172a !important; }
+        .dark .bg-white { background: #1e293b !important; }
+        .dark .text-gray-800, .dark .text-brand-dark { color: #e2e8f0 !important; }
+        .dark .text-gray-600, .dark .text-gray-500 { color: #94a3b8 !important; }
+        .dark .text-gray-700 { color: #cbd5e1 !important; }
+        .dark .border-gray-200, .dark .border-gray-100, .dark .border-gray-300 { border-color: #334155 !important; }
+        .dark footer { background: #020617 !important; }
+        @media (max-width: 640px) {
+            footer .grid { grid-template-columns: 1fr !important; gap: 1.5rem; }
+        }
+
+        /* ── SUCCESS ANIMATION ── */
+        .success-ring {
+            animation: ringPop 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        @keyframes ringPop {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .success-ring svg circle.ring-bg {
+            stroke: #dcfce7;
+            stroke-width: 4;
+            fill: none;
+        }
+        .success-ring svg circle.ring-fill {
+            stroke: #22c55e;
+            stroke-width: 4;
+            fill: none;
+            stroke-dasharray: 314;
+            stroke-dashoffset: 314;
+            animation: ringDraw 0.8s 0.3s ease-out forwards;
+            stroke-linecap: round;
+        }
+        @keyframes ringDraw {
+            to { stroke-dashoffset: 0; }
+        }
+        .success-ring svg .checkmark-path {
+            stroke-dasharray: 48;
+            stroke-dashoffset: 48;
+            animation: checkDraw 0.4s 0.9s ease-out forwards;
+        }
+        @keyframes checkDraw {
+            to { stroke-dashoffset: 0; }
+        }
+        .success-glow {
+            position: absolute; inset: -12px; border-radius: 9999px;
+            background: radial-gradient(circle, rgba(34,197,94,0.25) 0%, transparent 70%);
+            animation: glowPulse 2s 1s ease-in-out infinite;
+        }
+        @keyframes glowPulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+        .success-particles span {
+            position: absolute; width: 6px; height: 6px; border-radius: 50%;
+            animation: particleBurst 0.8s 0.6s ease-out forwards;
+            opacity: 0;
+        }
+        @keyframes particleBurst {
+            0% { transform: translate(0,0) scale(0); opacity: 1; }
+            100% { opacity: 0; }
+        }
+        .success-particles span:nth-child(1) { background:#22c55e; animation-delay:0.6s; }
+        .success-particles span:nth-child(2) { background:#3b82f6; animation-delay:0.7s; }
+        .success-particles span:nth-child(3) { background:#f59e0b; animation-delay:0.65s; }
+        .success-particles span:nth-child(4) { background:#8b5cf6; animation-delay:0.75s; }
+        .success-particles span:nth-child(5) { background:#22c55e; animation-delay:0.8s; }
+        .success-particles span:nth-child(6) { background:#ec4899; animation-delay:0.7s; }
+        .success-particles span:nth-child(7) { background:#06b6d4; animation-delay:0.85s; }
+        .success-particles span:nth-child(8) { background:#f97316; animation-delay:0.72s; }
+        .success-particles span:nth-child(1) { --tx: -36px; --ty: -40px; }
+        .success-particles span:nth-child(2) { --tx: 38px; --ty: -32px; }
+        .success-particles span:nth-child(3) { --tx: -42px; --ty: 20px; }
+        .success-particles span:nth-child(4) { --tx: 30px; --ty: 38px; }
+        .success-particles span:nth-child(5) { --tx: 0px; --ty: -50px; }
+        .success-particles span:nth-child(6) { --tx: -48px; --ty: -8px; }
+        .success-particles span:nth-child(7) { --tx: 46px; --ty: 8px; }
+        .success-particles span:nth-child(8) { --tx: 10px; --ty: 46px; }
+        .success-particles span { --tx: 0px; --ty: 0px; }
+        @keyframes particleBurst {
+            0% { transform: translate(0,0) scale(0); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(1); opacity: 0; }
+        }
+
+        .fade-up {
+            animation: fadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 1.1s both;
+        }
+        @keyframes fadeUp {
+            0% { transform: translateY(30px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        .fade-up-2 { animation-delay: 1.3s; }
+        .fade-up-3 { animation-delay: 1.5s; }
+
+        /* ── FAILURE ANIMATION ── */
+        .fail-ring {
+            animation: failShake 0.6s 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+        @keyframes failShake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
+            20%, 40%, 60%, 80% { transform: translateX(6px); }
+        }
+        .fail-ring svg circle.fail-ring-bg {
+            stroke: #fee2e2;
+            stroke-width: 4;
+            fill: none;
+        }
+        .fail-ring svg circle.fail-ring-fill {
+            stroke: #ef4444;
+            stroke-width: 4;
+            fill: none;
+            stroke-dasharray: 314;
+            stroke-dashoffset: 314;
+            animation: ringDraw 0.6s 0.2s ease-out forwards;
+            stroke-linecap: round;
+        }
+        .fail-ring svg .x-path-1 {
+            stroke-dasharray: 34;
+            stroke-dashoffset: 34;
+            animation: checkDraw 0.3s 0.7s ease-out forwards;
+        }
+        .fail-ring svg .x-path-2 {
+            stroke-dasharray: 34;
+            stroke-dashoffset: 34;
+            animation: checkDraw 0.3s 0.85s ease-out forwards;
+        }
+        .fail-glow {
+            position: absolute; inset: -12px; border-radius: 9999px;
+            background: radial-gradient(circle, rgba(239,68,68,0.2) 0%, transparent 70%);
+            animation: failGlowPulse 2.5s 1s ease-in-out infinite;
+        }
+        @keyframes failGlowPulse {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.08); }
+        }
+        .fail-fade-up {
+            animation: fadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 1s both;
+        }
+        .fail-fade-up-2 { animation-delay: 1.2s; }
+    </style>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-compat.js"></script>
+
+
+    <script>
+        firebase.initializeApp({
+            apiKey: "AIzaSyAbBODZeHGStQFU_06ShU3ZXpi95reNz8U",
+            authDomain: "swiftdevices-e2972.firebaseapp.com",
+            projectId: "swiftdevices-e2972",
+            storageBucket: "swiftdevices-e2972.firebasestorage.app",
+            messagingSenderId: "143447135724",
+            appId: "1:143447135724:web:245a9a72fcbcaac55f1cc9",
+            measurementId: "G-53FFSTND6K"
+        });
+        firebase.analytics();
+        var db = firebase.firestore();
+    </script>
+</head>
+<body class="font-sans text-gray-800 bg-gray-50 antialiased">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
+            <a href="index.html" class="flex items-center gap-3">
+                <img src="logo.png" alt="SwiftDevices" class="h-48 w-auto -ml-10">
+            </a>
+            <div class="hidden md:flex items-center gap-6">
+                <a href="index.html" class="text-gray-700 font-medium hover:text-brand-blue transition">Shop</a>
+                <a href="index.html#deals" class="text-brand-accent font-bold hover:text-orange-600 transition">Deals</a>
+                <a href="support.html" class="text-gray-700 font-medium hover:text-brand-blue transition">Support</a>
+                <a href="support.html#order-tracking" class="text-gray-700 font-medium hover:text-brand-blue transition">Track Order</a>
+            </div>
+            <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="md:hidden text-gray-700 text-xl"><i class="fas fa-bars"></i></button>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100 px-4 py-4 space-y-2">
+            <a href="index.html" class="block px-4 py-3 text-gray-700 hover:text-brand-blue hover:bg-blue-50 rounded-lg font-medium transition">Shop</a>
+            <a href="support.html" class="block px-4 py-3 text-gray-700 hover:text-brand-blue hover:bg-blue-50 rounded-lg font-medium transition">Support</a>
+            <a href="support.html#order-tracking" class="block px-4 py-3 text-gray-700 hover:text-brand-blue hover:bg-blue-50 rounded-lg font-medium transition">Track Order</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <section class="min-h-[60vh] flex items-center justify-center py-16 px-4">
+        <div class="max-w-lg w-full text-center">
+
+            <!-- Loading State -->
+            <div id="loading-state">
+                <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-blue-100 flex items-center justify-center">
+                    <i class="fas fa-spinner fa-spin text-3xl text-brand-blue"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Confirming your payment...</h2>
+                <p class="text-gray-500">Please wait while we verify your order.</p>
+            </div>
+
+            <!-- Success State -->
+            <div id="success-state" class="hidden">
+                <div class="relative w-28 h-28 mx-auto mb-8">
+                    <div class="success-glow"></div>
+                    <div class="success-particles" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
+                        <span></span><span></span><span></span><span></span>
+                        <span></span><span></span><span></span><span></span>
+                    </div>
+                    <div class="success-ring w-28 h-28">
+                        <svg viewBox="0 0 112 112" width="112" height="112">
+                            <circle class="ring-bg" cx="56" cy="56" r="50"/>
+                            <circle class="ring-fill" cx="56" cy="56" r="50" transform="rotate(-90 56 56)"/>
+                            <polyline class="checkmark-path" points="36,58 50,72 76,42" fill="none" stroke="#22c55e" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="fade-up">
+                    <h1 class="text-3xl font-extrabold text-gray-800 mb-2">Payment Successful!</h1>
+                    <p class="text-gray-500 mb-1">Your cryptocurrency payment has been received.</p>
+                    <p class="text-gray-400 text-sm mb-8">Thank you for your order!</p>
+                </div>
+                <div class="fade-up fade-up-2">
+                    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8 text-left">
+                        <div class="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
+                            <div class="w-10 h-10 rounded-full bg-brand-blue/10 flex items-center justify-center">
+                                <i class="fas fa-receipt text-brand-blue"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Order Number</p>
+                                <p id="order-number" class="font-bold text-lg text-brand-dark">—</p>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-500">Payment Method</span>
+                                <span class="font-medium text-gray-700"><i class="fab fa-bitcoin text-orange-500 mr-1"></i>Cryptocurrency</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-500">Status</span>
+                                <span class="font-medium text-green-600"><i class="fas fa-check-circle mr-1"></i>Confirmed</span>
+                            </div>
+                            <div id="order-total-row" class="flex justify-between text-sm hidden">
+                                <span class="text-gray-500">Total</span>
+                                <span id="order-total" class="font-bold text-gray-800">—</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="fade-up fade-up-3 flex flex-col sm:flex-row gap-3">
+                    <a href="support.html#order-tracking" class="flex-1 inline-flex items-center justify-center gap-2 bg-brand-blue text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition shadow-lg shadow-blue-500/25">
+                        <i class="fas fa-shipping-fast"></i> Track Order
+                    </a>
+                    <a href="index.html" class="flex-1 inline-flex items-center justify-center gap-2 border-2 border-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-50 transition">
+                        <i class="fas fa-store"></i> Continue Shopping
+                    </a>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div id="error-state" class="hidden">
+                <div class="relative w-28 h-28 mx-auto mb-8">
+                    <div class="fail-glow"></div>
+                    <div class="fail-ring w-28 h-28">
+                        <svg viewBox="0 0 112 112" width="112" height="112">
+                            <circle class="fail-ring-bg" cx="56" cy="56" r="50"/>
+                            <circle class="fail-ring-fill" cx="56" cy="56" r="50" transform="rotate(-90 56 56)"/>
+                            <line class="x-path-1" x1="40" y1="40" x2="72" y2="72" stroke="#ef4444" stroke-width="5" stroke-linecap="round"/>
+                            <line class="x-path-2" x1="72" y1="40" x2="40" y2="72" stroke="#ef4444" stroke-width="5" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="fail-fade-up">
+                    <h1 class="text-3xl font-extrabold text-gray-800 mb-2">Something Went Wrong</h1>
+                    <p id="error-message" class="text-gray-500 mb-8">We couldn't verify your payment. If you completed the payment, your order will be confirmed shortly.</p>
+                </div>
+                <div class="fail-fade-up fail-fade-up-2 flex flex-col sm:flex-row gap-3">
+                    <a href="support.html#order-tracking" class="flex-1 inline-flex items-center justify-center gap-2 bg-brand-blue text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition shadow-lg shadow-blue-500/25">
+                        <i class="fas fa-shipping-fast"></i> Track Order
+                    </a>
+                    <a href="index.html" class="flex-1 inline-flex items-center justify-center gap-2 border-2 border-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-50 transition">
+                        <i class="fas fa-store"></i> Continue Shopping
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-300 pt-16 pb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+                <div>
+                    <div class="flex items-center gap-3 mb-6">
+                        <img src="logo.png" alt="SwiftDevices" class="h-36 w-auto brightness-0 invert -ml-10">
+                    </div>
+                    <p class="text-sm mb-6 leading-relaxed">Your trusted destination for premium electronics and exceptional service.</p>
+                    <div class="flex space-x-4">
+                        <a href="https://facebook.com/swiftdevices" target="_blank" rel="noopener noreferrer" class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-brand-blue transition-colors" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="https://x.com/swiftdevices" target="_blank" rel="noopener noreferrer" class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-brand-blue transition-colors" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="https://instagram.com/swiftdevices" target="_blank" rel="noopener noreferrer" class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-brand-blue transition-colors" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="https://youtube.com/@swiftdevices" target="_blank" rel="noopener noreferrer" class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-brand-blue transition-colors" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold text-lg mb-6">Quick Links</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="index.html" class="hover:text-brand-blue transition-colors">Shop All Products</a></li>
+                        <li><a href="index.html#deals" class="hover:text-brand-blue transition-colors">Deals & Promotions</a></li>
+                        <li><a href="support.html" class="hover:text-brand-blue transition-colors">Support</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold text-lg mb-6">Customer Service</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="support.html#order-tracking" class="hover:text-brand-blue transition-colors">Order Tracking</a></li>
+                        <li><a href="support.html#faq-section" class="hover:text-brand-blue transition-colors">FAQs</a></li>
+                        <li><a href="contact.html" class="hover:text-brand-blue transition-colors">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold text-lg mb-6">Contact Us</h4>
+                    <ul class="space-y-4 text-sm">
+                        <li class="flex items-start space-x-3"><i class="fas fa-map-marker-alt text-brand-blue mt-1"></i><span>440 Route 66 LOT 62, Hudson, NY 12534</span></li>
+                        <li class="flex items-center space-x-3"><i class="fas fa-phone text-brand-blue"></i><span>1-800-SWIFT-01</span></li>
+                        <li class="flex items-center space-x-3"><i class="fas fa-envelope text-brand-blue"></i><span>swiftdevices@technologist.com</span></li>
+                        <li class="flex items-center space-x-3"><i class="fas fa-clock text-brand-blue"></i><span>Mon-Fri: 9AM - 8PM EST</span></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm">
+                <p>&copy; 2026 SwiftDevices. All rights reserved.</p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="privacy.html" class="hover:text-white transition-colors">Privacy Policy</a>
+                    <a href="terms.html" class="hover:text-white transition-colors">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Web3Forms Configuration
+        var WEB3FORMS_KEY = '0e7ad91d-7aa7-4810-8358-be2628922caa';
+
+        function sendCryptoConfirmationEmail(order, orderNum) {
+            var items = (order.items || []);
+            var itemsText = items.map(function(i) {
+                var line = (i.name || 'Product #' + i.id) + ' x' + (i.qty || 1) + ' — $' + (i.price * (i.qty || 1)).toFixed(2);
+                if (i.image) line += '\n  Image: ' + i.image;
+                return line;
+            }).join('\n');
+            var ship = order.shipping || {};
+            var customerEmail = ship.email || order.email || '';
+            fetch('https://api.web3forms.com/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    access_key: WEB3FORMS_KEY,
+                    botcheck: '',
+                    subject: 'SwiftDevices Order Confirmation #' + orderNum,
+                    from_name: 'SwiftDevices',
+                    name: (ship.firstName || '') + ' ' + (ship.lastName || ''),
+                    email: customerEmail,
+                    ccemail: customerEmail,
+                    message: 'Order: ' + orderNum + '\n\nItems:\n' + itemsText + '\n\nSubtotal: $' + (order.subtotal || 0).toFixed(2) + '\nTax: $' + (order.tax || 0).toFixed(2) + '\nTotal: $' + (order.total || 0).toFixed(2) + '\n\nPayment: Cryptocurrency\nShipping: ' + [ship.address, ship.city, ship.state, ship.zip].filter(Boolean).join(', ') + '\n\n---\nSwiftDevices Support: swiftdevices@technologist.com\nhttps://swiftdevices-e2972.web.app'
+                })
+            }).then(function(r) { return r.json(); })
+              .then(function(res) {
+                  if (res.success) console.log('Crypto order confirmation email sent');
+                  else console.warn('Email send failed:', res.message);
+              })
+              .catch(function(err) { console.warn('Email send failed:', err); });
+        }
+
+        (function() {
+            var params = new URLSearchParams(window.location.search);
+            var orderNum = params.get('order');
+
+            var loadingEl = document.getElementById('loading-state');
+            var successEl = document.getElementById('success-state');
+            var errorEl = document.getElementById('error-state');
+
+            if (!orderNum || !/^SW-\d{6}$/.test(orderNum)) {
+                loadingEl.classList.add('hidden');
+                errorEl.classList.remove('hidden');
+                document.getElementById('error-message').textContent = 'Invalid or missing order number. Please check your email for order details.';
+                return;
+            }
+
+            // Look up the order and update status
+            db.collection('orders').doc(orderNum).get().then(function(doc) {
+                if (!doc.exists) {
+                    loadingEl.classList.add('hidden');
+                    errorEl.classList.remove('hidden');
+                    document.getElementById('error-message').textContent = 'Order ' + orderNum + ' not found. If you just paid, please allow a moment and check your order on the Support page.';
+                    return;
+                }
+
+                var order = doc.data();
+
+                // Update order status to confirmed if it was awaiting payment
+                var updatePromise;
+                if (order.status === 'awaiting_crypto_payment') {
+                    updatePromise = db.collection('orders').doc(orderNum).update({
+                        status: 'confirmed',
+                        paidAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } else {
+                    updatePromise = Promise.resolve();
+                }
+
+                updatePromise.then(function() {
+                    document.getElementById('order-number').textContent = orderNum;
+                    if (order.total) {
+                        document.getElementById('order-total').textContent = '$' + order.total.toFixed(2);
+                        document.getElementById('order-total-row').classList.remove('hidden');
+                    }
+                    loadingEl.classList.add('hidden');
+                    successEl.classList.remove('hidden');
+                    // Send confirmation email for crypto payment
+                    sendCryptoConfirmationEmail(order, orderNum);
+                }).catch(function() {
+                    // Even if update fails, show success since payment went through on NOWPayments side
+                    document.getElementById('order-number').textContent = orderNum;
+                    loadingEl.classList.add('hidden');
+                    successEl.classList.remove('hidden');
+                });
+
+            }).catch(function() {
+                loadingEl.classList.add('hidden');
+                errorEl.classList.remove('hidden');
+            });
+        })();
+    </script>
+</body>
+</html>

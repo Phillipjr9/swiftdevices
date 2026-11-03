@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://www.gstatic.com https://apis.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://api.web3forms.com;">
+    <meta name="description" content="Trade in your old device and get credit towards new tech at SwiftDevices. Get an instant estimate for your phone, tablet, or wearable.">
+    <meta property="og:title" content="Trade-In Estimator - SwiftDevices">
+    <meta property="og:description" content="Get instant trade-in value for your old devices. Save on your next purchase.">
+    <title>Trade-In Your Device - SwiftDevices</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { brand: { blue: '#0066CC', light: '#00A8E8', dark: '#0a1628', accent: '#FF6B35' } } } }
+        }
+    </script>
+    <script>
+        var firebaseConfig = {
+            apiKey: "AIzaSyAbBODZeHGStQFU_06ShU3ZXpi95reNz8U",
+            authDomain: "swiftdevices-e2972.firebaseapp.com",
+            projectId: "swiftdevices-e2972",
+            storageBucket: "swiftdevices-e2972.firebasestorage.app",
+            messagingSenderId: "143447135724",
+            appId: "1:143447135724:web:245a9a72fcbcaac55f1cc9"
+        };
+        firebase.initializeApp(firebaseConfig);
+        var auth = firebase.auth();
+        var db = firebase.firestore();
+    </script>
+</head>
+<body class="font-sans bg-gray-50 text-gray-800">
+    <nav class="bg-brand-dark text-white py-4 px-6 flex items-center justify-between sticky top-0 z-50">
+        <a href="index.html" class="flex items-center gap-3">
+            <img src="logo.png" alt="SwiftDevices" class="h-8">
+            <span class="text-xl font-bold">SwiftDevices</span>
+        </a>
+        <a href="index.html" class="text-sm hover:text-brand-light transition">Back to Store</a>
+    </nav>
+
+    <!-- Hero -->
+    <section class="bg-gradient-to-br from-green-600 via-emerald-700 to-teal-800 text-white py-16 px-4">
+        <div class="max-w-4xl mx-auto text-center">
+            <div class="inline-flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full text-sm mb-6">
+                <i class="fas fa-recycle"></i>
+                <span>Sustainable Tech</span>
+            </div>
+            <h1 class="text-4xl lg:text-6xl font-bold mb-4">Trade-In & Save</h1>
+            <p class="text-xl text-green-100 max-w-2xl mx-auto">Get instant value for your old device. Trade it in and save on your next purchase. It's fast, easy, and eco-friendly.</p>
+        </div>
+    </section>
+
+    <!-- Trade-In Estimator -->
+    <section class="max-w-4xl mx-auto py-16 px-4">
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div class="p-8">
+                <h2 class="text-2xl font-bold text-brand-dark mb-6"><i class="fas fa-calculator text-brand-blue mr-2"></i>Get Your Estimate</h2>
+                
+                <!-- Step 1: Device Type -->
+                <div id="step-1" class="trade-step">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Step 1: Select Device Type</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <button onclick="selectDeviceType('smartphone')" class="device-type-btn border-2 border-gray-200 rounded-xl p-6 text-center hover:border-brand-blue hover:shadow-md transition" data-type="smartphone">
+                            <i class="fas fa-mobile-alt text-3xl text-brand-blue mb-2"></i>
+                            <p class="font-semibold text-sm">Smartphone</p>
+                        </button>
+                        <button onclick="selectDeviceType('tablet')" class="device-type-btn border-2 border-gray-200 rounded-xl p-6 text-center hover:border-brand-blue hover:shadow-md transition" data-type="tablet">
+                            <i class="fas fa-tablet-alt text-3xl text-purple-600 mb-2"></i>
+                            <p class="font-semibold text-sm">Tablet</p>
+                        </button>
+                        <button onclick="selectDeviceType('wearable')" class="device-type-btn border-2 border-gray-200 rounded-xl p-6 text-center hover:border-brand-blue hover:shadow-md transition" data-type="wearable">
+                            <i class="far fa-clock text-3xl text-green-600 mb-2"></i>
+                            <p class="font-semibold text-sm">Smartwatch</p>
+                        </button>
+                        <button onclick="selectDeviceType('audio')" class="device-type-btn border-2 border-gray-200 rounded-xl p-6 text-center hover:border-brand-blue hover:shadow-md transition" data-type="audio">
+                            <i class="fas fa-headphones text-3xl text-amber-600 mb-2"></i>
+                            <p class="font-semibold text-sm">Headphones</p>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Brand & Model -->
+                <div id="step-2" class="trade-step hidden mt-8">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Step 2: Select Brand & Model</h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Brand</label>
+                            <select id="trade-brand" onchange="updateModels()" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-brand-blue">
+                                <option value="">Select Brand...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Model</label>
+                            <select id="trade-model" onchange="updateStorage()" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-brand-blue">
+                                <option value="">Select Model...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="storage-section" class="hidden mt-4">
+                        <label class="block text-sm font-medium mb-1">Storage</label>
+                        <select id="trade-storage" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-brand-blue">
+                            <option value="">Select Storage...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Step 3: Condition -->
+                <div id="step-3" class="trade-step hidden mt-8">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Step 3: Device Condition</h3>
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <button onclick="selectCondition('excellent')" class="condition-btn border-2 border-gray-200 rounded-xl p-5 text-left hover:border-green-500 hover:shadow-md transition" data-condition="excellent">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center"><i class="fas fa-star text-green-600"></i></div>
+                                <span class="font-bold text-green-700">Excellent</span>
+                            </div>
+                            <p class="text-xs text-gray-500">Like new. No scratches, dents, or damage. Works perfectly.</p>
+                        </button>
+                        <button onclick="selectCondition('good')" class="condition-btn border-2 border-gray-200 rounded-xl p-5 text-left hover:border-yellow-500 hover:shadow-md transition" data-condition="good">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center"><i class="fas fa-thumbs-up text-yellow-600"></i></div>
+                                <span class="font-bold text-yellow-700">Good</span>
+                            </div>
+                            <p class="text-xs text-gray-500">Minor scratches or wear. Fully functional with no issues.</p>
+                        </button>
+                        <button onclick="selectCondition('fair')" class="condition-btn border-2 border-gray-200 rounded-xl p-5 text-left hover:border-orange-500 hover:shadow-md transition" data-condition="fair">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center"><i class="fas fa-exclamation-circle text-orange-600"></i></div>
+                                <span class="font-bold text-orange-700">Fair</span>
+                            </div>
+                            <p class="text-xs text-gray-500">Visible wear, cracks, or dents. Still powers on and works.</p>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Get Estimate Button -->
+                <div id="estimate-btn-section" class="hidden mt-8 text-center">
+                    <button onclick="calculateTradeIn()" class="bg-brand-blue text-white px-10 py-4 rounded-full font-bold text-lg hover:bg-blue-700 transition shadow-lg">
+                        <i class="fas fa-calculator mr-2"></i>Get My Trade-In Value
+                    </button>
+                </div>
+            </div>
+
+            <!-- Result -->
+            <div id="trade-result" class="hidden bg-gradient-to-r from-green-500 to-emerald-600 text-white p-8">
+                <div class="max-w-md mx-auto text-center">
+                    <i class="fas fa-leaf text-4xl mb-4 opacity-80"></i>
+                    <h3 class="text-lg font-semibold mb-1">Your Estimated Trade-In Value</h3>
+                    <div class="text-5xl font-black my-4" id="trade-value">$0</div>
+                    <p class="text-green-100 text-sm mb-6" id="trade-summary"></p>
+                    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                        <button onclick="submitTradeIn()" id="submit-tradein-btn" class="bg-white text-green-700 px-6 py-3 rounded-full font-bold hover:bg-green-50 transition">
+                            <i class="fas fa-paper-plane mr-2"></i>Submit Trade-In Request
+                        </button>
+                        <a href="index.html" class="bg-white/20 text-white px-6 py-3 rounded-full font-bold hover:bg-white/30 transition">
+                            <i class="fas fa-shopping-bag mr-2"></i>Shop Now & Save
+                        </a>
+                        <button onclick="resetTradeIn()" class="bg-white/20 text-white px-6 py-3 rounded-full font-bold hover:bg-white/30 transition">
+                            <i class="fas fa-redo mr-2"></i>Estimate Another
+                        </button>
+                    </div>
+                    <p class="text-xs text-green-200 mt-4">*Estimated value. Final value determined upon device inspection.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- How It Works -->
+        <div class="mt-16">
+            <h2 class="text-2xl font-bold text-brand-dark text-center mb-10">How Trade-In Works</h2>
+            <div class="grid md:grid-cols-4 gap-6">
+                <div class="text-center">
+                    <div class="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                        <span class="text-brand-blue font-bold text-xl">1</span>
+                    </div>
+                    <h3 class="font-bold text-sm mb-1">Estimate Value</h3>
+                    <p class="text-xs text-gray-500">Use our calculator above to get an instant estimate</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                        <span class="text-green-600 font-bold text-xl">2</span>
+                    </div>
+                    <h3 class="font-bold text-sm mb-1">Ship Your Device</h3>
+                    <p class="text-xs text-gray-500">We send a prepaid shipping label to your email</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                        <span class="text-purple-600 font-bold text-xl">3</span>
+                    </div>
+                    <h3 class="font-bold text-sm mb-1">We Inspect</h3>
+                    <p class="text-xs text-gray-500">Our team verifies condition and confirms value</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-14 h-14 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                        <span class="text-amber-600 font-bold text-xl">4</span>
+                    </div>
+                    <h3 class="font-bold text-sm mb-1">Get Credit</h3>
+                    <p class="text-xs text-gray-500">Receive store credit added as reward points</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accepted Brands -->
+        <div class="mt-16 bg-white rounded-2xl shadow-lg p-8 text-center">
+            <h2 class="text-xl font-bold text-brand-dark mb-6">Brands We Accept</h2>
+            <div class="flex flex-wrap justify-center gap-8">
+                <div class="text-center"><i class="fab fa-apple text-4xl text-gray-400 hover:text-black transition"></i><p class="text-xs text-gray-400 mt-1">Apple</p></div>
+                <div class="text-center"><i class="fab fa-samsung text-4xl text-gray-400 hover:text-blue-600 transition" style="font-size:2.5rem"></i><p class="text-xs text-gray-400 mt-1">Samsung</p></div>
+                <div class="text-center"><i class="fab fa-google text-4xl text-gray-400 hover:text-green-500 transition"></i><p class="text-xs text-gray-400 mt-1">Google</p></div>
+                <div class="text-center"><i class="fas fa-mobile-alt text-4xl text-gray-400 hover:text-red-500 transition"></i><p class="text-xs text-gray-400 mt-1">Motorola</p></div>
+                <div class="text-center"><i class="fas fa-headphones text-4xl text-gray-400 hover:text-orange-500 transition"></i><p class="text-xs text-gray-400 mt-1">Beats</p></div>
+                <div class="text-center"><i class="fas fa-volume-up text-4xl text-gray-400 hover:text-orange-600 transition"></i><p class="text-xs text-gray-400 mt-1">JBL</p></div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-brand-dark text-gray-400 py-8 px-4 text-center">
+        <p class="text-sm">&copy; 2026 SwiftDevices. All rights reserved. | <a href="index.html" class="hover:text-white transition">Back to Store</a></p>
+    </footer>
+
+    <script>
+        // Trade-in device database with estimated values
+        var tradeInData = {
+            smartphone: {
+                Apple: {
+                    'iPhone 16 Pro Max': { base: 750, storage: { '256GB': 750, '512GB': 820, '1TB': 900 } },
+                    'iPhone 16 Pro': { base: 650, storage: { '128GB': 650, '256GB': 700, '512GB': 770 } },
+                    'iPhone 16': { base: 520, storage: { '128GB': 520, '256GB': 560 } },
+                    'iPhone 15 Pro Max': { base: 580, storage: { '256GB': 580, '512GB': 640, '1TB': 720 } },
+                    'iPhone 15 Pro': { base: 480, storage: { '128GB': 480, '256GB': 520, '512GB': 580 } },
+                    'iPhone 15': { base: 380, storage: { '128GB': 380, '256GB': 420 } },
+                    'iPhone 14 Pro Max': { base: 420, storage: { '128GB': 420, '256GB': 460, '512GB': 500 } },
+                    'iPhone 14': { base: 280, storage: { '128GB': 280, '256GB': 310 } },
+                    'iPhone 13': { base: 200, storage: { '128GB': 200, '256GB': 230 } },
+                    'iPhone 12': { base: 130, storage: { '64GB': 120, '128GB': 140 } }
+                },
+                Samsung: {
+                    'Galaxy S25 Ultra': { base: 650, storage: { '256GB': 650, '512GB': 720, '1TB': 800 } },
+                    'Galaxy S25+': { base: 500, storage: { '256GB': 500, '512GB': 560 } },
+                    'Galaxy S25': { base: 400, storage: { '128GB': 400, '256GB': 440 } },
+                    'Galaxy S24 Ultra': { base: 480, storage: { '256GB': 480, '512GB': 540, '1TB': 620 } },
+                    'Galaxy S24': { base: 300, storage: { '128GB': 300, '256GB': 340 } },
+                    'Galaxy S23 Ultra': { base: 350, storage: { '256GB': 350, '512GB': 400 } },
+                    'Galaxy Z Fold 6': { base: 550, storage: { '256GB': 550, '512GB': 620 } },
+                    'Galaxy Z Flip 6': { base: 380, storage: { '256GB': 380, '512GB': 430 } }
+                },
+                Google: {
+                    'Pixel 9 Pro XL': { base: 500, storage: { '128GB': 500, '256GB': 540, '512GB': 600 } },
+                    'Pixel 9 Pro': { base: 400, storage: { '128GB': 400, '256GB': 440 } },
+                    'Pixel 9': { base: 320, storage: { '128GB': 320, '256GB': 360 } },
+                    'Pixel 8 Pro': { base: 280, storage: { '128GB': 280, '256GB': 320 } },
+                    'Pixel 8': { base: 200, storage: { '128GB': 200, '256GB': 230 } }
+                },
+                Motorola: {
+                    'Razr+ (2024)': { base: 350, storage: { '256GB': 350 } },
+                    'Razr (2024)': { base: 250, storage: { '128GB': 250, '256GB': 280 } },
+                    'Edge (2024)': { base: 200, storage: { '256GB': 200 } }
+                }
+            },
+            tablet: {
+                Apple: {
+                    'iPad Pro 13" M4': { base: 700, storage: { '256GB': 700, '512GB': 780, '1TB': 900 } },
+                    'iPad Pro 11" M4': { base: 520, storage: { '256GB': 520, '512GB': 580, '1TB': 680 } },
+                    'iPad Air 13" M3': { base: 400, storage: { '128GB': 400, '256GB': 440, '512GB': 500 } },
+                    'iPad Air 11" M3': { base: 320, storage: { '128GB': 320, '256GB': 360, '512GB': 420 } },
+                    'iPad (10th Gen)': { base: 200, storage: { '64GB': 200, '256GB': 240 } },
+                    'iPad mini (6th Gen)': { base: 250, storage: { '64GB': 250, '256GB': 290 } }
+                },
+                Samsung: {
+                    'Galaxy Tab S10 Ultra': { base: 500, storage: { '256GB': 500, '512GB': 560 } },
+                    'Galaxy Tab S10+': { base: 380, storage: { '256GB': 380 } },
+                    'Galaxy Tab S10 FE': { base: 250, storage: { '128GB': 250, '256GB': 280 } },
+                    'Galaxy Tab S9': { base: 280, storage: { '128GB': 280, '256GB': 320 } }
+                },
+                Google: {
+                    'Pixel Tablet': { base: 200, storage: { '128GB': 200, '256GB': 230 } }
+                }
+            },
+            wearable: {
+                Apple: {
+                    'Apple Watch Ultra 2': { base: 400, storage: {} },
+                    'Apple Watch Series 10': { base: 250, storage: {} },
+                    'Apple Watch SE (2nd Gen)': { base: 130, storage: {} }
+                },
+                Samsung: {
+                    'Galaxy Watch Ultra': { base: 300, storage: {} },
+                    'Galaxy Watch 7': { base: 150, storage: {} },
+                    'Galaxy Watch FE': { base: 80, storage: {} }
+                },
+                Google: {
+                    'Pixel Watch 3': { base: 180, storage: {} },
+                    'Pixel Watch 2': { base: 100, storage: {} }
+                }
+            },
+            audio: {
+                Apple: {
+                    'AirPods Max (2024)': { base: 300, storage: {} },
+                    'AirPods Pro 2': { base: 120, storage: {} },
+                    'AirPods 4': { base: 80, storage: {} }
+                },
+                Samsung: {
+                    'Galaxy Buds 3 Pro': { base: 100, storage: {} },
+                    'Galaxy Buds 3': { base: 60, storage: {} }
+                },
+                Beats: {
+                    'Beats Studio Pro': { base: 150, storage: {} },
+                    'Beats Fit Pro': { base: 80, storage: {} },
+                    'Beats Solo 4': { base: 90, storage: {} }
+                },
+                JBL: {
+                    'JBL Tour Pro 3': { base: 90, storage: {} },
+                    'JBL Live 770NC': { base: 60, storage: {} }
+                }
+            }
+        };
+
+        var conditionMultiplier = { excellent: 1.0, good: 0.75, fair: 0.50 };
+        var selectedType = '';
+        var selectedBrand = '';
+        var selectedModel = '';
+        var selectedStorage = '';
+        var selectedCondition = '';
+
+        function selectDeviceType(type) {
+            selectedType = type;
+            document.querySelectorAll('.device-type-btn').forEach(function(btn) {
+                btn.classList.remove('border-brand-blue', 'shadow-md', 'bg-blue-50');
+                btn.classList.add('border-gray-200');
+            });
+            var active = document.querySelector('[data-type="' + type + '"]');
+            if (active) {
+                active.classList.add('border-brand-blue', 'shadow-md', 'bg-blue-50');
+                active.classList.remove('border-gray-200');
+            }
+            // Populate brands
+            var brandSelect = document.getElementById('trade-brand');
+            var brands = Object.keys(tradeInData[type] || {});
+            brandSelect.innerHTML = '<option value="">Select Brand...</option>';
+            brands.forEach(function(b) {
+                brandSelect.innerHTML += '<option value="' + b + '">' + b + '</option>';
+            });
+            document.getElementById('trade-model').innerHTML = '<option value="">Select Model...</option>';
+            document.getElementById('step-2').classList.remove('hidden');
+            document.getElementById('step-3').classList.add('hidden');
+            document.getElementById('estimate-btn-section').classList.add('hidden');
+            document.getElementById('trade-result').classList.add('hidden');
+            document.getElementById('storage-section').classList.add('hidden');
+        }
+
+        function updateModels() {
+            selectedBrand = document.getElementById('trade-brand').value;
+            var modelSelect = document.getElementById('trade-model');
+            modelSelect.innerHTML = '<option value="">Select Model...</option>';
+            if (!selectedBrand || !tradeInData[selectedType]) return;
+            var models = Object.keys(tradeInData[selectedType][selectedBrand] || {});
+            models.forEach(function(m) {
+                modelSelect.innerHTML += '<option value="' + m + '">' + m + '</option>';
+            });
+            document.getElementById('storage-section').classList.add('hidden');
+            document.getElementById('step-3').classList.add('hidden');
+            document.getElementById('estimate-btn-section').classList.add('hidden');
+        }
+
+        function updateStorage() {
+            selectedModel = document.getElementById('trade-model').value;
+            if (!selectedModel) return;
+            var device = tradeInData[selectedType][selectedBrand][selectedModel];
+            var storageKeys = Object.keys(device.storage || {});
+            if (storageKeys.length > 0) {
+                var storageSelect = document.getElementById('trade-storage');
+                storageSelect.innerHTML = '<option value="">Select Storage...</option>';
+                storageKeys.forEach(function(s) {
+                    storageSelect.innerHTML += '<option value="' + s + '">' + s + '</option>';
+                });
+                document.getElementById('storage-section').classList.remove('hidden');
+            } else {
+                document.getElementById('storage-section').classList.add('hidden');
+            }
+            document.getElementById('step-3').classList.remove('hidden');
+            document.getElementById('estimate-btn-section').classList.add('hidden');
+        }
+
+        function selectCondition(condition) {
+            selectedCondition = condition;
+            document.querySelectorAll('.condition-btn').forEach(function(btn) {
+                btn.classList.remove('border-green-500', 'border-yellow-500', 'border-orange-500', 'shadow-md', 'bg-green-50', 'bg-yellow-50', 'bg-orange-50');
+                btn.classList.add('border-gray-200');
+            });
+            var colors = { excellent: ['border-green-500', 'bg-green-50'], good: ['border-yellow-500', 'bg-yellow-50'], fair: ['border-orange-500', 'bg-orange-50'] };
+            var active = document.querySelector('[data-condition="' + condition + '"]');
+            if (active && colors[condition]) {
+                colors[condition].forEach(function(c) { active.classList.add(c); });
+                active.classList.add('shadow-md');
+                active.classList.remove('border-gray-200');
+            }
+            document.getElementById('estimate-btn-section').classList.remove('hidden');
+        }
+
+        function calculateTradeIn() {
+            if (!selectedType || !selectedBrand || !selectedModel || !selectedCondition) return;
+            var device = tradeInData[selectedType][selectedBrand][selectedModel];
+            selectedStorage = document.getElementById('trade-storage').value;
+            var baseVal = device.base;
+            if (selectedStorage && device.storage[selectedStorage]) {
+                baseVal = device.storage[selectedStorage];
+            }
+            var value = Math.round(baseVal * conditionMultiplier[selectedCondition]);
+            document.getElementById('trade-value').textContent = '$' + value;
+            document.getElementById('trade-summary').textContent = selectedBrand + ' ' + selectedModel + (selectedStorage ? ' (' + selectedStorage + ')' : '') + ' in ' + selectedCondition + ' condition';
+            document.getElementById('trade-result').classList.remove('hidden');
+            document.getElementById('trade-result').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetTradeIn() {
+            selectedType = ''; selectedBrand = ''; selectedModel = ''; selectedStorage = ''; selectedCondition = '';
+            document.querySelectorAll('.device-type-btn').forEach(function(btn) {
+                btn.classList.remove('border-brand-blue', 'shadow-md', 'bg-blue-50');
+                btn.classList.add('border-gray-200');
+            });
+            document.getElementById('step-2').classList.add('hidden');
+            document.getElementById('step-3').classList.add('hidden');
+            document.getElementById('estimate-btn-section').classList.add('hidden');
+            document.getElementById('trade-result').classList.add('hidden');
+            document.getElementById('storage-section').classList.add('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Web3Forms Configuration
+        var WEB3FORMS_KEY = '0e7ad91d-7aa7-4810-8358-be2628922caa';
+
+        function submitTradeIn() {
+            if (!auth.currentUser) {
+                alert('Please sign in at the main store page first to submit a trade-in request.');
+                return;
+            }
+            var btn = document.getElementById('submit-tradein-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Submitting...';
+            var valueText = document.getElementById('trade-value').textContent;
+            var estimatedValue = parseInt(valueText.replace('$', ''), 10) || 0;
+            var requestData = {
+                uid: auth.currentUser.uid,
+                email: auth.currentUser.email,
+                deviceType: selectedType,
+                brand: selectedBrand,
+                model: selectedModel,
+                storage: selectedStorage || 'N/A',
+                condition: selectedCondition,
+                estimatedValue: estimatedValue,
+                status: 'pending',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            db.collection('tradeInRequests').add(requestData).then(function(docRef) {
+                btn.innerHTML = '<i class="fas fa-check mr-2"></i>Request Submitted!';
+                btn.classList.remove('text-green-700');
+                btn.classList.add('text-white', 'bg-green-600');
+                alert('Trade-in request submitted! Reference: ' + docRef.id + '\nWe\'ll email you at ' + auth.currentUser.email + ' with next steps.');
+                // Send trade-in confirmation email via Web3Forms
+                fetch('https://api.web3forms.com/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        access_key: WEB3FORMS_KEY,
+                        subject: 'SwiftDevices Trade-In Confirmation — ' + docRef.id,
+                        from_name: 'SwiftDevices',
+                        name: auth.currentUser.displayName || auth.currentUser.email.split('@')[0],
+                        email: auth.currentUser.email,
+                        message: 'Trade-In Reference: ' + docRef.id + '\nDevice: ' + (requestData.brand || '') + ' ' + (requestData.model || '') + '\nType: ' + (requestData.deviceType || 'N/A') + '\nCondition: ' + (requestData.condition || 'N/A') + '\nEstimated Value: $' + estimatedValue + '\n\nWe will review your request and get back to you within 1-2 business days.'
+                    })
+                }).catch(function(err) { console.warn('Trade-in email failed:', err); });
+            }).catch(function(err) {
+                alert('Error submitting trade-in: ' + err.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Submit Trade-In Request';
+            });
+        }
+    </script>
+</body>
+</html>

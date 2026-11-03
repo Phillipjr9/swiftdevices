@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://www.gstatic.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com;">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: { blue: '#0066CC', light: '#00A8E8', dark: '#0a1628', accent: '#FF6B35', purple: '#6366f1' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics-compat.js"></script>
+    <script>
+        firebase.initializeApp({
+            apiKey: "AIzaSyAbBODZeHGStQFU_06ShU3ZXpi95reNz8U",
+            authDomain: "swiftdevices-e2972.firebaseapp.com",
+            projectId: "swiftdevices-e2972",
+            storageBucket: "swiftdevices-e2972.firebasestorage.app",
+            messagingSenderId: "143447135724",
+            appId: "1:143447135724:web:245a9a72fcbcaac55f1cc9",
+            measurementId: "G-53FFSTND6K"
+        });
+        firebase.analytics();
+    </script>
+</head>
+<body class="font-sans text-gray-800 bg-gray-50 antialiased">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
+            <a href="index.html" class="flex items-center gap-3">
+                <img src="logo.png" alt="SwiftDevices" class="h-48 w-auto -ml-10">
+            </a>
+            <div class="hidden md:flex items-center gap-6">
+                <a href="index.html" class="text-gray-700 font-medium hover:text-brand-blue transition">Shop</a>
+                <a href="index.html#deals" class="text-gray-700 font-medium hover:text-brand-blue transition">Deals</a>
+                <a href="support.html" class="text-gray-700 font-medium hover:text-brand-blue transition">Support</a>
+                <a href="contact.html" class="text-gray-700 font-medium hover:text-brand-blue transition">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="bg-gradient-to-br from-brand-dark to-blue-900 py-16 text-center text-white">
+        <h1 class="text-5xl font-bold mb-4"><i class="fas fa-file-contract mr-3"></i>Terms of Service</h1>
+        <p class="text-white/80 text-lg max-w-xl mx-auto">Last updated: March 21, 2026</p>
+    </section>
+
+    <!-- Content -->
+    <section class="py-16">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white rounded-2xl shadow-lg p-8 space-y-8 text-gray-600 leading-relaxed">
+
+                <div>
+                    <h2 class="text-2xl font-bold text-brand-dark mb-3">1. Acceptance of Terms</h2>
+                    <p>By accessing or using the SwiftDevices website, you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, please do not use our website or services.</p>
+                </div>
+
+                <div>
+                    <h2 class="text-2xl font-bold text-brand-dark mb-3">2. Account Registration</h2>
+                    <p class="mb-2">When creating an account, you agree to:</p>
+                    <ul class="list-disc pl-6 space-y-1">
+                        <li>Provide accurate and complete information</li>
+                        <li>Maintain the security of your password and account</li>
+                        <li>Notify us immediately of any unauthorized use</li>
+                        <li>Accept responsibility for all activity that occurs under your account</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h2 class="text-2xl font-bold text-brand-dark mb-3">3. Orders & Pricing</h2>
+                    <ul class="list-disc pl-6 space-y-1">
+                        <li>All prices are listed in USD and include applicable taxes unless stated otherwise</li>
+                        <li>We reserve the right to update pricing at any time without prior notice</li>
+                        <li>An order confirmation does not constitute acceptance — we may cancel orders due to pricing errors, stock issues, or suspected fraud</li>
+                        <li>Promotional discounts and bundle deals are subject to availability and may be withdrawn at any time</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h2 class="text-2xl font-bold text-brand-dark mb-3">4. Payment</h2>
+                    <p class="mb-2">We accept the following payment methods:</p>
+                    <ul class="list-disc pl-6 space-y-1">
+                        <li>Cryptocurrency (Bitcoin, Ethereum, USDT, and more)</li>
+                        <li>Bank Transfer (for orders $20,000 and above)</li>
+                    </ul>
+                    <p class="mt-2">All payments are processed through secure, encrypted channels. Cryptocurrency payments are converted at the market rate at the time of purchase and are non-reversible once confirmed on the blockchain.</p>
+                </div>
+
+                <div>
+                    <h2 class="text-2xl font-bold text-brand-dark mb-3">5. Shipping & Delivery</h2>
+                    <ul class="list-disc pl-6 space-y-1">
+                        <li>Estimated delivery times are provided as guidelines and are not guaranteed</li>
+                        <li>Risk of loss passes to you upon delivery to the carrier</li>
+                        <li>We are not responsible for delays caused by carriers, customs, or events beyond our control</li>
+                        <li>Free shipping promotions apply only to standard delivery within the continental US</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h2 class="text-2xl font-bold text-brand-dark mb-3">6. Returns & Refunds</h2>
+                    <p>Returns are subject to our <a href="returns.html" class="text-brand-blue hover:underline">Returns & Exchanges Policy</a>. Refunds are processed to the original payment method within 5–10 business days after we receive and inspect the returned item.</p>
+                </div>
+
+                <div>
+                    <h2 class="text-2xl font-bold text-brand-dark mb-3">7. Intellectual Property</h2>
+                    <p>All content on this website — including text, images, logos, product descriptions, and design — is the property of SwiftDevices or its licensors. You may not copy, reproduce, or distribute any content without our written consent.</p>
+                </div>
+
+                <div>
+                    <h2 class="text-2xl font-bold text-brand-dark mb-3">8. Limitation of Liability</h2>
+                    <p>To the fullest extent permitted by law, SwiftDevices shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of our website or products. Our total liability for any claim shall not exceed the amount you paid for the relevant product.</p>
+                </div>
+
+                <div>
+                    <h2 class="text-2xl font-bold text-brand-dark mb-3">9. Prohibited Conduct</h2>
+                    <ul class="list-disc pl-6 space-y-1">
+                        <li>Using the site for any unlawful purpose</li>
+                        <li>Attempting to access other users' accounts</li>
+                        <li>Interfering with the website's functionality or security</li>
+                        <li>Scraping, crawling, or using automated tools to extract data</li>
+                        <li>Placing fraudulent orders or providing false information</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h2 class="text-2xl font-bold text-brand-dark mb-3">10. Changes to Terms</h2>
+                    <p>We may modify these Terms of Service at any time. Changes take effect when posted on this page. Your continued use of the site after changes constitutes acceptance of the updated terms.</p>
+                </div>
+
+                <div>
+                    <h2 class="text-2xl font-bold text-brand-dark mb-3">11. Contact</h2>
+                    <p>If you have questions about these terms, please <a href="contact.html" class="text-brand-blue hover:underline">contact us</a>.</p>
+                </div>
+
+                <div class="bg-blue-50 rounded-xl p-6 text-center">
+                    <p class="text-brand-dark font-semibold mb-2">Need clarification on any of these terms?</p>
+                    <a href="contact.html" class="inline-block bg-brand-blue text-white px-6 py-3 rounded-full font-bold hover:bg-blue-700 transition">
+                        <i class="fas fa-envelope mr-2"></i>Contact Us
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-300 pt-12 pb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm">
+                <p>&copy; 2026 SwiftDevices. All rights reserved.</p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="privacy.html" class="hover:text-white transition-colors">Privacy Policy</a>
+                    <a href="terms.html" class="hover:text-white transition-colors">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

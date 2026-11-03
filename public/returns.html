@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://www.gstatic.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com;">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: { blue: '#0066CC', light: '#00A8E8', dark: '#0a1628', accent: '#FF6B35', purple: '#6366f1' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics-compat.js"></script>
+    <script>
+        firebase.initializeApp({
+            apiKey: "AIzaSyAbBODZeHGStQFU_06ShU3ZXpi95reNz8U",
+            authDomain: "swiftdevices-e2972.firebaseapp.com",
+            projectId: "swiftdevices-e2972",
+            storageBucket: "swiftdevices-e2972.firebasestorage.app",
+            messagingSenderId: "143447135724",
+            appId: "1:143447135724:web:245a9a72fcbcaac55f1cc9",
+            measurementId: "G-53FFSTND6K"
+        });
+        firebase.analytics();
+    </script>
+</head>
+<body class="font-sans text-gray-800 bg-gray-50 antialiased">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
+            <a href="index.html" class="flex items-center gap-3">
+                <img src="logo.png" alt="SwiftDevices" class="h-48 w-auto -ml-10">
+            </a>
+            <div class="hidden md:flex items-center gap-6">
+                <a href="index.html" class="text-gray-700 font-medium hover:text-brand-blue transition">Shop</a>
+                <a href="index.html#deals" class="text-gray-700 font-medium hover:text-brand-blue transition">Deals</a>
+                <a href="support.html" class="text-gray-700 font-medium hover:text-brand-blue transition">Support</a>
+                <a href="contact.html" class="text-gray-700 font-medium hover:text-brand-blue transition">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="bg-gradient-to-br from-brand-dark to-blue-900 py-16 text-center text-white">
+        <h1 class="text-5xl font-bold mb-4"><i class="fas fa-undo mr-3"></i>Returns & Exchanges</h1>
+        <p class="text-white/80 text-lg max-w-xl mx-auto">Hassle-free returns within 30 days of purchase</p>
+    </section>
+
+    <!-- Content -->
+    <section class="py-16">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+
+            <!-- Highlights -->
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-white rounded-2xl p-6 text-center shadow-sm">
+                    <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-calendar-check text-green-600 text-2xl"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-1">30-Day Window</h3>
+                    <p class="text-gray-600 text-sm">Return any product within 30 days of delivery</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 text-center shadow-sm">
+                    <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-shipping-fast text-brand-blue text-2xl"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-1">Free Return Shipping</h3>
+                    <p class="text-gray-600 text-sm">We provide prepaid return labels at no cost</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 text-center shadow-sm">
+                    <div class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-exchange-alt text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-1">Easy Exchanges</h3>
+                    <p class="text-gray-600 text-sm">Swap for a different size, color, or product</p>
+                </div>
+            </div>
+
+            <!-- Policy Details -->
+            <div class="bg-white rounded-2xl shadow-lg p-8 space-y-8">
+                <div>
+                    <h2 class="text-2xl font-bold text-brand-dark mb-4">Return Policy</h2>
+                    <p class="text-gray-600 leading-relaxed">We want you to be completely satisfied with your purchase. If you're not happy with your product for any reason, you can return it within <strong>30 days</strong> of the delivery date for a full refund or exchange.</p>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-bold text-brand-dark mb-3">Eligibility</h3>
+                    <ul class="space-y-3 text-gray-600">
+                        <li class="flex items-start gap-3"><i class="fas fa-check-circle text-green-500 mt-1"></i>Product must be in its original packaging</li>
+                        <li class="flex items-start gap-3"><i class="fas fa-check-circle text-green-500 mt-1"></i>All accessories, manuals, and cables must be included</li>
+                        <li class="flex items-start gap-3"><i class="fas fa-check-circle text-green-500 mt-1"></i>Product must be in the same condition as received</li>
+                        <li class="flex items-start gap-3"><i class="fas fa-check-circle text-green-500 mt-1"></i>Receipt or proof of purchase is required</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-bold text-brand-dark mb-3">How to Return</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 bg-brand-blue text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">1</div>
+                            <div>
+                                <h4 class="font-semibold">Contact Us</h4>
+                                <p class="text-gray-600 text-sm">Email <a href="mailto:swiftdevices@technologist.com" class="text-brand-blue hover:underline">swiftdevices@technologist.com</a> or call 1-800-SWIFT-01 with your order number.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 bg-brand-blue text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">2</div>
+                            <div>
+                                <h4 class="font-semibold">Get Your Label</h4>
+                                <p class="text-gray-600 text-sm">We'll email you a prepaid return shipping label within 24 hours.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 bg-brand-blue text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">3</div>
+                            <div>
+                                <h4 class="font-semibold">Ship It Back</h4>
+                                <p class="text-gray-600 text-sm">Pack the product securely, attach the label, and drop it off at any authorized shipping location.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 bg-brand-blue text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">4</div>
+                            <div>
+                                <h4 class="font-semibold">Get Refunded</h4>
+                                <p class="text-gray-600 text-sm">Once we receive and inspect the item, your refund will be processed within 5-7 business days to your original payment method.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-bold text-brand-dark mb-3">Non-Returnable Items</h3>
+                    <ul class="space-y-2 text-gray-600">
+                        <li class="flex items-start gap-3"><i class="fas fa-times-circle text-red-400 mt-1"></i>Products with broken seals on software or digital content</li>
+                        <li class="flex items-start gap-3"><i class="fas fa-times-circle text-red-400 mt-1"></i>Gift cards and downloadable products</li>
+                        <li class="flex items-start gap-3"><i class="fas fa-times-circle text-red-400 mt-1"></i>Items damaged through misuse or accidental damage</li>
+                    </ul>
+                </div>
+
+                <div class="bg-blue-50 rounded-xl p-6 text-center">
+                    <p class="text-brand-dark font-semibold mb-2">Need help with a return?</p>
+                    <a href="contact.html" class="inline-block bg-brand-blue text-white px-6 py-3 rounded-full font-bold hover:bg-blue-700 transition">
+                        <i class="fas fa-envelope mr-2"></i>Contact Support
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-300 pt-12 pb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm">
+                <p>&copy; 2026 SwiftDevices. All rights reserved.</p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="privacy.html" class="hover:text-white transition-colors">Privacy Policy</a>
+                    <a href="terms.html" class="hover:text-white transition-colors">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

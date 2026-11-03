@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://www.gstatic.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com;">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: { blue: '#0066CC', light: '#00A8E8', dark: '#0a1628', accent: '#FF6B35', purple: '#6366f1' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics-compat.js"></script>
+    <script>
+        firebase.initializeApp({
+            apiKey: "AIzaSyAbBODZeHGStQFU_06ShU3ZXpi95reNz8U",
+            authDomain: "swiftdevices-e2972.firebaseapp.com",
+            projectId: "swiftdevices-e2972",
+            storageBucket: "swiftdevices-e2972.firebasestorage.app",
+            messagingSenderId: "143447135724",
+            appId: "1:143447135724:web:245a9a72fcbcaac55f1cc9",
+            measurementId: "G-53FFSTND6K"
+        });
+        firebase.analytics();
+    </script>
+</head>
+<body class="font-sans text-gray-800 bg-gray-50 antialiased">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
+            <a href="index.html" class="flex items-center gap-3">
+                <img src="logo.png" alt="SwiftDevices" class="h-48 w-auto -ml-10">
+            </a>
+            <div class="hidden md:flex items-center gap-6">
+                <a href="index.html" class="text-gray-700 font-medium hover:text-brand-blue transition">Shop</a>
+                <a href="index.html#deals" class="text-gray-700 font-medium hover:text-brand-blue transition">Deals</a>
+                <a href="support.html" class="text-gray-700 font-medium hover:text-brand-blue transition">Support</a>
+                <a href="contact.html" class="text-gray-700 font-medium hover:text-brand-blue transition">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="bg-gradient-to-br from-brand-dark to-blue-900 py-16 text-center text-white">
+        <h1 class="text-5xl font-bold mb-4"><i class="fas fa-shield-alt mr-3"></i>Warranty Information</h1>
+        <p class="text-white/80 text-lg max-w-xl mx-auto">Every purchase is protected by our SwiftCare warranty</p>
+    </section>
+
+    <!-- Content -->
+    <section class="py-16">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+
+            <!-- Warranty Tiers -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-brand-blue to-brand-light p-6 text-white">
+                        <h3 class="text-2xl font-bold">Standard Warranty</h3>
+                        <p class="text-white/80">Included with every purchase</p>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span class="text-gray-600">Duration</span>
+                            <span class="font-bold text-brand-dark">2 Years</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span class="text-gray-600">Manufacturing Defects</span>
+                            <i class="fas fa-check-circle text-green-500"></i>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span class="text-gray-600">Hardware Failures</span>
+                            <i class="fas fa-check-circle text-green-500"></i>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span class="text-gray-600">Battery Issues</span>
+                            <i class="fas fa-check-circle text-green-500"></i>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span class="text-gray-600">Accidental Damage</span>
+                            <i class="fas fa-times-circle text-red-400"></i>
+                        </div>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-gray-600">Price</span>
+                            <span class="font-bold text-green-600 text-lg">FREE</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden border-2 border-brand-accent relative">
+                    <div class="absolute top-0 right-0 bg-brand-accent text-white text-xs font-bold px-4 py-1 rounded-bl-xl">RECOMMENDED</div>
+                    <div class="bg-gradient-to-r from-brand-accent to-orange-600 p-6 text-white">
+                        <h3 class="text-2xl font-bold">SwiftCare+</h3>
+                        <p class="text-white/80">Complete protection plan</p>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span class="text-gray-600">Duration</span>
+                            <span class="font-bold text-brand-dark">3 Years</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span class="text-gray-600">Manufacturing Defects</span>
+                            <i class="fas fa-check-circle text-green-500"></i>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span class="text-gray-600">Hardware Failures</span>
+                            <i class="fas fa-check-circle text-green-500"></i>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span class="text-gray-600">Battery Issues</span>
+                            <i class="fas fa-check-circle text-green-500"></i>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span class="text-gray-600">Accidental Damage</span>
+                            <i class="fas fa-check-circle text-green-500"></i>
+                        </div>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-gray-600">Price</span>
+                            <span class="font-bold text-brand-accent text-lg">From $49/yr</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Details -->
+            <div class="bg-white rounded-2xl shadow-lg p-8 space-y-8">
+                <div>
+                    <h2 class="text-2xl font-bold text-brand-dark mb-4">What's Covered</h2>
+                    <ul class="space-y-3 text-gray-600">
+                        <li class="flex items-start gap-3"><i class="fas fa-check text-green-500 mt-1"></i><strong>Manufacturing defects</strong> — any fault in materials or workmanship that occurs under normal use.</li>
+                        <li class="flex items-start gap-3"><i class="fas fa-check text-green-500 mt-1"></i><strong>Hardware component failure</strong> — screens, processors, memory, speakers, cameras, and charging ports.</li>
+                        <li class="flex items-start gap-3"><i class="fas fa-check text-green-500 mt-1"></i><strong>Battery degradation</strong> — if battery health drops below 80% within the warranty period.</li>
+                        <li class="flex items-start gap-3"><i class="fas fa-check text-green-500 mt-1"></i><strong>Software issues</strong> — pre-installed firmware or OS-related malfunctions.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h2 class="text-2xl font-bold text-brand-dark mb-4">What's Not Covered</h2>
+                    <ul class="space-y-3 text-gray-600">
+                        <li class="flex items-start gap-3"><i class="fas fa-times text-red-400 mt-1"></i>Physical damage from drops, impacts, or liquid exposure (covered under SwiftCare+ only)</li>
+                        <li class="flex items-start gap-3"><i class="fas fa-times text-red-400 mt-1"></i>Damage caused by unauthorized modifications or repairs</li>
+                        <li class="flex items-start gap-3"><i class="fas fa-times text-red-400 mt-1"></i>Cosmetic damage such as scratches or dents that don't affect functionality</li>
+                        <li class="flex items-start gap-3"><i class="fas fa-times text-red-400 mt-1"></i>Damage from using non-approved accessories or chargers</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h2 class="text-2xl font-bold text-brand-dark mb-4">How to File a Claim</h2>
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 bg-brand-blue text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">1</div>
+                            <div>
+                                <h4 class="font-semibold">Contact Our Team</h4>
+                                <p class="text-gray-600 text-sm">Reach out via <a href="contact.html" class="text-brand-blue hover:underline">our contact form</a> or call 1-800-SWIFT-01 with your order number and describe the issue.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 bg-brand-blue text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">2</div>
+                            <div>
+                                <h4 class="font-semibold">Diagnostic Review</h4>
+                                <p class="text-gray-600 text-sm">Our technicians will review your claim and may request photos or a brief video of the issue.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 bg-brand-blue text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">3</div>
+                            <div>
+                                <h4 class="font-semibold">Resolution</h4>
+                                <p class="text-gray-600 text-sm">We'll either repair your device, send a replacement, or issue a full refund — whichever you prefer.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 rounded-xl p-6 text-center">
+                    <p class="text-brand-dark font-semibold mb-2">Need to file a warranty claim?</p>
+                    <a href="contact.html" class="inline-block bg-brand-blue text-white px-6 py-3 rounded-full font-bold hover:bg-blue-700 transition">
+                        <i class="fas fa-headset mr-2"></i>Contact Support
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-300 pt-12 pb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm">
+                <p>&copy; 2026 SwiftDevices. All rights reserved.</p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="privacy.html" class="hover:text-white transition-colors">Privacy Policy</a>
+                    <a href="terms.html" class="hover:text-white transition-colors">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

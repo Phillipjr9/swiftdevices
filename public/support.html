@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://www.gstatic.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com;">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: { blue: '#0066CC', light: '#00A8E8', dark: '#0a1628', accent: '#FF6B35', purple: '#6366f1' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .logo-icon {
+            width: 45px; height: 45px;
+            background: linear-gradient(135deg, #0066CC 0%, #00A8E8 100%);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 24px; font-weight: bold;
+        }
+        .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; }
+        .faq-item.open .faq-answer { max-height: 300px; padding-top: 12px; }
+        .faq-item.open .faq-icon { transform: rotate(180deg); }
+        .faq-icon { transition: transform 0.3s ease; }
+        .blog-card img { transition: transform 0.5s ease; }
+        .blog-card:hover img { transform: scale(1.05); }
+        .dark body, .dark .bg-gray-50 { background: #0f172a !important; }
+        .dark .bg-white { background: #1e293b !important; }
+        .dark .text-gray-800, .dark .text-brand-dark { color: #e2e8f0 !important; }
+        .dark .text-gray-600, .dark .text-gray-500 { color: #94a3b8 !important; }
+        .dark .text-gray-700 { color: #cbd5e1 !important; }
+        .dark .border-gray-200, .dark .border-gray-100, .dark .border-gray-300 { border-color: #334155 !important; }
+        .dark .bg-gray-50 { background: #1e293b !important; }
+        .dark input { background: #1e293b !important; color: #e2e8f0 !important; border-color: #475569 !important; }
+        .dark footer { background: #020617 !important; }
+        .tab-btn { transition: all 0.3s; }
+        .tab-btn.active { border-color: #0066CC; color: #0066CC; background: rgba(0,102,204,0.05); }
+        @media (max-width: 640px) {
+            footer .grid { grid-template-columns: 1fr !important; gap: 1.5rem; }
+        }
+    </style>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-compat.js"></script>
+    <script>
+        firebase.initializeApp({
+            apiKey: "AIzaSyAbBODZeHGStQFU_06ShU3ZXpi95reNz8U",
+            authDomain: "swiftdevices-e2972.firebaseapp.com",
+            projectId: "swiftdevices-e2972",
+            storageBucket: "swiftdevices-e2972.firebasestorage.app",
+            messagingSenderId: "143447135724",
+            appId: "1:143447135724:web:245a9a72fcbcaac55f1cc9",
+            measurementId: "G-53FFSTND6K"
+        });
+        firebase.analytics();
+        const db = firebase.firestore();
+    </script>
+</head>
+<body class="font-sans text-gray-800 bg-gray-50 antialiased">
+
+    <!-- Top Bar -->
+    <div class="bg-brand-dark text-white text-sm py-3 px-4">
+        <div class="max-w-7xl mx-auto flex justify-center items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-headset"></i>
+                <span>Support Center &mdash; We're here to help</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
+            <a href="index.html" class="flex items-center gap-3">
+                <img src="logo.png" alt="SwiftDevices" class="h-48 w-auto -ml-10">
+            </a>
+            <div class="hidden md:flex items-center gap-6">
+                <a href="index.html" class="text-gray-700 font-medium hover:text-brand-blue transition">Shop</a>
+                <a href="index.html#deals" class="text-brand-accent font-bold hover:text-orange-600 transition">Deals</a>
+                <a href="#blog-section" class="text-gray-700 font-medium hover:text-brand-blue transition">Blog</a>
+                <a href="#faq-section" class="text-gray-700 font-medium hover:text-brand-blue transition">FAQ</a>
+                <a href="#order-tracking" class="text-gray-700 font-medium hover:text-brand-blue transition">Track Order</a>
+            </div>
+            <button onclick="document.getElementById('mobile-support-menu').classList.toggle('hidden')" class="md:hidden text-gray-700 text-xl"><i class="fas fa-bars"></i></button>
+        </div>
+        <div id="mobile-support-menu" class="hidden md:hidden bg-white border-t border-gray-100 px-4 py-4 space-y-2">
+            <a href="index.html" class="block px-4 py-3 text-gray-700 hover:text-brand-blue hover:bg-blue-50 rounded-lg font-medium transition">Shop</a>
+            <a href="#blog-section" class="block px-4 py-3 text-gray-700 hover:text-brand-blue hover:bg-blue-50 rounded-lg font-medium transition">Blog</a>
+            <a href="#faq-section" class="block px-4 py-3 text-gray-700 hover:text-brand-blue hover:bg-blue-50 rounded-lg font-medium transition">FAQ</a>
+            <a href="#order-tracking" class="block px-4 py-3 text-gray-700 hover:text-brand-blue hover:bg-blue-50 rounded-lg font-medium transition">Track Order</a>
+        </div>
+    </nav>
+
+    <!-- Page Hero -->
+    <section class="bg-gradient-to-br from-brand-dark via-[#1e3a5f] to-brand-dark py-16 text-white text-center relative overflow-hidden">
+        <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%230066CC%22%20fill-opacity%3D%220.06%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-40"></div>
+        <div class="relative max-w-3xl mx-auto px-4">
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-4">Support & Resources</h1>
+            <p class="text-lg text-white/80">Track orders, read the latest tech news, or find answers to your questions.</p>
+            <!-- Quick Jump Tabs -->
+            <div class="flex flex-wrap justify-center gap-3 mt-8">
+                <a href="#blog-section" class="tab-btn px-5 py-2.5 rounded-full border-2 border-white/30 text-sm font-semibold hover:bg-white/10 transition"><i class="fas fa-newspaper mr-2"></i>Tech Blog</a>
+                <a href="#order-tracking" class="tab-btn px-5 py-2.5 rounded-full border-2 border-white/30 text-sm font-semibold hover:bg-white/10 transition"><i class="fas fa-shipping-fast mr-2"></i>Track Order</a>
+                <a href="#faq-section" class="tab-btn px-5 py-2.5 rounded-full border-2 border-white/30 text-sm font-semibold hover:bg-white/10 transition"><i class="fas fa-question-circle mr-2"></i>FAQ</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Blog / Tech News Section -->
+    <section class="py-16 bg-white" id="blog-section">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-brand-dark mb-3">Tech News & Tips</h2>
+                <p class="text-gray-600">Stay updated with the latest in tech</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <article class="blog-card bg-gray-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer group">
+                    <div class="h-48 overflow-hidden">
+                        <img src="https://www.att.com/scmsassets/global/devices/phones/apple/apple-iphone-17-pro-max/defaultimage/cosmic-orange-hero-zoom.png" alt="Tech Trends 2026" class="w-full h-full object-cover" loading="lazy">
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-3 text-xs text-gray-500 mb-3">
+                            <span class="bg-brand-blue/10 text-brand-blue px-2 py-1 rounded-full font-semibold">Trends</span>
+                            <span>March 18, 2026</span>
+                            <span>5 min read</span>
+                        </div>
+                        <h3 class="font-bold text-lg text-brand-dark mb-2 group-hover:text-brand-blue transition-colors">Top 10 Tech Trends to Watch in 2026</h3>
+                        <p class="text-gray-600 text-sm line-clamp-2">From AI-powered devices to foldable screens, discover the technologies shaping the future of consumer electronics.</p>
+                    </div>
+                </article>
+                <article class="blog-card bg-gray-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer group">
+                    <div class="h-48 overflow-hidden">
+                        <img src="https://www.att.com/scmsassets/global/devices/phones/samsung/samsung-galaxy-s26-ultra/defaultimage/black-hero-zoom.png" alt="Smartphone Buying Guide" class="w-full h-full object-cover" loading="lazy">
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-3 text-xs text-gray-500 mb-3">
+                            <span class="bg-green-500/10 text-green-600 px-2 py-1 rounded-full font-semibold">Guide</span>
+                            <span>March 15, 2026</span>
+                            <span>8 min read</span>
+                        </div>
+                        <h3 class="font-bold text-lg text-brand-dark mb-2 group-hover:text-brand-blue transition-colors">Ultimate Smartphone Buying Guide: Find Your Perfect Match</h3>
+                        <p class="text-gray-600 text-sm line-clamp-2">Whether you need an iPhone, Galaxy, or Pixel, we break down everything you need to know before upgrading your phone.</p>
+                    </div>
+                </article>
+                <article class="blog-card bg-gray-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer group">
+                    <div class="h-48 overflow-hidden">
+                        <img src="https://www.att.com/scmsassets/global/devices/other/apple/apple-watch-ultra-3-49mm/defaultimage/black-titanium-black-ocean-band-hero-zoom.png" alt="Best Smartwatches" class="w-full h-full object-cover" loading="lazy">
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-3 text-xs text-gray-500 mb-3">
+                            <span class="bg-purple-500/10 text-purple-600 px-2 py-1 rounded-full font-semibold">Tutorial</span>
+                            <span>March 10, 2026</span>
+                            <span>6 min read</span>
+                        </div>
+                        <h3 class="font-bold text-lg text-brand-dark mb-2 group-hover:text-brand-blue transition-colors">Best Smartwatches of 2026: Apple Watch vs Galaxy Watch vs Pixel Watch</h3>
+                        <p class="text-gray-600 text-sm line-clamp-2">Compare the top smartwatches side by side. We cover health tracking, battery life, and which one is right for you.</p>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- Order Tracking Section -->
+    <section class="py-16 bg-gray-50" id="order-tracking">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-10">
+                <h2 class="text-4xl font-bold text-brand-dark mb-3"><i class="fas fa-shipping-fast text-brand-blue mr-2"></i>Track Your Order</h2>
+                <p class="text-gray-600">Enter your order number to check the delivery status</p>
+            </div>
+            <div class="bg-white rounded-2xl shadow-lg p-8">
+                <form onsubmit="trackOrder(event)" class="flex flex-col sm:flex-row gap-4 mb-8">
+                    <input type="text" id="tracking-input" placeholder="Enter order number (e.g., SW-123456)" class="flex-1 px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20" required>
+                    <button type="submit" id="track-btn" class="bg-brand-blue text-white px-8 py-3 rounded-full font-bold hover:bg-blue-700 transition shadow-lg">Track Order</button>
+                </form>
+                <div id="tracking-result" class="hidden"></div>
+                <div id="tracking-not-found" class="hidden text-center py-8">
+                    <i class="fas fa-search text-4xl text-gray-300 mb-4"></i>
+                    <p class="font-semibold text-gray-700 text-lg">Order not found</p>
+                    <p class="text-gray-500 text-sm mt-1">Please check the order number and try again.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="py-16 bg-white" id="faq-section">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-brand-dark mb-3">Frequently Asked Questions</h2>
+                <p class="text-gray-600">Find quick answers to common questions</p>
+            </div>
+            <div class="space-y-3">
+                <div class="faq-item bg-gray-50 rounded-xl overflow-hidden">
+                    <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-5 text-left font-semibold text-brand-dark hover:text-brand-blue transition-colors">
+                        <span>What payment methods do you accept?</span>
+                        <i class="fas fa-chevron-down faq-icon text-gray-400 text-sm"></i>
+                    </button>
+                    <div class="faq-answer px-5 pb-5 text-gray-600 text-sm leading-relaxed">
+                        We accept Cryptocurrency (Bitcoin, Ethereum, USDT, Solana) and Bank Transfer. For orders over $20,000, only Bank Transfer is available. All transactions are secured with industry-standard encryption.
+                    </div>
+                </div>
+                <div class="faq-item bg-gray-50 rounded-xl overflow-hidden">
+                    <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-5 text-left font-semibold text-brand-dark hover:text-brand-blue transition-colors">
+                        <span>How long does shipping take?</span>
+                        <i class="fas fa-chevron-down faq-icon text-gray-400 text-sm"></i>
+                    </button>
+                    <div class="faq-answer px-5 pb-5 text-gray-600 text-sm leading-relaxed">
+                        Standard shipping takes 5-7 business days. Express shipping (free on orders $500+) takes 2-3 business days. Same-day delivery is available in select metro areas.
+                    </div>
+                </div>
+                <div class="faq-item bg-gray-50 rounded-xl overflow-hidden">
+                    <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-5 text-left font-semibold text-brand-dark hover:text-brand-blue transition-colors">
+                        <span>What is your return policy?</span>
+                        <i class="fas fa-chevron-down faq-icon text-gray-400 text-sm"></i>
+                    </button>
+                    <div class="faq-answer px-5 pb-5 text-gray-600 text-sm leading-relaxed">
+                        We offer a 30-day no-questions-asked return policy. Products must be in original packaging and condition. We provide free return shipping labels for all returns.
+                    </div>
+                </div>
+                <div class="faq-item bg-gray-50 rounded-xl overflow-hidden">
+                    <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-5 text-left font-semibold text-brand-dark hover:text-brand-blue transition-colors">
+                        <span>Are all products genuine and brand new?</span>
+                        <i class="fas fa-chevron-down faq-icon text-gray-400 text-sm"></i>
+                    </button>
+                    <div class="faq-answer px-5 pb-5 text-gray-600 text-sm leading-relaxed">
+                        Yes, every product sold on SwiftDevices is 100% genuine and brand new. We are authorized retailers for all listed brands. Each product comes with manufacturer warranty.
+                    </div>
+                </div>
+                <div class="faq-item bg-gray-50 rounded-xl overflow-hidden">
+                    <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-5 text-left font-semibold text-brand-dark hover:text-brand-blue transition-colors">
+                        <span>How does the 2-year warranty work?</span>
+                        <i class="fas fa-chevron-down faq-icon text-gray-400 text-sm"></i>
+                    </button>
+                    <div class="faq-answer px-5 pb-5 text-gray-600 text-sm leading-relaxed">
+                        Our 2-year SwiftCare warranty covers manufacturing defects and hardware failures. Simply contact our support team and we'll arrange a repair or replacement at no extra cost.
+                    </div>
+                </div>
+                <div class="faq-item bg-gray-50 rounded-xl overflow-hidden">
+                    <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-5 text-left font-semibold text-brand-dark hover:text-brand-blue transition-colors">
+                        <span>Do you offer price matching?</span>
+                        <i class="fas fa-chevron-down faq-icon text-gray-400 text-sm"></i>
+                    </button>
+                    <div class="faq-answer px-5 pb-5 text-gray-600 text-sm leading-relaxed">
+                        Yes! If you find a lower price on an identical product at an authorized retailer, we'll match it and give you an additional 5% off. Contact our support team with proof of the lower price.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact CTA -->
+    <section class="py-16 bg-gradient-to-br from-brand-blue to-brand-light text-white text-center">
+        <div class="max-w-2xl mx-auto px-4">
+            <h2 class="text-3xl font-bold mb-4">Still need help?</h2>
+            <p class="text-white/80 mb-8">Our support team is available Mon-Fri, 9AM - 8PM EST.</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="mailto:swiftdevices@technologist.com" class="bg-white text-brand-blue px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition shadow-lg"><i class="fas fa-envelope mr-2"></i>Email Us</a>
+                <a href="tel:1-800-SWIFT-01" class="border-2 border-white px-8 py-3 rounded-full font-bold hover:bg-white/10 transition"><i class="fas fa-phone mr-2"></i>1-800-SWIFT-01</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-300 pt-16 pb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+                <div>
+                    <div class="flex items-center gap-3 mb-6">
+                        <img src="logo.png" alt="SwiftDevices" class="h-36 w-auto brightness-0 invert -ml-10">
+                    </div>
+                    <p class="text-sm mb-6 leading-relaxed">Your trusted destination for premium electronics and exceptional service.</p>
+                    <div class="flex space-x-4">
+                        <a href="https://facebook.com/swiftdevices" target="_blank" rel="noopener noreferrer" class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-brand-blue transition-colors" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="https://x.com/swiftdevices" target="_blank" rel="noopener noreferrer" class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-brand-blue transition-colors" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="https://instagram.com/swiftdevices" target="_blank" rel="noopener noreferrer" class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-brand-blue transition-colors" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="https://youtube.com/@swiftdevices" target="_blank" rel="noopener noreferrer" class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-brand-blue transition-colors" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold text-lg mb-6">Quick Links</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="index.html" class="hover:text-brand-blue transition-colors">Shop All Products</a></li>
+                        <li><a href="index.html#deals" class="hover:text-brand-blue transition-colors">Deals & Promotions</a></li>
+                        <li><a href="#blog-section" class="hover:text-brand-blue transition-colors">Tech Blog</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold text-lg mb-6">Customer Service</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#order-tracking" class="hover:text-brand-blue transition-colors">Order Tracking</a></li>
+                        <li><a href="#faq-section" class="hover:text-brand-blue transition-colors">FAQs</a></li>
+                        <li><a href="mailto:swiftdevices@technologist.com" class="hover:text-brand-blue transition-colors">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold text-lg mb-6">Contact Us</h4>
+                    <ul class="space-y-4 text-sm">
+                        <li class="flex items-start space-x-3"><i class="fas fa-map-marker-alt text-brand-blue mt-1"></i><span>440 Route 66 LOT 62, Hudson, NY 12534</span></li>
+                        <li class="flex items-center space-x-3"><i class="fas fa-phone text-brand-blue"></i><span>1-800-SWIFT-01</span></li>
+                        <li class="flex items-center space-x-3"><i class="fas fa-envelope text-brand-blue"></i><span>swiftdevices@technologist.com</span></li>
+                        <li class="flex items-center space-x-3"><i class="fas fa-clock text-brand-blue"></i><span>Mon-Fri: 9AM - 8PM EST</span></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm">
+                <p>&copy; 2026 SwiftDevices. All rights reserved.</p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="privacy.html" class="hover:text-white transition-colors">Privacy Policy</a>
+                    <a href="terms.html" class="hover:text-white transition-colors">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function toggleFaq(btn) {
+            const item = btn.parentElement;
+            const wasOpen = item.classList.contains('open');
+            document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+            if (!wasOpen) item.classList.add('open');
+        }
+
+        function getCarrierTrackingUrl(carrier, trackingNumber) {
+            var num = encodeURIComponent(trackingNumber);
+            switch ((carrier || '').toLowerCase()) {
+                case 'fedex': return 'https://www.fedex.com/fedextrack/?trknbr=' + num;
+                case 'ups': return 'https://www.ups.com/track?tracknum=' + num;
+                case 'usps': return 'https://tools.usps.com/go/TrackConfirmAction?tLabels=' + num;
+                case 'dhl': return 'https://www.dhl.com/us-en/home/tracking.html?tracking-id=' + num;
+                default: return '';
+            }
+        }
+
+        function getCarrierDisplayName(carrier) {
+            switch ((carrier || '').toLowerCase()) {
+                case 'fedex': return 'FedEx';
+                case 'ups': return 'UPS';
+                case 'usps': return 'USPS';
+                case 'dhl': return 'DHL';
+                default: return carrier ? carrier.toUpperCase() : '';
+            }
+        }
+
+        function trackOrder(e) {
+            e.preventDefault();
+            var input = document.getElementById('tracking-input');
+            var val = input.value.trim().toUpperCase();
+            if (!val) return;
+
+            var resultDiv = document.getElementById('tracking-result');
+            var notFoundDiv = document.getElementById('tracking-not-found');
+            var btn = document.getElementById('track-btn');
+            resultDiv.classList.add('hidden');
+            notFoundDiv.classList.add('hidden');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Searching...';
+
+            db.collection('orders').doc(val).get().then(function(doc) {
+                btn.disabled = false;
+                btn.innerHTML = 'Track Order';
+                if (!doc.exists) {
+                    notFoundDiv.classList.remove('hidden');
+                    return;
+                }
+                var order = doc.data();
+                var createdDate = order.createdAt ? order.createdAt.toDate() : new Date();
+                var eta = new Date(createdDate);
+                eta.setDate(eta.getDate() + 5);
+                var fmtDate = function(d) { return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); };
+                var fmtTime = function(d) { return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); };
+
+                var statusSteps = [
+                    { key: 'confirmed', label: 'Order Confirmed', icon: 'fa-check' },
+                    { key: 'processing', label: 'Processing & Packed', icon: 'fa-box' },
+                    { key: 'shipped', label: 'In Transit', icon: 'fa-truck' },
+                    { key: 'delivered', label: 'Delivered', icon: 'fa-home' }
+                ];
+                var statusOrder = ['confirmed', 'processing', 'shipped', 'delivered'];
+                var currentIdx = statusOrder.indexOf(order.status || 'confirmed');
+
+                var html = '<div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">';
+                html += '<div><p class="text-sm text-gray-500">Order Number</p><p class="font-bold text-brand-dark">' + order.orderNumber + '</p></div>';
+                html += '<div class="text-right"><p class="text-sm text-gray-500">Estimated Delivery</p><p class="font-bold text-green-600">' + fmtDate(eta) + '</p></div>';
+                html += '</div>';
+
+                // Order items
+                if (order.items && order.items.length) {
+                    html += '<div class="mb-6 pb-4 border-b border-gray-200">';
+                    html += '<h4 class="font-bold text-brand-dark mb-3">Items Ordered</h4>';
+                    order.items.forEach(function(item) {
+                        html += '<div class="flex items-center gap-3 mb-2">';
+                        html += '<img src="' + (item.image || '') + '" alt="' + item.name + '" class="w-12 h-12 object-contain rounded-lg bg-gray-50" loading="lazy">';
+                        html += '<div class="flex-1"><p class="font-medium text-sm">' + item.name + '</p><p class="text-xs text-gray-500">' + item.brand + ' &middot; Qty: ' + item.qty + '</p></div>';
+                        html += '<p class="font-semibold text-sm">$' + (item.price * item.qty).toLocaleString() + '</p>';
+                        html += '</div>';
+                    });
+                    html += '<div class="flex justify-between mt-3 pt-3 border-t border-gray-100 font-bold"><span>Total</span><span class="text-brand-blue">$' + (order.total || 0).toLocaleString() + '</span></div>';
+                    html += '</div>';
+                }
+
+                // Shipping info
+                if (order.shipping) {
+                    var s = order.shipping;
+                    html += '<div class="mb-6 pb-4 border-b border-gray-200">';
+                    html += '<h4 class="font-bold text-brand-dark mb-2">Shipping To</h4>';
+                    html += '<p class="text-sm text-gray-600">' + s.firstName + ' ' + s.lastName + '</p>';
+                    html += '<p class="text-sm text-gray-600">' + s.address + '</p>';
+                    html += '<p class="text-sm text-gray-600">' + s.city + ', ' + s.state + ' ' + s.zip + '</p>';
+                    html += '<p class="text-sm text-gray-500 mt-1">Payment: ' + (order.paymentMethod || 'N/A').charAt(0).toUpperCase() + (order.paymentMethod || 'N/A').slice(1) + '</p>';
+                    html += '</div>';
+                }
+
+                // Carrier tracking info
+                if (order.trackingNumber && order.trackingCarrier) {
+                    var carrierName = getCarrierDisplayName(order.trackingCarrier);
+                    var trackUrl = getCarrierTrackingUrl(order.trackingCarrier, order.trackingNumber);
+                    html += '<div class="mb-6 pb-4 border-b border-gray-200 bg-blue-50 rounded-xl p-4">';
+                    html += '<h4 class="font-bold text-brand-dark mb-2"><i class="fas fa-truck text-brand-blue mr-2"></i>Shipment Tracking</h4>';
+                    html += '<div class="flex flex-col sm:flex-row sm:items-center gap-3">';
+                    html += '<div class="flex-1"><p class="text-sm text-gray-500">Carrier</p><p class="font-semibold">' + carrierName + '</p></div>';
+                    html += '<div class="flex-1"><p class="text-sm text-gray-500">Tracking Number</p><p class="font-mono text-sm font-semibold">' + order.trackingNumber + '</p></div>';
+                    if (trackUrl) {
+                        html += '<a href="' + trackUrl + '" target="_blank" rel="noopener" class="inline-flex items-center gap-2 bg-brand-blue text-white px-5 py-2.5 rounded-full font-bold hover:bg-blue-700 transition shadow-lg text-sm"><i class="fas fa-external-link-alt"></i>Track on ' + carrierName + '</a>';
+                    }
+                    html += '</div></div>';
+                }
+
+                // Status timeline
+                html += '<h4 class="font-bold text-brand-dark mb-4">Order Status</h4>';
+                html += '<div class="relative"><div class="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div><div class="space-y-6">';
+                statusSteps.forEach(function(step, i) {
+                    var done = i <= currentIdx;
+                    var active = i === currentIdx;
+                    var bgClass = done ? (active ? 'bg-brand-blue animate-pulse' : 'bg-green-500') : 'bg-gray-200';
+                    var textClass = done ? (active ? 'text-brand-blue' : 'text-brand-dark') : 'text-gray-400';
+                    var iconColor = done ? 'text-white' : 'text-gray-400';
+                    var dateStr = '';
+                    if (done) {
+                        var stepDate = new Date(createdDate);
+                        stepDate.setHours(stepDate.getHours() + i * 12);
+                        dateStr = fmtDate(stepDate) + ' - ' + fmtTime(stepDate);
+                    } else {
+                        dateStr = 'Pending';
+                    }
+                    html += '<div class="flex gap-4 relative">';
+                    html += '<div class="w-8 h-8 ' + bgClass + ' rounded-full flex items-center justify-center z-10 flex-shrink-0"><i class="fas ' + step.icon + ' ' + iconColor + ' text-xs"></i></div>';
+                    html += '<div><p class="font-semibold ' + textClass + '">' + step.label + '</p><p class="text-sm text-gray-500">' + dateStr + '</p>';
+                    if (step.key === 'shipped' && done && order.trackingNumber && order.trackingCarrier) {
+                        var cName = getCarrierDisplayName(order.trackingCarrier);
+                        var tUrl = getCarrierTrackingUrl(order.trackingCarrier, order.trackingNumber);
+                        html += '<p class="text-xs text-blue-600 mt-1"><i class="fas fa-truck mr-1"></i>' + cName + ': <a href="' + tUrl + '" target="_blank" rel="noopener" class="font-mono hover:underline">' + order.trackingNumber + '</a></p>';
+                    }
+                    html += '</div>';
+                    html += '</div>';
+                });
+                html += '</div></div>';
+
+                resultDiv.innerHTML = html;
+                resultDiv.classList.remove('hidden');
+            }).catch(function(err) {
+                btn.disabled = false;
+                btn.innerHTML = 'Track Order';
+                notFoundDiv.classList.remove('hidden');
+            });
+        }
+    </script>
+</body>
+</html>

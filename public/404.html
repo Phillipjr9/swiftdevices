@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data:;">
+    <title>Page Not Found - SwiftDevices</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { brand: { blue: '#0066CC', light: '#00A8E8', dark: '#0a1628', accent: '#FF6B35' } } } }
+        }
+    </script>
+</head>
+<body class="font-sans bg-brand-dark min-h-screen flex flex-col">
+    <nav class="text-white py-4 px-6 flex items-center justify-between">
+        <a href="index.html" class="flex items-center gap-3">
+            <img src="logo.png" alt="SwiftDevices" class="h-8">
+            <span class="text-xl font-bold">SwiftDevices</span>
+        </a>
+    </nav>
+
+    <main class="flex-1 flex items-center justify-center px-4">
+        <div class="text-center max-w-lg">
+            <div class="text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-blue to-brand-accent mb-4">404</div>
+            <h1 class="text-3xl font-bold text-white mb-3">Page Not Found</h1>
+            <p class="text-gray-400 mb-8">Oops! The page you're looking for doesn't exist or has been moved. Let's get you back on track.</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="index.html" class="bg-brand-blue text-white px-8 py-3 rounded-full font-bold hover:bg-blue-700 transition shadow-lg flex items-center justify-center gap-2">
+                    <i class="fas fa-home"></i> Go to Homepage
+                </a>
+                <a href="index.html#products" class="bg-white/10 text-white px-8 py-3 rounded-full font-bold hover:bg-white/20 transition flex items-center justify-center gap-2">
+                    <i class="fas fa-shopping-bag"></i> Shop Products
+                </a>
+            </div>
+            <div class="mt-12 grid grid-cols-3 gap-4 max-w-sm mx-auto">
+                <a href="support.html" class="bg-white/5 hover:bg-white/10 rounded-xl p-4 transition text-center">
+                    <i class="fas fa-headset text-brand-blue text-xl mb-1"></i>
+                    <p class="text-xs text-gray-400">Support</p>
+                </a>
+                <a href="contact.html" class="bg-white/5 hover:bg-white/10 rounded-xl p-4 transition text-center">
+                    <i class="fas fa-envelope text-brand-blue text-xl mb-1"></i>
+                    <p class="text-xs text-gray-400">Contact</p>
+                </a>
+                <a href="support.html#order-tracking" class="bg-white/5 hover:bg-white/10 rounded-xl p-4 transition text-center">
+                    <i class="fas fa-box text-brand-blue text-xl mb-1"></i>
+                    <p class="text-xs text-gray-400">Track Order</p>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="text-center py-6 text-gray-500 text-sm">
+        &copy; 2026 SwiftDevices. All rights reserved.
+    </footer>
+</body>
+</html>

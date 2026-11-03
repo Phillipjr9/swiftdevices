@@ -1,0 +1,2790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://www.gstatic.com https://apis.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data: https://*.firebasestorage.app https://www.att.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com; frame-src 'self' https://accounts.google.com;">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <title>SwiftDevices Admin</title>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-blue': '#2563eb',
+                        'brand-dark': '#0f172a',
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-compat.js"></script>
+    <script>
+        var firebaseConfig = {
+            apiKey: "AIzaSyAbBODZeHGStQFU_06ShU3ZXpi95reNz8U",
+            authDomain: "swiftdevices-e2972.firebaseapp.com",
+            projectId: "swiftdevices-e2972",
+            storageBucket: "swiftdevices-e2972.firebasestorage.app",
+            messagingSenderId: "143447135724",
+            appId: "1:143447135724:web:245a9a72fcbcaac55f1cc9",
+            measurementId: "G-53FFSTND6K"
+        };
+        firebase.initializeApp(firebaseConfig);
+        var auth = firebase.auth();
+        var db = firebase.firestore();
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .admin-card { transition: transform 0.2s, box-shadow 0.2s; }
+        .admin-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .stat-card { background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%); }
+        .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 700; }
+        .product-row:hover { background: #f8fafc; }
+        .badge-edit { cursor: pointer; }
+        .status-select { font-size: 0.75rem; padding: 2px 6px; border-radius: 9999px; border: 1px solid #d1d5db; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+    <!-- Auth Gate -->
+    <div id="auth-gate" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full mx-4">
+            <div class="text-center mb-6">
+                <i class="fas fa-shield-alt text-brand-blue text-4xl mb-3"></i>
+                <h1 class="text-2xl font-bold text-brand-dark">Admin Access</h1>
+                <p class="text-gray-500 text-sm mt-1">Sign in with an authorized admin account</p>
+            </div>
+            <div id="auth-loading" class="text-center py-8">
+                <i class="fas fa-spinner fa-spin text-brand-blue text-2xl"></i>
+                <p class="text-gray-500 text-sm mt-2">Checking authentication...</p>
+            </div>
+            <div id="auth-form" class="hidden space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Email</label>
+                    <input type="email" id="admin-email" class="w-full px-4 py-3 border rounded-xl focus:outline-none focus:border-brand-blue" placeholder="admin@swiftdevices.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Password</label>
+                    <input type="password" id="admin-password" class="w-full px-4 py-3 border rounded-xl focus:outline-none focus:border-brand-blue" placeholder="Enter password" onkeypress="if(event.key==='Enter')adminLogin()">
+                </div>
+                <button onclick="adminLogin()" id="admin-login-btn" class="w-full bg-brand-blue text-white py-3 rounded-full font-bold hover:bg-blue-700 transition">Sign In</button>
+                <p id="auth-error" class="text-red-500 text-sm text-center hidden"></p>
+            </div>
+            <div id="auth-denied" class="hidden text-center py-4">
+                <i class="fas fa-ban text-red-500 text-3xl mb-2"></i>
+                <p class="text-red-500 font-semibold">Access Denied</p>
+                <p class="text-gray-500 text-sm mt-1">Your account is not authorized for admin access.</p>
+                <button onclick="auth.signOut().then(function(){ location.reload(); })" class="mt-4 text-brand-blue text-sm font-semibold hover:underline">Sign out and try another account</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="admin-dashboard" class="hidden">
+        <!-- Top Nav -->
+        <nav class="bg-white shadow-sm border-b">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center gap-3">
+                        <a href="index.html" class="text-gray-500 hover:text-brand-blue transition"><i class="fas fa-arrow-left mr-1"></i></a>
+                        <h1 class="text-xl font-bold text-brand-dark"><i class="fas fa-shield-alt text-brand-blue mr-2"></i>SwiftDevices Admin</h1>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span id="admin-name" class="text-sm text-gray-600"></span>
+                        <button onclick="auth.signOut().then(function(){ location.reload(); })" class="text-red-500 hover:text-red-700 text-sm font-semibold"><i class="fas fa-sign-out-alt mr-1"></i>Logout</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Stats Row -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+                <div class="stat-card text-white rounded-2xl p-5">
+                    <p class="text-white/70 text-xs uppercase tracking-wide">Total Orders</p>
+                    <p class="text-3xl font-bold mt-1" id="stat-orders">--</p>
+                </div>
+                <div class="bg-white rounded-2xl p-5 shadow-sm">
+                    <p class="text-gray-500 text-xs uppercase tracking-wide">Revenue</p>
+                    <p class="text-3xl font-bold text-green-600 mt-1" id="stat-revenue">--</p>
+                </div>
+                <div class="bg-white rounded-2xl p-5 shadow-sm">
+                    <p class="text-gray-500 text-xs uppercase tracking-wide">Customers</p>
+                    <p class="text-3xl font-bold text-brand-blue mt-1" id="stat-customers">--</p>
+                </div>
+                <div class="bg-white rounded-2xl p-5 shadow-sm">
+                    <p class="text-gray-500 text-xs uppercase tracking-wide">Products</p>
+                    <p class="text-3xl font-bold text-indigo-600 mt-1" id="stat-products">78</p>
+                </div>
+                <div class="bg-white rounded-2xl p-5 shadow-sm">
+                    <p class="text-gray-500 text-xs uppercase tracking-wide">Trade-Ins</p>
+                    <p class="text-3xl font-bold text-orange-600 mt-1" id="stat-tradeins">--</p>
+                </div>
+                <div class="bg-white rounded-2xl p-5 shadow-sm">
+                    <p class="text-gray-500 text-xs uppercase tracking-wide">Gift Cards</p>
+                    <p class="text-3xl font-bold text-purple-600 mt-1" id="stat-giftcards">--</p>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div class="flex border-b overflow-x-auto">
+                    <button onclick="switchTab('products')" id="atab-products" class="px-5 py-4 text-sm font-medium whitespace-nowrap tab-active"><i class="fas fa-boxes mr-1"></i>Products</button>
+                    <button onclick="switchTab('orders')" id="atab-orders" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-box mr-1"></i>Orders</button>
+                    <button onclick="switchTab('customers')" id="atab-customers" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-users mr-1"></i>Customers</button>
+                    <button onclick="switchTab('tradeins')" id="atab-tradeins" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-exchange-alt mr-1"></i>Trade-Ins</button>
+                    <button onclick="switchTab('giftcards')" id="atab-giftcards" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-gift mr-1"></i>Gift Cards</button>
+                    <button onclick="switchTab('rewards')" id="atab-rewards" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-coins mr-1"></i>Rewards</button>
+                    <button onclick="switchTab('reviews')" id="atab-reviews" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-star mr-1"></i>Reviews</button>
+                    <button onclick="switchTab('contacts')" id="atab-contacts" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-envelope mr-1"></i>Contacts</button>
+                    <button onclick="switchTab('coupons')" id="atab-coupons" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-tags mr-1"></i>Coupons</button>
+                    <button onclick="switchTab('analytics')" id="atab-analytics" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-chart-line mr-1"></i>Analytics</button>
+                    <button onclick="switchTab('auditlog')" id="atab-auditlog" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-history mr-1"></i>Audit Log</button>
+                    <button onclick="switchTab('settings')" id="atab-settings" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-cog mr-1"></i>Settings</button>
+                </div>
+
+                <!-- ==================== PRODUCTS TAB ==================== -->
+                <div id="panel-products" class="p-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                        <h2 class="text-lg font-bold text-brand-dark" id="product-catalog-title">Product Catalog</h2>
+                        <div class="flex gap-2 flex-wrap">
+                            <select id="product-filter-cat" onchange="renderProducts()" class="text-sm border rounded-lg px-3 py-2">
+                                <option value="">All Categories</option>
+                                <option value="smartphones">Smartphones</option>
+                                <option value="tablets">Tablets</option>
+                                <option value="wearables">Wearables</option>
+                                <option value="audio">Audio</option>
+                                <option value="accessories">Accessories</option>
+                            </select>
+                            <input type="text" id="product-search" oninput="renderProducts()" placeholder="Search products..." class="text-sm border rounded-lg px-3 py-2 w-48">
+                            <button onclick="openBulkStockModal()" class="text-sm bg-orange-500 text-white px-3 py-2 rounded-lg font-semibold hover:bg-orange-600"><i class="fas fa-boxes mr-1"></i>Bulk Stock</button>
+                            <button onclick="openBulkPriceModal()" class="text-sm bg-green-600 text-white px-3 py-2 rounded-lg font-semibold hover:bg-green-700"><i class="fas fa-dollar-sign mr-1"></i>Bulk Price</button>
+                            <button onclick="loadProducts()" class="text-brand-blue text-sm hover:underline"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
+                        </div>
+                    </div>
+                    <div id="products-table" class="overflow-x-auto">
+                        <div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>
+                    </div>
+                </div>
+
+                <!-- ==================== ORDERS TAB ==================== -->
+                <div id="panel-orders" class="p-6 hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-brand-dark">Orders</h2>
+                        <div class="flex gap-2">
+                            <input type="text" id="order-search" oninput="renderOrders()" placeholder="Search orders..." class="text-sm border rounded-lg px-3 py-2 w-40">
+                            <button onclick="exportOrdersCSV()" class="text-sm bg-green-600 text-white px-3 py-2 rounded-lg font-semibold hover:bg-green-700"><i class="fas fa-file-csv mr-1"></i>Export CSV</button>
+                            <select id="order-filter" onchange="renderOrders()" class="text-sm border rounded-lg px-3 py-2">
+                                <option value="">All Statuses</option>
+                                <option value="confirmed">Confirmed</option>
+                                <option value="processing">Processing</option>
+                                <option value="shipped">Shipped</option>
+                                <option value="delivered">Delivered</option>
+                                <option value="awaiting_crypto_payment">Awaiting Crypto</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                            <button onclick="loadOrders()" class="text-brand-blue text-sm hover:underline"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
+                        </div>
+                    </div>
+                    <div id="orders-table" class="overflow-x-auto">
+                        <div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>
+                    </div>
+                </div>
+
+                <!-- ==================== CUSTOMERS TAB ==================== -->
+                <div id="panel-customers" class="p-6 hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-brand-dark">Customers</h2>
+                        <div class="flex gap-2">
+                            <input type="text" id="customer-search" oninput="renderCustomers()" placeholder="Search name or email..." class="text-sm border rounded-lg px-3 py-2 w-48">
+                            <select id="customer-sort" onchange="renderCustomers()" class="text-sm border rounded-lg px-3 py-2">
+                                <option value="spent-desc">Top Spenders</option>
+                                <option value="spent-asc">Lowest Spend</option>
+                                <option value="orders-desc">Most Orders</option>
+                                <option value="name-asc">Name A-Z</option>
+                            </select>
+                            <button onclick="exportCustomersCSV()" class="text-sm bg-green-600 text-white px-3 py-2 rounded-lg font-semibold hover:bg-green-700"><i class="fas fa-file-csv mr-1"></i>Export</button>
+                            <button onclick="loadCustomers()" class="text-brand-blue text-sm hover:underline"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
+                        </div>
+                    </div>
+                    <div id="customers-table">
+                        <div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>
+                    </div>
+                </div>
+
+                <!-- ==================== TRADE-INS TAB ==================== -->
+                <div id="panel-tradeins" class="p-6 hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-brand-dark">Trade-In Requests</h2>
+                        <div class="flex gap-2">
+                            <select id="tradein-filter" onchange="renderTradeIns()" class="text-sm border rounded-lg px-3 py-2">
+                                <option value="">All</option>
+                                <option value="pending">Pending</option>
+                                <option value="approved">Approved</option>
+                                <option value="completed">Completed</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                            <button onclick="loadTradeIns()" class="text-brand-blue text-sm hover:underline"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
+                        </div>
+                    </div>
+                    <div id="tradeins-table" class="overflow-x-auto">
+                        <div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>
+                    </div>
+                </div>
+
+                <!-- ==================== GIFT CARDS TAB ==================== -->
+                <div id="panel-giftcards" class="p-6 hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-brand-dark">Gift Cards</h2>
+                        <button onclick="loadGiftCards()" class="text-brand-blue text-sm hover:underline"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
+                    </div>
+                    <div id="giftcards-table" class="overflow-x-auto mb-6">
+                        <div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-4 space-y-3">
+                        <h3 class="font-semibold text-sm text-brand-dark"><i class="fas fa-plus-circle mr-1"></i>Issue Gift Card</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium mb-1">Amount ($)</label>
+                                <select id="new-gc-amount" class="w-full px-3 py-2 border rounded-lg text-sm">
+                                    <option value="25">$25</option>
+                                    <option value="50">$50</option>
+                                    <option value="100" selected>$100</option>
+                                    <option value="150">$150</option>
+                                    <option value="200">$200</option>
+                                    <option value="500">$500</option>
+                                    <option value="custom">Custom...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium mb-1">Custom Amount</label>
+                                <input type="number" id="new-gc-custom-amount" min="5" max="2000" placeholder="$" class="w-full px-3 py-2 border rounded-lg text-sm" disabled>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium mb-1">Recipient Email</label>
+                                <input type="email" id="new-gc-email" placeholder="customer@email.com" class="w-full px-3 py-2 border rounded-lg text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium mb-1">Recipient Name</label>
+                                <input type="text" id="new-gc-name" placeholder="Customer name" class="w-full px-3 py-2 border rounded-lg text-sm">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium mb-1">Reason / Note</label>
+                                <input type="text" id="new-gc-reason" placeholder="e.g. Loyalty reward, Compensation" class="w-full px-3 py-2 border rounded-lg text-sm">
+                            </div>
+                            <div class="flex items-end">
+                                <button onclick="issueGiftCard()" class="bg-purple-600 text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-purple-700 transition"><i class="fas fa-gift mr-1"></i>Issue Gift Card</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== REWARDS TAB ==================== -->
+                <div id="panel-rewards" class="p-6 hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-brand-dark">Rewards Points</h2>
+                        <button onclick="loadRewards()" class="text-brand-blue text-sm hover:underline"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
+                    </div>
+                    <div id="rewards-table" class="overflow-x-auto">
+                        <div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>
+                    </div>
+                </div>
+
+                <!-- ==================== REVIEWS TAB ==================== -->
+                <div id="panel-reviews" class="p-6 hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-brand-dark">User Reviews</h2>
+                        <button onclick="loadReviews()" class="text-brand-blue text-sm hover:underline"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
+                    </div>
+                    <div id="reviews-table">
+                        <div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>
+                    </div>
+                </div>
+
+                <!-- ==================== CONTACTS TAB ==================== -->
+                <div id="panel-contacts" class="p-6 hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-brand-dark">Contact Messages</h2>
+                        <div class="flex gap-2">
+                            <select id="contact-filter" onchange="renderContacts()" class="text-sm border rounded-lg px-3 py-2">
+                                <option value="">All Messages</option>
+                                <option value="unread">Unread</option>
+                                <option value="read">Read</option>
+                                <option value="replied">Replied</option>
+                            </select>
+                            <button onclick="loadContacts()" class="text-brand-blue text-sm hover:underline"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
+                        </div>
+                    </div>
+                    <div id="contacts-table">
+                        <div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>
+                    </div>
+                </div>
+
+                <!-- ==================== COUPONS TAB ==================== -->
+                <div id="panel-coupons" class="p-6 hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-brand-dark">Coupon Codes</h2>
+                        <button onclick="loadCoupons()" class="text-brand-blue text-sm hover:underline"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
+                    </div>
+                    <div id="coupons-table" class="overflow-x-auto mb-6">
+                        <div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-4 space-y-3">
+                        <h3 class="font-semibold text-sm text-brand-dark"><i class="fas fa-plus-circle mr-1"></i>Create Coupon</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium mb-1">Code</label>
+                                <input type="text" id="new-coupon-code" placeholder="e.g. SAVE20" class="w-full px-3 py-2 border rounded-lg text-sm uppercase" maxlength="20">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium mb-1">Type</label>
+                                <select id="new-coupon-type" class="w-full px-3 py-2 border rounded-lg text-sm">
+                                    <option value="percent">Percentage (%)</option>
+                                    <option value="fixed">Fixed Amount ($)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium mb-1">Value</label>
+                                <input type="number" id="new-coupon-value" min="1" placeholder="e.g. 15" class="w-full px-3 py-2 border rounded-lg text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium mb-1">Min Order ($)</label>
+                                <input type="number" id="new-coupon-min" min="0" value="0" class="w-full px-3 py-2 border rounded-lg text-sm">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium mb-1">Max Uses (0=unlimited)</label>
+                                <input type="number" id="new-coupon-max" min="0" value="0" class="w-full px-3 py-2 border rounded-lg text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium mb-1">Expires</label>
+                                <input type="date" id="new-coupon-expires" class="w-full px-3 py-2 border rounded-lg text-sm">
+                            </div>
+                            <div class="flex items-end">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" id="new-coupon-active" checked class="w-4 h-4 accent-brand-blue">
+                                    <span class="text-sm font-medium">Active</span>
+                                </label>
+                            </div>
+                            <div class="flex items-end">
+                                <button onclick="createCoupon()" class="bg-brand-blue text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-blue-700 transition"><i class="fas fa-plus mr-1"></i>Create</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium mb-1"><i class="fas fa-user-lock mr-1 text-purple-500"></i>Assign to Email(s) <span class="text-gray-400">(leave blank = anyone can use)</span></label>
+                            <input type="text" id="new-coupon-assigned" placeholder="e.g. john@email.com, jane@email.com" class="w-full px-3 py-2 border rounded-lg text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== ANALYTICS TAB ==================== -->
+                <div id="panel-analytics" class="p-6 hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-brand-dark">Analytics</h2>
+                        <button onclick="loadAnalytics()" class="text-brand-blue text-sm hover:underline"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white border rounded-xl p-4">
+                            <h3 class="text-sm font-semibold text-gray-500 mb-3">Revenue (Last 30 Days)</h3>
+                            <canvas id="revenue-chart" height="200"></canvas>
+                        </div>
+                        <div class="bg-white border rounded-xl p-4">
+                            <h3 class="text-sm font-semibold text-gray-500 mb-3">Orders by Status</h3>
+                            <canvas id="status-chart" height="200"></canvas>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white border rounded-xl p-4">
+                            <h3 class="text-sm font-semibold text-gray-500 mb-3">Top Selling Products</h3>
+                            <div id="top-products-list"></div>
+                        </div>
+                        <div class="bg-white border rounded-xl p-4">
+                            <h3 class="text-sm font-semibold text-gray-500 mb-3">Revenue by Category</h3>
+                            <canvas id="category-chart" height="200"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white border rounded-xl p-4">
+                        <h3 class="text-sm font-semibold text-gray-500 mb-3"><i class="fas fa-exclamation-triangle text-orange-500 mr-1"></i>Low Stock Alerts</h3>
+                        <div id="low-stock-alerts"></div>
+                    </div>
+                </div>
+
+                <!-- ==================== AUDIT LOG TAB ==================== -->
+                <div id="panel-auditlog" class="p-6 hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-brand-dark">Audit Log</h2>
+                        <button onclick="loadAuditLog()" class="text-brand-blue text-sm hover:underline"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
+                    </div>
+                    <div id="auditlog-table" class="overflow-x-auto">
+                        <div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>
+                    </div>
+                </div>
+
+                <!-- ==================== SETTINGS TAB ==================== -->
+                <div id="panel-settings" class="p-6 hidden">
+
+                    <!-- ── Promo / Sale Settings ── -->
+                    <div class="mb-10">
+                        <h2 class="text-lg font-bold text-brand-dark mb-1"><i class="fas fa-percent mr-2 text-orange-500"></i>Promo / Sale Settings</h2>
+                        <p class="text-sm text-gray-500 mb-5">Control the sitewide promo banner, discount percentage, and schedule. Changes apply instantly to the live site.</p>
+
+                        <div id="promo-settings-loading" class="text-center py-6"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>
+
+                        <div id="promo-settings-form" class="hidden space-y-5">
+                            <!-- Toggle ON/OFF -->
+                            <div class="flex items-center justify-between bg-gray-50 rounded-xl p-5">
+                                <div>
+                                    <h3 class="font-bold text-brand-dark">Promo Status</h3>
+                                    <p class="text-xs text-gray-500 mt-0.5">When enabled, the promo bar, countdown, and discounted prices show on the site</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="promo-enabled" class="sr-only peer" onchange="togglePromoPreview()">
+                                    <div class="w-14 h-7 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-500"></div>
+                                    <span id="promo-status-label" class="ml-3 text-sm font-semibold text-red-500">OFF</span>
+                                </label>
+                            </div>
+
+                            <!-- Live Preview -->
+                            <div id="promo-preview" class="hidden bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl p-4 text-center">
+                                <p class="font-bold text-sm"><i class="fas fa-bolt mr-1"></i>LIVE PREVIEW: <span id="promo-preview-text">5% OFF Everything!</span></p>
+                            </div>
+
+                            <!-- Discount % -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div class="bg-white border rounded-xl p-5">
+                                    <label class="block text-sm font-bold text-brand-dark mb-2"><i class="fas fa-tag mr-1 text-green-500"></i>Discount Percentage</label>
+                                    <div class="flex items-center gap-3">
+                                        <input type="range" id="promo-percent-slider" min="1" max="50" value="5" class="flex-1 accent-brand-blue" oninput="updatePromoSlider()">
+                                        <div class="flex items-center bg-gray-100 rounded-lg">
+                                            <input type="number" id="promo-percent" min="1" max="50" value="5" class="w-16 text-center py-2 bg-transparent text-lg font-bold focus:outline-none" oninput="syncPromoSlider()">
+                                            <span class="pr-3 font-bold text-gray-500">%</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-400 mt-2">Applied to all products sitewide</p>
+                                </div>
+
+                                <div class="bg-white border rounded-xl p-5">
+                                    <label class="block text-sm font-bold text-brand-dark mb-2"><i class="fas fa-comment-dots mr-1 text-blue-500"></i>Promo Banner Message</label>
+                                    <input type="text" id="promo-message" value="FLASH SALE — Limited Time Only!" maxlength="80" class="w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:border-brand-blue" oninput="updatePromoPreviewText()">
+                                    <p class="text-xs text-gray-400 mt-2">Shown in the scrolling promo bar</p>
+                                </div>
+                            </div>
+
+                            <!-- Schedule -->
+                            <div class="bg-white border rounded-xl p-5">
+                                <label class="block text-sm font-bold text-brand-dark mb-3"><i class="fas fa-clock mr-1 text-purple-500"></i>Promo Schedule</label>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Start Date & Time</label>
+                                        <input type="datetime-local" id="promo-start" class="w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:border-brand-blue">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">End Date & Time</label>
+                                        <input type="datetime-local" id="promo-end" class="w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:border-brand-blue">
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-2">The promo automatically deactivates after the end date, even if the toggle is ON</p>
+                            </div>
+
+                            <!-- Save Button -->
+                            <div class="flex items-center gap-4">
+                                <button onclick="savePromoSettings()" id="promo-save-btn" class="bg-brand-blue text-white px-8 py-3 rounded-full font-bold hover:bg-blue-700 transition text-sm flex items-center gap-2">
+                                    <i class="fas fa-save"></i> Save Promo Settings
+                                </button>
+                                <button onclick="disablePromoNow()" class="bg-red-500 text-white px-6 py-3 rounded-full font-bold hover:bg-red-600 transition text-sm flex items-center gap-2">
+                                    <i class="fas fa-power-off"></i> Turn Off Now
+                                </button>
+                                <span id="promo-save-status" class="text-sm text-green-600 font-semibold hidden"><i class="fas fa-check-circle mr-1"></i>Saved!</span>
+                            </div>
+
+                            <!-- Current Status -->
+                            <div class="bg-gray-50 rounded-xl p-4 mt-2">
+                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Current Live Status</h4>
+                                <div id="promo-live-status" class="text-sm text-gray-600">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-8 border-gray-200">
+
+                    <!-- ── Announcement Bar ── -->
+                    <div class="mb-10">
+                        <h2 class="text-lg font-bold text-brand-dark mb-1"><i class="fas fa-bullhorn mr-2 text-blue-500"></i>Announcement Bar</h2>
+                        <p class="text-sm text-gray-500 mb-5">Control the announcement banner shown below the promo bar on the main site.</p>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between bg-gray-50 rounded-xl p-5">
+                                <div>
+                                    <h3 class="font-bold text-brand-dark">Announcement Bar</h3>
+                                    <p class="text-xs text-gray-500 mt-0.5">Toggle visibility of the announcement banner</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="announce-enabled" class="sr-only peer" checked>
+                                    <div class="w-14 h-7 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-500"></div>
+                                </label>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-white border rounded-xl p-5">
+                                    <label class="block text-sm font-bold text-brand-dark mb-2"><i class="fas fa-comment mr-1 text-blue-500"></i>Message Text</label>
+                                    <input type="text" id="announce-text" value="Switch to SwiftDevices and get up to $800 off your new device." maxlength="120" class="w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:border-brand-blue">
+                                </div>
+                                <div class="bg-white border rounded-xl p-5">
+                                    <label class="block text-sm font-bold text-brand-dark mb-2"><i class="fas fa-link mr-1 text-green-500"></i>CTA Link Text</label>
+                                    <input type="text" id="announce-cta" value="Shop smartphones" maxlength="40" class="w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:border-brand-blue">
+                                </div>
+                            </div>
+                            <div class="bg-white border rounded-xl p-5">
+                                <label class="block text-sm font-bold text-brand-dark mb-2"><i class="fas fa-dollar-sign mr-1 text-yellow-500"></i>Highlight Text (bold/accent)</label>
+                                <input type="text" id="announce-highlight" value="$800 off" maxlength="30" class="w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:border-brand-blue">
+                                <p class="text-xs text-gray-400 mt-1">This portion will be bold and accent-colored in the message</p>
+                            </div>
+                            <button onclick="saveAnnouncementSettings()" class="bg-brand-blue text-white px-8 py-3 rounded-full font-bold hover:bg-blue-700 transition text-sm"><i class="fas fa-save mr-1"></i>Save Announcement</button>
+                            <span id="announce-save-status" class="text-sm text-green-600 font-semibold hidden ml-3"><i class="fas fa-check-circle mr-1"></i>Saved!</span>
+                        </div>
+                    </div>
+
+                    <hr class="my-8 border-gray-200">
+
+                    <!-- ── Hero Carousel Management ── -->
+                    <div class="mb-10">
+                        <h2 class="text-lg font-bold text-brand-dark mb-1"><i class="fas fa-images mr-2 text-purple-500"></i>Hero Carousel</h2>
+                        <p class="text-sm text-gray-500 mb-5">Manage the hero slides on the homepage. Reorder, enable/disable, or edit slide content.</p>
+                        <div id="hero-slides-list" class="space-y-3 mb-4">
+                            <div class="text-center py-4"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>
+                        </div>
+                        <button onclick="saveHeroSlides()" class="bg-brand-blue text-white px-8 py-3 rounded-full font-bold hover:bg-blue-700 transition text-sm"><i class="fas fa-save mr-1"></i>Save Carousel Order</button>
+                        <span id="hero-save-status" class="text-sm text-green-600 font-semibold hidden ml-3"><i class="fas fa-check-circle mr-1"></i>Saved!</span>
+                    </div>
+
+                    <hr class="my-8 border-gray-200">
+
+                    <!-- ── Bundle Management ── -->
+                    <div class="mb-10">
+                        <h2 class="text-lg font-bold text-brand-dark mb-1"><i class="fas fa-cubes mr-2 text-teal-500"></i>Bundle Deals</h2>
+                        <p class="text-sm text-gray-500 mb-5">Manage product bundles shown on the main site. Each bundle combines 3 products at 9% off.</p>
+                        <div id="bundles-list" class="space-y-4 mb-4"></div>
+                        <div class="bg-gray-50 rounded-xl p-4 space-y-3">
+                            <h3 class="font-semibold text-sm text-brand-dark"><i class="fas fa-plus-circle mr-1"></i>Add Bundle</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium mb-1">Bundle Name</label>
+                                    <input type="text" id="new-bundle-name" placeholder="e.g. Premium Kit" maxlength="30" class="w-full px-3 py-2 border rounded-lg text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium mb-1">Icon (FA class)</label>
+                                    <select id="new-bundle-icon" class="w-full px-3 py-2 border rounded-lg text-sm">
+                                        <option value="fa-star">⭐ Star</option>
+                                        <option value="fa-apple-whole">🍎 Apple</option>
+                                        <option value="fa-bolt">⚡ Bolt</option>
+                                        <option value="fa-fire">🔥 Fire</option>
+                                        <option value="fa-gift">🎁 Gift</option>
+                                        <option value="fa-crown">👑 Crown</option>
+                                        <option value="fa-rocket">🚀 Rocket</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium mb-1">Color Gradient</label>
+                                    <select id="new-bundle-color" class="w-full px-3 py-2 border rounded-lg text-sm">
+                                        <option value="from-blue-600 to-indigo-700">Blue → Indigo</option>
+                                        <option value="from-gray-800 to-gray-900">Dark Gray</option>
+                                        <option value="from-green-600 to-teal-700">Green → Teal</option>
+                                        <option value="from-purple-600 to-pink-700">Purple → Pink</option>
+                                        <option value="from-orange-500 to-red-600">Orange → Red</option>
+                                        <option value="from-cyan-600 to-blue-700">Cyan → Blue</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium mb-1">Product IDs (comma separated, 3 products)</label>
+                                <input type="text" id="new-bundle-ids" placeholder="e.g. 1, 18, 33" class="w-full px-3 py-2 border rounded-lg text-sm font-mono">
+                            </div>
+                            <button onclick="addBundle()" class="bg-teal-600 text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-teal-700 transition"><i class="fas fa-plus mr-1"></i>Add Bundle</button>
+                        </div>
+                    </div>
+
+                    <hr class="my-8 border-gray-200">
+
+                    <!-- ── Crypto Wallets (existing) ── -->
+                    <h2 class="text-lg font-bold text-brand-dark mb-6"><i class="fas fa-wallet mr-2"></i>Crypto Wallet Addresses</h2>
+                    <p class="text-sm text-gray-500 mb-4">Manage cryptocurrency wallet addresses shown to customers during checkout.</p>
+                    <div id="wallet-list" class="space-y-3 mb-4"></div>
+                    <div class="bg-gray-50 rounded-xl p-4 space-y-3">
+                        <h3 class="font-semibold text-sm text-brand-dark"><i class="fas fa-plus-circle mr-1"></i>Add Wallet</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium mb-1">Coin</label>
+                                <select id="new-wallet-coin" class="w-full px-3 py-2 border rounded-lg text-sm">
+                                    <option value="BTC">BTC (Bitcoin)</option>
+                                    <option value="ETH">ETH (Ethereum)</option>
+                                    <option value="USDT">USDT (Tether)</option>
+                                    <option value="SOL">SOL (Solana)</option>
+                                    <option value="USDC">USDC</option>
+                                    <option value="LTC">LTC (Litecoin)</option>
+                                    <option value="XRP">XRP (Ripple)</option>
+                                    <option value="DOGE">DOGE (Dogecoin)</option>
+                                    <option value="OTHER">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium mb-1">Network (optional)</label>
+                                <input type="text" id="new-wallet-network" placeholder="e.g. ERC-20, TRC-20" class="w-full px-3 py-2 border rounded-lg text-sm">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Wallet Address</label>
+                            <input type="text" id="new-wallet-address" placeholder="Paste your wallet address" class="w-full px-3 py-2 border rounded-lg text-sm font-mono">
+                        </div>
+                        <button onclick="addCryptoWallet()" class="bg-brand-blue text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-blue-700 transition"><i class="fas fa-plus mr-1"></i>Add Wallet</button>
+                    </div>
+                </div>
+
+            </div><!-- end tabs container -->
+        </div>
+    </div><!-- end admin-dashboard -->
+
+    <!-- Product Edit Modal -->
+    <div id="product-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-brand-dark" id="modal-product-title">Edit Product</h3>
+                <button onclick="closeProductModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div id="modal-product-image" class="text-center mb-4"></div>
+            <div class="space-y-4">
+                <input type="hidden" id="modal-product-id">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium mb-1">Price ($)</label>
+                        <input type="number" id="modal-price" step="0.01" class="w-full px-3 py-2 border rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1">Old Price ($)</label>
+                        <input type="number" id="modal-old-price" step="0.01" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="Leave blank for none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium mb-1">Stock Quantity</label>
+                        <input type="number" id="modal-stock" min="0" class="w-full px-3 py-2 border rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1">Badge</label>
+                        <select id="modal-badge" class="w-full px-3 py-2 border rounded-lg text-sm">
+                            <option value="">None</option>
+                            <option value="NEW">NEW</option>
+                            <option value="HOT">HOT</option>
+                            <option value="SALE">SALE</option>
+                            <option value="BEST SELLER">BEST SELLER</option>
+                            <option value="POPULAR">POPULAR</option>
+                            <option value="BUDGET">BUDGET</option>
+                            <option value="PREVIOUS GEN">PREVIOUS GEN</option>
+                            <option value="SOLD OUT">SOLD OUT</option>
+                            <option value="OPEN BOX">OPEN BOX</option>
+                            <option value="eSIM">eSIM</option>
+                            <option value="JP eSIM">JP eSIM</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="modal-soldout" class="w-4 h-4 accent-red-500">
+                        <span class="text-sm font-medium text-red-600">Mark as Sold Out (stock = 0)</span>
+                    </label>
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button onclick="saveProductOverride()" class="flex-1 bg-brand-blue text-white py-2.5 rounded-full font-bold text-sm hover:bg-blue-700 transition"><i class="fas fa-save mr-1"></i>Save Changes</button>
+                    <button onclick="resetProductOverride()" class="px-4 py-2.5 bg-gray-200 rounded-full text-sm font-bold hover:bg-gray-300 transition">Reset to Default</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Detail Modal -->
+    <div id="order-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-brand-dark">Order Details</h3>
+                <button onclick="document.getElementById('order-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div id="order-modal-content"></div>
+        </div>
+    </div>
+
+    <!-- Bulk Stock Modal -->
+    <div id="bulk-stock-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-brand-dark">Bulk Stock Update</h3>
+                <button onclick="document.getElementById('bulk-stock-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium mb-1">Category</label>
+                    <select id="bulk-stock-cat" class="w-full px-3 py-2 border rounded-lg text-sm">
+                        <option value="">All Products</option>
+                        <option value="smartphones">Smartphones</option>
+                        <option value="tablets">Tablets</option>
+                        <option value="wearables">Wearables</option>
+                        <option value="audio">Audio</option>
+                        <option value="accessories">Accessories</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1">Set Stock To</label>
+                    <input type="number" id="bulk-stock-value" min="0" value="10" class="w-full px-3 py-2 border rounded-lg text-sm">
+                </div>
+                <button onclick="applyBulkStock()" class="w-full bg-orange-500 text-white py-2.5 rounded-full font-bold text-sm hover:bg-orange-600"><i class="fas fa-boxes mr-1"></i>Apply to All</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Price Modal -->
+    <div id="bulk-price-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-brand-dark">Bulk Price Adjustment</h3>
+                <button onclick="document.getElementById('bulk-price-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium mb-1">Category</label>
+                    <select id="bulk-price-cat" class="w-full px-3 py-2 border rounded-lg text-sm">
+                        <option value="">All Products</option>
+                        <option value="smartphones">Smartphones</option>
+                        <option value="tablets">Tablets</option>
+                        <option value="wearables">Wearables</option>
+                        <option value="audio">Audio</option>
+                        <option value="accessories">Accessories</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1">Adjustment Type</label>
+                    <select id="bulk-price-type" class="w-full px-3 py-2 border rounded-lg text-sm">
+                        <option value="percent-off">% Discount (mark down)</option>
+                        <option value="percent-up">% Increase (mark up)</option>
+                        <option value="fixed-off">$ Off Each Product</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1">Value</label>
+                    <input type="number" id="bulk-price-value" min="0" step="0.01" value="10" class="w-full px-3 py-2 border rounded-lg text-sm">
+                </div>
+                <button onclick="applyBulkPrice()" class="w-full bg-green-600 text-white py-2.5 rounded-full font-bold text-sm hover:bg-green-700"><i class="fas fa-dollar-sign mr-1"></i>Apply Price Change</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ════════════════════════════════════════════
+    //  ADMIN AUTH
+    // ════════════════════════════════════════════
+    var ADMIN_EMAILS = ['admin@swiftdevices.com', 'jeffreid6525@gmail.com', 'swiftdevices@technologist.com'];
+    function isAdmin(email) {
+        if (ADMIN_EMAILS.length === 0) return true;
+        return ADMIN_EMAILS.includes(email.toLowerCase());
+    }
+
+    function adminLogin() {
+        var email = document.getElementById('admin-email').value;
+        var password = document.getElementById('admin-password').value;
+        var btn = document.getElementById('admin-login-btn');
+        var errEl = document.getElementById('auth-error');
+        errEl.classList.add('hidden');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Signing in...';
+        auth.signInWithEmailAndPassword(email, password).catch(function(error) {
+            errEl.textContent = error.code === 'auth/user-not-found' ? 'No account found.' :
+                error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential' ? 'Incorrect password.' :
+                error.message;
+            errEl.classList.remove('hidden');
+        }).finally(function() {
+            btn.disabled = false;
+            btn.textContent = 'Sign In';
+        });
+    }
+
+    auth.onAuthStateChanged(function(user) {
+        var gate = document.getElementById('auth-gate');
+        var dashboard = document.getElementById('admin-dashboard');
+        var loading = document.getElementById('auth-loading');
+        var form = document.getElementById('auth-form');
+        var denied = document.getElementById('auth-denied');
+        if (user) {
+            user.getIdTokenResult().then(function(tokenResult) {
+                var hasAdminClaim = tokenResult.claims.admin === true;
+                if (hasAdminClaim || isAdmin(user.email)) {
+                    gate.classList.add('hidden');
+                    dashboard.classList.remove('hidden');
+                    document.getElementById('admin-name').textContent = user.displayName || user.email;
+                    loadAllData();
+                } else {
+                    loading.classList.add('hidden');
+                    form.classList.add('hidden');
+                    denied.classList.remove('hidden');
+                }
+            }).catch(function() {
+                if (isAdmin(user.email)) {
+                    gate.classList.add('hidden');
+                    dashboard.classList.remove('hidden');
+                    document.getElementById('admin-name').textContent = user.displayName || user.email;
+                    loadAllData();
+                } else {
+                    loading.classList.add('hidden');
+                    form.classList.add('hidden');
+                    denied.classList.remove('hidden');
+                }
+            });
+        } else {
+            gate.classList.remove('hidden');
+            dashboard.classList.add('hidden');
+            loading.classList.add('hidden');
+            form.classList.remove('hidden');
+            denied.classList.add('hidden');
+        }
+    });
+
+    // ════════════════════════════════════════════
+    //  TAB SWITCHING
+    // ════════════════════════════════════════════
+    var ALL_TABS = ['products','orders','customers','tradeins','giftcards','rewards','reviews','contacts','coupons','analytics','auditlog','settings'];
+
+    function switchTab(tab) {
+        ALL_TABS.forEach(function(t) {
+            var btn = document.getElementById('atab-' + t);
+            var panel = document.getElementById('panel-' + t);
+            if (t === tab) {
+                if (btn) { btn.classList.add('tab-active'); btn.classList.remove('text-gray-500'); }
+                if (panel) panel.classList.remove('hidden');
+            } else {
+                if (btn) { btn.classList.remove('tab-active'); btn.classList.add('text-gray-500'); }
+                if (panel) panel.classList.add('hidden');
+            }
+        });
+    }
+
+    // ════════════════════════════════════════════
+    //  LOAD ALL DATA
+    // ════════════════════════════════════════════
+    function loadAllData() {
+        loadProducts();
+        loadOrders();
+        loadCustomers();
+        loadTradeIns();
+        loadGiftCards();
+        loadRewards();
+        loadReviews();
+        loadContacts();
+        loadCoupons();
+        loadAdminWallets();
+        loadPromoSettings();
+        loadAuditLog();
+        loadAnalytics();
+        loadAnnouncementSettings();
+        loadHeroSlides();
+        loadBundles();
+    }
+
+    // ════════════════════════════════════════════
+    //  PRODUCT CATALOG (78 products)
+    // ════════════════════════════════════════════
+    var baseProducts = [
+        {id:1,name:"iPhone 17 Pro Max",brand:"Apple",category:"smartphones",price:1199,oldPrice:1299,badge:"NEW"},
+        {id:10,name:"iPad Air 13-inch M4",brand:"Apple",category:"tablets",price:949,oldPrice:null,badge:"NEW"},
+        {id:14,name:"Apple Watch Ultra 3",brand:"Apple",category:"wearables",price:799,oldPrice:null,badge:"NEW"},
+        {id:18,name:"AirPods Pro 3",brand:"Apple",category:"audio",price:249,oldPrice:null,badge:"NEW"},
+        {id:22,name:"iPhone 17",brand:"Apple",category:"smartphones",price:799,oldPrice:null,badge:"NEW"},
+        {id:25,name:"Google Pixel Watch 4 45mm",brand:"Google",category:"wearables",price:449,oldPrice:null,badge:"NEW"},
+        {id:29,name:"Beats Solo 4",brand:"Beats",category:"audio",price:199,oldPrice:null,badge:null},
+        {id:33,name:"Apple MagSafe 25W Charger",brand:"Apple",category:"accessories",price:39,oldPrice:null,badge:null},
+        {id:37,name:"Belkin Magnetic Power Bank 8K",brand:"Belkin",category:"accessories",price:59,oldPrice:79,badge:"BEST SELLER"},
+        {id:2,name:"Samsung Galaxy S26 Ultra",brand:"Samsung",category:"smartphones",price:1299,oldPrice:null,badge:"NEW"},
+        {id:11,name:"iPad Air 11-inch M4",brand:"Apple",category:"tablets",price:749,oldPrice:null,badge:null},
+        {id:15,name:"Apple Watch Series 11",brand:"Apple",category:"wearables",price:499,oldPrice:529,badge:null},
+        {id:19,name:"Galaxy Buds4 Pro",brand:"Samsung",category:"audio",price:249,oldPrice:null,badge:null},
+        {id:23,name:"Motorola razr+ 2025",brand:"Motorola",category:"smartphones",price:999,oldPrice:null,badge:"NEW"},
+        {id:26,name:"Samsung Galaxy Watch8 Classic 47mm",brand:"Samsung",category:"wearables",price:549,oldPrice:null,badge:"NEW"},
+        {id:30,name:"JBL Charge 6",brand:"JBL",category:"audio",price:199,oldPrice:null,badge:"BEST SELLER"},
+        {id:34,name:"Samsung 45W USB-C Power Adapter",brand:"Samsung",category:"accessories",price:49,oldPrice:null,badge:null},
+        {id:38,name:"Samsung 15W Wireless Charger",brand:"Samsung",category:"accessories",price:59,oldPrice:null,badge:null},
+        {id:3,name:"iPhone 17 Pro",brand:"Apple",category:"smartphones",price:1099,oldPrice:null,badge:null},
+        {id:12,name:"Galaxy Tab S10 FE 5G",brand:"Samsung",category:"tablets",price:599,oldPrice:649,badge:"SALE"},
+        {id:16,name:"Samsung Galaxy Watch8",brand:"Samsung",category:"wearables",price:399,oldPrice:449,badge:"-11%"},
+        {id:20,name:"Google Pixel Buds 2A",brand:"Google",category:"audio",price:129,oldPrice:null,badge:null},
+        {id:24,name:"Moto g Stylus 2025",brand:"Motorola",category:"smartphones",price:295,oldPrice:null,badge:"BUDGET"},
+        {id:27,name:"Apple Watch SE 3 44mm",brand:"Apple",category:"wearables",price:329,oldPrice:null,badge:"POPULAR"},
+        {id:31,name:"JBL Flip 7",brand:"JBL",category:"audio",price:149,oldPrice:null,badge:null},
+        {id:35,name:"Samsung 25W Magnetic Charging Pad",brand:"Samsung",category:"accessories",price:49,oldPrice:null,badge:"NEW"},
+        {id:39,name:"Belkin 70W Travel Charger",brand:"Belkin",category:"accessories",price:59,oldPrice:null,badge:null},
+        {id:4,name:"Samsung Galaxy Z Fold7",brand:"Samsung",category:"smartphones",price:1999,oldPrice:null,badge:"HOT"},
+        {id:13,name:"Galaxy Tab A11+ 5G",brand:"Samsung",category:"tablets",price:279,oldPrice:null,badge:"POPULAR"},
+        {id:17,name:"Apple Watch Series 11 42mm",brand:"Apple",category:"wearables",price:429,oldPrice:null,badge:null},
+        {id:21,name:"Beats Studio Pro",brand:"Beats",category:"audio",price:349,oldPrice:399,badge:"-13%"},
+        {id:28,name:"Apple Watch SE 3 40mm",brand:"Apple",category:"wearables",price:299,oldPrice:null,badge:null},
+        {id:32,name:"JBL Xtreme 4",brand:"JBL",category:"audio",price:379,oldPrice:null,badge:null},
+        {id:36,name:"Apple iPhone Air MagSafe Battery",brand:"Apple",category:"accessories",price:99,oldPrice:null,badge:"NEW"},
+        {id:40,name:"Samsung Galaxy Buds3 FE",brand:"Samsung",category:"audio",price:149,oldPrice:null,badge:null},
+        {id:5,name:"Samsung Galaxy Z Flip7",brand:"Samsung",category:"smartphones",price:1099,oldPrice:null,badge:null},
+        {id:6,name:"Google Pixel 10 Pro XL",brand:"Google",category:"smartphones",price:1249,oldPrice:null,badge:"NEW"},
+        {id:7,name:"iPhone Air",brand:"Apple",category:"smartphones",price:999,oldPrice:null,badge:null},
+        {id:8,name:"Google Pixel 10 Pro",brand:"Google",category:"smartphones",price:1049,oldPrice:null,badge:null},
+        {id:9,name:"Google Pixel 10",brand:"Google",category:"smartphones",price:849,oldPrice:null,badge:null},
+        {id:41,name:"iPhone 17e",brand:"Apple",category:"smartphones",price:599,oldPrice:null,badge:"NEW"},
+        {id:42,name:"Samsung Galaxy S26+",brand:"Samsung",category:"smartphones",price:1099,oldPrice:null,badge:"NEW"},
+        {id:43,name:"Samsung Galaxy S26",brand:"Samsung",category:"smartphones",price:899,oldPrice:null,badge:"NEW"},
+        {id:44,name:"Google Pixel 10a",brand:"Google",category:"smartphones",price:499,oldPrice:null,badge:"NEW"},
+        {id:45,name:"Samsung Galaxy Watch Ultra",brand:"Samsung",category:"wearables",price:649,oldPrice:null,badge:null},
+        {id:46,name:"Samsung Galaxy Watch8 44mm",brand:"Samsung",category:"wearables",price:449,oldPrice:null,badge:null},
+        {id:47,name:"Samsung Galaxy A16 5G",brand:"Samsung",category:"smartphones",price:199,oldPrice:null,badge:"BUDGET"},
+        {id:48,name:"Google Pixel Watch 4 41mm",brand:"Google",category:"wearables",price:349,oldPrice:null,badge:"NEW"},
+        {id:49,name:"Google Pixel 9a",brand:"Google",category:"smartphones",price:499,oldPrice:null,badge:"POPULAR"},
+        {id:50,name:"Beats Solo Buds+",brand:"Beats",category:"audio",price:79,oldPrice:null,badge:null},
+        {id:51,name:"Beats Studio Buds+",brand:"Beats",category:"audio",price:169,oldPrice:null,badge:null},
+        {id:52,name:"JBL Tune 670NC",brand:"JBL",category:"audio",price:99,oldPrice:null,badge:"BUDGET"},
+        {id:53,name:"JBL Go 4",brand:"JBL",category:"audio",price:49,oldPrice:null,badge:"BUDGET"},
+        {id:54,name:"Belkin 65W Dual USB-C Charger",brand:"Belkin",category:"accessories",price:59,oldPrice:null,badge:null},
+        {id:55,name:"Belkin 25W 3-in-1 Compact Travel",brand:"Belkin",category:"accessories",price:99,oldPrice:null,badge:null},
+        {id:56,name:"Samsung 60W Power Wall Adapter",brand:"Samsung",category:"accessories",price:54,oldPrice:null,badge:null},
+        {id:57,name:"Belkin 3-in-1 Magnetic Travel Pad",brand:"Belkin",category:"accessories",price:149,oldPrice:null,badge:null},
+        {id:58,name:"Belkin BoostCharge Pro Wireless Pad",brand:"Belkin",category:"accessories",price:49,oldPrice:null,badge:null},
+        {id:59,name:"Belkin 3-in-1 Magnetic Stand",brand:"Belkin",category:"accessories",price:149,oldPrice:null,badge:null},
+        {id:63,name:"iPhone 16 Pro Max",brand:"Apple",category:"smartphones",price:1099,oldPrice:1199,badge:"PREVIOUS GEN"},
+        {id:64,name:"iPhone 16 Pro",brand:"Apple",category:"smartphones",price:899,oldPrice:999,badge:"PREVIOUS GEN"},
+        {id:65,name:"iPhone 16",brand:"Apple",category:"smartphones",price:699,oldPrice:799,badge:"PREVIOUS GEN"},
+        {id:66,name:"iPhone 16 Plus",brand:"Apple",category:"smartphones",price:799,oldPrice:899,badge:"PREVIOUS GEN"},
+        {id:67,name:"iPhone 15 Pro Max",brand:"Apple",category:"smartphones",price:899,oldPrice:1199,badge:"PREVIOUS GEN"},
+        {id:68,name:"iPhone 15 Pro",brand:"Apple",category:"smartphones",price:799,oldPrice:999,badge:"PREVIOUS GEN"},
+        {id:69,name:"iPhone 15",brand:"Apple",category:"smartphones",price:599,oldPrice:799,badge:"PREVIOUS GEN"},
+        {id:70,name:"Samsung Galaxy S25 Ultra",brand:"Samsung",category:"smartphones",price:1099,oldPrice:1299,badge:"PREVIOUS GEN"},
+        {id:71,name:"Samsung Galaxy S25+",brand:"Samsung",category:"smartphones",price:849,oldPrice:999,badge:"PREVIOUS GEN"},
+        {id:72,name:"Samsung Galaxy S25",brand:"Samsung",category:"smartphones",price:699,oldPrice:799,badge:"PREVIOUS GEN"},
+        {id:73,name:"Samsung Galaxy S24 Ultra",brand:"Samsung",category:"smartphones",price:899,oldPrice:1299,badge:"PREVIOUS GEN"},
+        {id:74,name:"Samsung Galaxy Z Fold6",brand:"Samsung",category:"smartphones",price:1499,oldPrice:1899,badge:"PREVIOUS GEN"},
+        {id:75,name:"Samsung Galaxy Z Flip6",brand:"Samsung",category:"smartphones",price:799,oldPrice:1099,badge:"PREVIOUS GEN"},
+        {id:76,name:"Google Pixel 9 Pro",brand:"Google",category:"smartphones",price:799,oldPrice:999,badge:"PREVIOUS GEN"},
+        {id:77,name:"Google Pixel 9",brand:"Google",category:"smartphones",price:549,oldPrice:799,badge:"PREVIOUS GEN"},
+        {id:78,name:"Samsung Galaxy Watch7",brand:"Samsung",category:"wearables",price:249,oldPrice:299,badge:"PREVIOUS GEN"},
+        {id:79,name:"iPhone 14 (USA)",brand:"Apple",category:"smartphones",price:476,oldPrice:null,badge:"PREVIOUS GEN"},
+        {id:80,name:"iPhone 14 Starlight (USA)",brand:"Apple",category:"smartphones",price:476,oldPrice:null,badge:"PREVIOUS GEN"},
+        {id:81,name:"iPhone 16e (Open Box)",brand:"Apple",category:"smartphones",price:500,oldPrice:null,badge:"OPEN BOX"},
+        {id:82,name:"iPhone 16e (eSIM Activate)",brand:"Apple",category:"smartphones",price:400,oldPrice:null,badge:"eSIM"},
+        {id:83,name:"iPhone Air Gold",brand:"Apple",category:"smartphones",price:855,oldPrice:null,badge:null},
+        {id:84,name:"iPhone Air 512GB Gold",brand:"Apple",category:"smartphones",price:1100,oldPrice:null,badge:null},
+        {id:85,name:"iPhone Air 1TB Blue",brand:"Apple",category:"smartphones",price:1300,oldPrice:null,badge:null},
+        {id:86,name:"iPhone 17e Pink",brand:"Apple",category:"smartphones",price:590,oldPrice:null,badge:"NEW"},
+        {id:87,name:"iPhone 17e White",brand:"Apple",category:"smartphones",price:590,oldPrice:null,badge:"NEW"},
+        {id:88,name:"iPhone 17 Blue (JP eSIM)",brand:"Apple",category:"smartphones",price:795,oldPrice:null,badge:"JP eSIM"},
+        {id:89,name:"iPhone 17 Lavender (JP eSIM)",brand:"Apple",category:"smartphones",price:795,oldPrice:null,badge:"JP eSIM"},
+        {id:90,name:"iPhone 17 Sage (JP eSIM)",brand:"Apple",category:"smartphones",price:795,oldPrice:null,badge:"JP eSIM"},
+        {id:91,name:"iPhone 17 White (JP eSIM)",brand:"Apple",category:"smartphones",price:795,oldPrice:null,badge:"JP eSIM"},
+        {id:92,name:"iPhone 17 Pro Blue",brand:"Apple",category:"smartphones",price:1185,oldPrice:null,badge:"NEW"},
+        {id:93,name:"iPhone 17 Pro Silver",brand:"Apple",category:"smartphones",price:1185,oldPrice:null,badge:"NEW"},
+        {id:94,name:"iPhone 17 Pro 512GB",brand:"Apple",category:"smartphones",price:1395,oldPrice:null,badge:"NEW"},
+        {id:95,name:"iPhone 17 Pro Max Silver",brand:"Apple",category:"smartphones",price:1320,oldPrice:null,badge:"NEW"},
+        {id:96,name:"iPhone 17 Pro Max 512GB",brand:"Apple",category:"smartphones",price:1510,oldPrice:null,badge:"NEW"},
+        {id:97,name:"iPhone 17 Pro Max (JP) 512GB Orange",brand:"Apple",category:"smartphones",price:1510,oldPrice:null,badge:"JP eSIM"},
+        {id:98,name:"iPhone 17 Pro Max (JP) 512GB Silver",brand:"Apple",category:"smartphones",price:1510,oldPrice:null,badge:"JP eSIM"}
+    ];
+
+    var productOverrides = {};
+    var mergedProducts = [];
+
+    function loadProducts() {
+        db.collection('siteSettings').doc('productOverrides').get().then(function(doc) {
+            productOverrides = (doc.exists && doc.data().overrides) ? doc.data().overrides : {};
+            mergeProducts();
+            renderProducts();
+        }).catch(function() {
+            productOverrides = {};
+            mergeProducts();
+            renderProducts();
+        });
+    }
+
+    function mergeProducts() {
+        mergedProducts = baseProducts.map(function(p) {
+            var o = productOverrides[String(p.id)] || {};
+            return {
+                id: p.id,
+                name: p.name,
+                brand: p.brand,
+                category: p.category,
+                price: o.price !== undefined ? o.price : p.price,
+                oldPrice: o.oldPrice !== undefined ? o.oldPrice : p.oldPrice,
+                badge: o.badge !== undefined ? o.badge : p.badge,
+                stock: o.stock !== undefined ? o.stock : 10,
+                defaultPrice: p.price,
+                defaultOldPrice: p.oldPrice,
+                defaultBadge: p.badge,
+                hasOverride: Object.keys(o).length > 0
+            };
+        });
+        // count in-stock
+        var inStock = mergedProducts.filter(function(p) { return p.stock > 0; }).length;
+        document.getElementById('stat-products').textContent = inStock + '/' + mergedProducts.length;
+        var titleEl = document.getElementById('product-catalog-title');
+        if (titleEl) titleEl.textContent = 'Product Catalog (' + mergedProducts.length + ' products)';
+    }
+
+    function renderProducts() {
+        var cat = document.getElementById('product-filter-cat').value;
+        var search = document.getElementById('product-search').value.toLowerCase();
+        var filtered = mergedProducts.filter(function(p) {
+            if (cat && p.category !== cat) return false;
+            if (search && p.name.toLowerCase().indexOf(search) === -1 && p.brand.toLowerCase().indexOf(search) === -1) return false;
+            return true;
+        });
+        var container = document.getElementById('products-table');
+        if (filtered.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 text-center py-4">No products match your filter.</p>';
+            return;
+        }
+        var html = '<table class="w-full text-sm"><thead><tr class="border-b">'
+            + '<th class="text-left py-2 px-2 font-semibold text-gray-500 w-10">ID</th>'
+            + '<th class="text-left py-2 px-2 font-semibold text-gray-500">Product</th>'
+            + '<th class="text-left py-2 px-2 font-semibold text-gray-500">Category</th>'
+            + '<th class="text-left py-2 px-2 font-semibold text-gray-500">Price</th>'
+            + '<th class="text-left py-2 px-2 font-semibold text-gray-500">Stock</th>'
+            + '<th class="text-left py-2 px-2 font-semibold text-gray-500">Badge</th>'
+            + '<th class="text-left py-2 px-2 font-semibold text-gray-500">Status</th>'
+            + '<th class="text-left py-2 px-2 font-semibold text-gray-500"></th>'
+            + '</tr></thead><tbody>';
+        filtered.forEach(function(p) {
+            var stockColor = p.stock <= 0 ? 'red' : p.stock <= 5 ? 'yellow' : 'green';
+            var stockLabel = p.stock <= 0 ? 'Out of Stock' : p.stock <= 5 ? 'Low Stock' : 'In Stock';
+            var badgeHtml = p.badge ? '<span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">' + escHtml(p.badge) + '</span>' : '<span class="text-xs text-gray-300">—</span>';
+            var overrideIcon = p.hasOverride ? ' <i class="fas fa-pen text-orange-400 text-xs" title="Has admin overrides"></i>' : '';
+            html += '<tr class="border-b product-row">'
+                + '<td class="py-2 px-2 font-mono text-xs text-gray-400">' + p.id + '</td>'
+                + '<td class="py-2 px-2"><span class="font-medium">' + escHtml(p.name) + '</span>' + overrideIcon + '<br><span class="text-xs text-gray-400">' + escHtml(p.brand) + '</span></td>'
+                + '<td class="py-2 px-2 capitalize text-xs">' + p.category + '</td>'
+                + '<td class="py-2 px-2 font-bold">$' + p.price.toFixed(2) + (p.oldPrice ? '<br><span class="text-xs text-gray-400 line-through">$' + p.oldPrice.toFixed(2) + '</span>' : '') + '</td>'
+                + '<td class="py-2 px-2 font-bold text-' + stockColor + '-600">' + p.stock + '</td>'
+                + '<td class="py-2 px-2">' + badgeHtml + '</td>'
+                + '<td class="py-2 px-2"><span class="text-xs bg-' + stockColor + '-100 text-' + stockColor + '-700 px-2 py-0.5 rounded-full">' + stockLabel + '</span></td>'
+                + '<td class="py-2 px-2"><button onclick="openProductModal(' + p.id + ')" class="text-brand-blue hover:text-blue-800 text-sm font-semibold"><i class="fas fa-edit mr-1"></i>Edit</button></td>'
+                + '</tr>';
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    function openProductModal(productId) {
+        var p = mergedProducts.find(function(x) { return x.id === productId; });
+        if (!p) return;
+        document.getElementById('modal-product-id').value = p.id;
+        document.getElementById('modal-product-title').textContent = 'Edit: ' + p.name;
+        document.getElementById('modal-product-image').innerHTML = '';
+        document.getElementById('modal-price').value = p.price;
+        document.getElementById('modal-old-price').value = p.oldPrice || '';
+        document.getElementById('modal-stock').value = p.stock;
+        document.getElementById('modal-badge').value = p.badge || '';
+        document.getElementById('modal-soldout').checked = p.stock <= 0;
+        document.getElementById('product-modal').classList.remove('hidden');
+    }
+
+    function closeProductModal() {
+        document.getElementById('product-modal').classList.add('hidden');
+    }
+
+    document.getElementById('modal-soldout').addEventListener('change', function() {
+        if (this.checked) document.getElementById('modal-stock').value = 0;
+    });
+
+    function saveProductOverride() {
+        var id = document.getElementById('modal-product-id').value;
+        var price = parseFloat(document.getElementById('modal-price').value);
+        var oldPrice = document.getElementById('modal-old-price').value ? parseFloat(document.getElementById('modal-old-price').value) : null;
+        var stock = parseInt(document.getElementById('modal-stock').value, 10);
+        var badge = document.getElementById('modal-badge').value || null;
+        if (isNaN(price) || price < 0) { alert('Enter a valid price.'); return; }
+        if (isNaN(stock) || stock < 0) stock = 0;
+        productOverrides[id] = { price: price, oldPrice: oldPrice, stock: stock, badge: badge };
+        db.collection('siteSettings').doc('productOverrides').set({ overrides: productOverrides }).then(function() {
+            mergeProducts();
+            renderProducts();
+            closeProductModal();
+            var pName = baseProducts.find(function(p){return p.id==id;});
+            logAudit('product_edit', 'Edited product #' + id + (pName ? ' (' + pName.name + ')' : '') + ' — price=$' + price + ', stock=' + stock);
+        }).catch(function(e) { alert('Error saving: ' + e.message); });
+    }
+
+    function resetProductOverride() {
+        var id = document.getElementById('modal-product-id').value;
+        if (!confirm('Reset this product to its default values?')) return;
+        delete productOverrides[id];
+        db.collection('siteSettings').doc('productOverrides').set({ overrides: productOverrides }).then(function() {
+            mergeProducts();
+            renderProducts();
+            closeProductModal();
+        }).catch(function(e) { alert('Error: ' + e.message); });
+    }
+
+    // ════════════════════════════════════════════
+    //  ORDERS
+    // ════════════════════════════════════════════
+    var allOrders = [];
+
+    function loadOrders() {
+        var container = document.getElementById('orders-table');
+        container.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>';
+        db.collection('orders').orderBy('createdAt', 'desc').limit(100).get().then(function(snap) {
+            allOrders = [];
+            var total = 0;
+            var emails = new Set();
+            snap.forEach(function(doc) {
+                var o = doc.data();
+                o._id = doc.id;
+                allOrders.push(o);
+                total += o.total || 0;
+                if (o.email) emails.add(o.email);
+            });
+            document.getElementById('stat-orders').textContent = allOrders.length;
+            document.getElementById('stat-revenue').textContent = '$' + total.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+            document.getElementById('stat-customers').textContent = emails.size;
+            renderOrders();
+        }).catch(function(e) {
+            container.innerHTML = '<p class="text-red-500 text-center py-4">Error: ' + escHtml(e.message) + '</p>';
+        });
+    }
+
+    function renderOrders() {
+        var container = document.getElementById('orders-table');
+        var filterStatus = document.getElementById('order-filter').value;
+        var searchTerm = (document.getElementById('order-search').value || '').toLowerCase();
+        var filtered = allOrders.filter(function(o) {
+            if (filterStatus && (o.status || 'processing') !== filterStatus) return false;
+            if (searchTerm) {
+                var haystack = ((o.orderId || o._id) + ' ' + (o.name || '') + ' ' + (o.email || '')).toLowerCase();
+                if (haystack.indexOf(searchTerm) === -1) return false;
+            }
+            return true;
+        });
+        if (filtered.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 text-center py-4">No orders' + (filterStatus ? ' with status "' + filterStatus + '"' : '') + '.</p>';
+            return;
+        }
+        var html = '<table class="w-full text-sm"><thead><tr class="border-b">'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Order ID</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Customer</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Total</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Payment</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Status</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Tracking</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Date</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Actions</th>'
+            + '</tr></thead><tbody>';
+        filtered.forEach(function(o) {
+            var status = o.status || 'processing';
+            var dateStr = o.createdAt ? new Date(o.createdAt.toDate()).toLocaleDateString() : 'N/A';
+            var payMethod = o.paymentMethod || 'card';
+            var statusOpts = ['confirmed','processing','shipped','delivered','awaiting_crypto_payment','cancelled'];
+            var selectHtml = '<select onchange="updateOrderStatus(\'' + o._id + '\', this.value)" class="status-select">';
+            statusOpts.forEach(function(s) {
+                selectHtml += '<option value="' + s + '"' + (s === status ? ' selected' : '') + '>' + s.replace(/_/g,' ') + '</option>';
+            });
+            selectHtml += '</select>';
+            var cryptoBadge = '';
+            if (payMethod === 'crypto') {
+                if (o.cryptoVerified) cryptoBadge = '<span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full ml-1" title="TX Verified"><i class="fas fa-check-circle"></i></span>';
+                else if (o.cryptoTxHash) cryptoBadge = '<span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full ml-1" title="TX Submitted - Needs Verification"><i class="fas fa-search"></i></span>';
+                else cryptoBadge = '<span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full ml-1" title="Awaiting TX Hash"><i class="fas fa-clock"></i></span>';
+            }
+            var trackingInfo = '';
+            if (o.trackingNumber && o.trackingCarrier) {
+                var tUrl = getCarrierTrackingUrl(o.trackingCarrier, o.trackingNumber);
+                trackingInfo = '<a href="' + tUrl + '" target="_blank" rel="noopener" class="text-xs text-blue-700 hover:underline"><i class="fas fa-truck mr-1"></i>' + escHtml(o.trackingCarrier.toUpperCase()) + '</a><div class="text-xs text-gray-400 font-mono truncate max-w-[120px]" title="' + escHtml(o.trackingNumber) + '">' + escHtml(o.trackingNumber) + '</div>';
+            } else {
+                trackingInfo = '<span class="text-xs text-gray-400">—</span>';
+            }
+            html += '<tr class="border-b hover:bg-gray-50">'
+                + '<td class="py-3 px-3 font-mono text-xs font-bold">' + escHtml(o.orderId || o._id) + '</td>'
+                + '<td class="py-3 px-3"><div class="font-medium">' + escHtml(o.name || 'N/A') + '</div><div class="text-xs text-gray-400">' + escHtml(o.email || '') + '</div></td>'
+                + '<td class="py-3 px-3 font-bold text-green-600">$' + (o.total ? o.total.toFixed(2) : '0.00') + '</td>'
+                + '<td class="py-3 px-3"><span class="text-xs bg-gray-100 px-2 py-0.5 rounded-full capitalize">' + escHtml(payMethod) + '</span>' + cryptoBadge + '</td>'
+                + '<td class="py-3 px-3">' + selectHtml + '</td>'
+                + '<td class="py-3 px-3">' + trackingInfo + '</td>'
+                + '<td class="py-3 px-3 text-gray-500 text-xs">' + dateStr + '</td>'
+                + '<td class="py-3 px-3"><button onclick="viewOrderDetail(\'' + o._id + '\')" class="text-brand-blue hover:underline text-xs"><i class="fas fa-eye mr-1"></i>View</button></td>'
+                + '</tr>';
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    function updateOrderStatus(docId, newStatus) {
+        if (newStatus === 'shipped') {
+            var carrier = prompt('Enter shipping carrier (fedex, ups, usps, dhl):');
+            var trackNum = prompt('Enter tracking number:');
+            if (carrier && trackNum) {
+                carrier = carrier.trim().toLowerCase();
+                trackNum = trackNum.trim();
+                db.collection('orders').doc(docId).update({
+                    status: newStatus,
+                    trackingCarrier: carrier,
+                    trackingNumber: trackNum,
+                    shippedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(function() {
+                    var order = allOrders.find(function(o) { return o._id === docId; });
+                    if (order) { order.status = newStatus; order.trackingCarrier = carrier; order.trackingNumber = trackNum; }
+                    logAudit('order_shipped', 'Order ' + docId + ' shipped via ' + carrier.toUpperCase() + ' — ' + trackNum);
+                    alert('Order marked as shipped! Tracking: ' + carrier.toUpperCase() + ' ' + trackNum);
+                }).catch(function(e) { alert('Error: ' + e.message); });
+                return;
+            }
+        }
+        db.collection('orders').doc(docId).update({ status: newStatus }).then(function() {
+            var order = allOrders.find(function(o) { return o._id === docId; });
+            if (order) order.status = newStatus;
+            logAudit('order_status', 'Order ' + docId + ' → ' + newStatus);
+        }).catch(function(e) { alert('Error updating status: ' + e.message); });
+    }
+
+    function viewOrderDetail(docId) {
+        var o = allOrders.find(function(x) { return x._id === docId; });
+        if (!o) return;
+        var dateStr = o.createdAt ? new Date(o.createdAt.toDate()).toLocaleString() : 'N/A';
+        var html = '<div class="space-y-4">'
+            + '<div class="grid grid-cols-2 gap-4">'
+            + '<div><p class="text-xs text-gray-500">Order ID</p><p class="font-bold font-mono">' + escHtml(o.orderId || o._id) + '</p></div>'
+            + '<div><p class="text-xs text-gray-500">Date</p><p class="font-medium">' + dateStr + '</p></div>'
+            + '<div><p class="text-xs text-gray-500">Customer</p><p class="font-medium">' + escHtml(o.name || 'N/A') + '</p></div>'
+            + '<div><p class="text-xs text-gray-500">Email</p><p class="font-medium">' + escHtml(o.email || 'N/A') + '</p></div>'
+            + '<div><p class="text-xs text-gray-500">Phone</p><p class="font-medium">' + escHtml(o.phone || 'N/A') + '</p></div>'
+            + '<div><p class="text-xs text-gray-500">Payment</p><p class="font-medium capitalize">' + escHtml(o.paymentMethod || 'card') + '</p></div>'
+            + '<div><p class="text-xs text-gray-500">Status</p><p class="font-medium capitalize">' + escHtml((o.status || 'processing').replace(/_/g,' ')) + '</p></div>'
+            + '<div><p class="text-xs text-gray-500">Total</p><p class="font-bold text-green-600 text-lg">$' + (o.total ? o.total.toFixed(2) : '0.00') + '</p></div>'
+            + '</div>';
+        // Crypto payment verification section
+        if (o.paymentMethod === 'crypto') {
+            var coin = o.cryptoCoin || 'BTC';
+            var txHash = o.cryptoTxHash || '';
+            var verified = o.cryptoVerified === true;
+            var walletAddr = o.cryptoWalletAddress || '';
+            html += '<div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4">'
+                + '<h4 class="font-bold text-sm text-yellow-800 mb-3"><i class="fab fa-bitcoin mr-1"></i>Crypto Payment Details</h4>'
+                + '<div class="grid grid-cols-2 gap-3 text-sm mb-3">'
+                + '<div><p class="text-xs text-gray-500">Coin</p><p class="font-semibold">' + escHtml(coin) + '</p></div>'
+                + '<div><p class="text-xs text-gray-500">Wallet</p><p class="font-mono text-xs truncate" title="' + escHtml(walletAddr) + '">' + escHtml(walletAddr || 'N/A') + '</p></div>'
+                + '</div>';
+            if (txHash) {
+                var explorerUrl = getBlockchainExplorerUrl(coin, txHash);
+                html += '<div class="mb-3"><p class="text-xs text-gray-500 mb-1">TX Hash (submitted by customer)</p>'
+                    + '<div class="flex items-center gap-2"><code class="text-xs font-mono bg-white border rounded-lg px-3 py-2 flex-1 truncate">' + escHtml(txHash) + '</code>'
+                    + '<a href="' + explorerUrl + '" target="_blank" rel="noopener" class="text-xs bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 whitespace-nowrap"><i class="fas fa-external-link-alt mr-1"></i>Verify on Blockchain</a></div></div>';
+                if (verified) {
+                    html += '<div class="flex items-center gap-2 text-green-700 bg-green-50 rounded-lg p-2"><i class="fas fa-check-circle"></i><span class="text-sm font-semibold">Payment Verified</span></div>';
+                } else {
+                    html += '<div class="flex gap-2">'
+                        + '<button onclick="verifyCryptoPayment(\'' + escHtml(docId) + '\', \'' + escHtml(coin) + '\', \'' + escHtml(txHash) + '\')" class="text-sm bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700"><i class="fas fa-check-circle mr-1"></i>Mark Payment Verified &amp; Confirm Order</button>'
+                        + '<button onclick="rejectCryptoPayment(\'' + escHtml(docId) + '\')" class="text-sm bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700"><i class="fas fa-times-circle mr-1"></i>Reject</button>'
+                        + '</div>';
+                }
+            } else {
+                html += '<div class="flex items-center gap-2 text-yellow-700 bg-yellow-100 rounded-lg p-2"><i class="fas fa-clock"></i><span class="text-sm font-semibold">Awaiting TX hash from customer — payment not yet submitted</span></div>';
+            }
+            html += '</div>';
+        }
+        // Bank Transfer receipt section
+        if (o.paymentMethod === 'bank' || o.bankTransfer) {
+            html += '<div class="bg-green-50 border border-green-200 rounded-xl p-4">'
+                + '<h4 class="font-bold text-sm text-green-800 mb-3"><i class="fas fa-university mr-1"></i>Bank Transfer Details</h4>';
+            if (o.bankReceiptUrl) {
+                var isImage = o.bankReceiptUrl.indexOf('data:image') === 0;
+                if (isImage) {
+                    html += '<div class="mb-3"><p class="text-xs text-gray-500 mb-2">Payment Receipt</p>'
+                        + '<a href="' + escHtml(o.bankReceiptUrl) + '" target="_blank" rel="noopener"><img src="' + escHtml(o.bankReceiptUrl) + '" class="max-h-60 rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition" alt="Payment receipt"></a>'
+                        + '<p class="text-xs text-gray-400 mt-1">' + escHtml(o.bankReceiptName || 'receipt') + ' — <a href="' + escHtml(o.bankReceiptUrl) + '" download="' + escHtml(o.bankReceiptName || 'receipt') + '" class="text-brand-blue hover:underline">Download</a></p>'
+                        + '</div>';
+                } else {
+                    html += '<div class="mb-3"><p class="text-xs text-gray-500 mb-2">Payment Receipt (PDF)</p>'
+                        + '<a href="' + escHtml(o.bankReceiptUrl) + '" download="' + escHtml(o.bankReceiptName || 'receipt.pdf') + '" class="inline-flex items-center gap-2 text-sm bg-white border rounded-lg px-4 py-2 hover:bg-gray-50 transition"><i class="fas fa-file-pdf text-red-500"></i>' + escHtml(o.bankReceiptName || 'receipt.pdf') + '</a>'
+                        + '</div>';
+                }
+                if (o.status === 'awaiting_payment') {
+                    html += '<div class="flex gap-2">'
+                        + '<button onclick="confirmBankPayment(\'' + escHtml(docId) + '\')" class="text-sm bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700"><i class="fas fa-check-circle mr-1"></i>Confirm Payment &amp; Process Order</button>'
+                        + '<button onclick="rejectBankPayment(\'' + escHtml(docId) + '\')" class="text-sm bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700"><i class="fas fa-times-circle mr-1"></i>Reject</button>'
+                        + '</div>';
+                } else {
+                    html += '<div class="flex items-center gap-2 text-green-700 bg-green-100 rounded-lg p-2"><i class="fas fa-check-circle"></i><span class="text-sm font-semibold">Payment Confirmed</span></div>';
+                }
+            } else {
+                if (o.status === 'awaiting_payment') {
+                    html += '<div class="flex items-center gap-2 text-yellow-700 bg-yellow-100 rounded-lg p-2"><i class="fas fa-clock"></i><span class="text-sm font-semibold">Awaiting bank transfer — no receipt uploaded yet</span></div>';
+                    html += '<div class="flex gap-2 mt-2">'
+                        + '<button onclick="confirmBankPayment(\'' + escHtml(docId) + '\')" class="text-sm bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700"><i class="fas fa-check-circle mr-1"></i>Confirm Payment Manually</button>'
+                        + '</div>';
+                } else {
+                    html += '<div class="flex items-center gap-2 text-green-700 bg-green-100 rounded-lg p-2"><i class="fas fa-check-circle"></i><span class="text-sm font-semibold">Payment Confirmed</span></div>';
+                }
+            }
+            html += '</div>';
+        }
+        // Shipping address (supports both o.shippingAddress and o.shipping)
+        var addr = o.shippingAddress || o.shipping;
+        if (addr) {
+            var addrLine = (addr.street || addr.address || '') + ', ' + (addr.city || '') + ', ' + (addr.state || '') + ' ' + (addr.zip || '');
+            if (addr.country) addrLine += ', ' + addr.country;
+            html += '<div class="bg-gray-50 rounded-xl p-3"><p class="text-xs text-gray-500 mb-1">Shipping Address</p><p class="text-sm">' + escHtml(addrLine) + '</p></div>';
+        }
+        // ── Shipping Tracking Section ──
+        html += '<div class="bg-blue-50 border border-blue-200 rounded-xl p-4">'
+            + '<h4 class="font-bold text-sm text-blue-800 mb-3"><i class="fas fa-truck mr-1"></i>Shipping & Tracking</h4>'
+            + '<div class="grid grid-cols-2 gap-3 mb-3">'
+            + '<div><label class="text-xs text-gray-500 block mb-1">Carrier</label>'
+            + '<select id="tracking-carrier-' + escHtml(docId) + '" class="w-full border rounded-lg px-3 py-2 text-sm">'
+            + '<option value=""' + (!o.trackingCarrier ? ' selected' : '') + '>Select carrier...</option>'
+            + '<option value="fedex"' + (o.trackingCarrier === 'fedex' ? ' selected' : '') + '>FedEx</option>'
+            + '<option value="ups"' + (o.trackingCarrier === 'ups' ? ' selected' : '') + '>UPS</option>'
+            + '<option value="usps"' + (o.trackingCarrier === 'usps' ? ' selected' : '') + '>USPS</option>'
+            + '<option value="dhl"' + (o.trackingCarrier === 'dhl' ? ' selected' : '') + '>DHL</option>'
+            + '<option value="other"' + (o.trackingCarrier === 'other' ? ' selected' : '') + '>Other</option>'
+            + '</select></div>'
+            + '<div><label class="text-xs text-gray-500 block mb-1">Tracking Number</label>'
+            + '<input type="text" id="tracking-number-' + escHtml(docId) + '" value="' + escHtml(o.trackingNumber || '') + '" placeholder="Enter tracking number" class="w-full border rounded-lg px-3 py-2 text-sm font-mono"></div>'
+            + '</div>';
+        if (o.trackingNumber && o.trackingCarrier) {
+            var trackUrl = getCarrierTrackingUrl(o.trackingCarrier, o.trackingNumber);
+            html += '<div class="flex items-center gap-2 mb-3"><a href="' + trackUrl + '" target="_blank" rel="noopener" class="text-sm text-blue-700 hover:underline"><i class="fas fa-external-link-alt mr-1"></i>View on ' + escHtml(o.trackingCarrier.toUpperCase()) + ' website</a></div>';
+        }
+        html += '<button onclick="saveTracking(\'' + escHtml(docId) + '\')" class="text-sm bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700"><i class="fas fa-save mr-1"></i>Save Tracking Info</button>'
+            + '</div>';
+        if (o.items && o.items.length > 0) {
+            html += '<div><p class="text-xs text-gray-500 mb-2">Items (' + o.items.length + ')</p><div class="space-y-2">';
+            o.items.forEach(function(item) {
+                html += '<div class="flex justify-between items-center bg-gray-50 rounded-lg p-2">'
+                    + '<div><span class="font-medium text-sm">' + escHtml(item.name || 'Product') + '</span><span class="text-xs text-gray-400 ml-2">x' + (item.qty || 1) + '</span></div>'
+                    + '<span class="font-bold text-sm">$' + ((item.price || 0) * (item.qty || 1)).toFixed(2) + '</span>'
+                    + '</div>';
+            });
+            html += '</div></div>';
+        }
+        // ── Internal Order Notes ──
+        html += '<div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4">'
+            + '<h4 class="font-bold text-sm text-yellow-800 mb-3"><i class="fas fa-sticky-note mr-1"></i>Internal Notes</h4>'
+            + '<div id="order-notes-' + escHtml(docId) + '" class="space-y-2 mb-3">';
+        if (o.notes && o.notes.length > 0) {
+            o.notes.forEach(function(note) {
+                html += '<div class="bg-white rounded-lg p-2 text-sm"><span class="text-xs text-gray-400">' + escHtml(note.date || '') + ' — ' + escHtml(note.admin || '') + '</span><p class="mt-0.5">' + escHtml(note.text || '') + '</p></div>';
+            });
+        } else {
+            html += '<p class="text-xs text-gray-400">No notes yet.</p>';
+        }
+        html += '</div>'
+            + '<div class="flex gap-2">'
+            + '<input type="text" id="note-input-' + escHtml(docId) + '" placeholder="Add a note..." class="flex-1 border rounded-lg px-3 py-2 text-sm" onkeypress="if(event.key===\'Enter\')addOrderNote(\'' + escHtml(docId) + '\')">'
+            + '<button onclick="addOrderNote(\'' + escHtml(docId) + '\')" class="text-sm bg-yellow-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-yellow-700"><i class="fas fa-plus mr-1"></i>Add</button>'
+            + '</div></div>';
+        html += '</div>';
+        document.getElementById('order-modal-content').innerHTML = html;
+        document.getElementById('order-modal').classList.remove('hidden');
+    }
+
+    // ════════════════════════════════════════════
+    //  CUSTOMERS (moved to new section below)
+    // ════════════════════════════════════════════
+
+    // ════════════════════════════════════════════
+    //  TRADE-INS
+    // ════════════════════════════════════════════
+    var allTradeIns = [];
+
+    function loadTradeIns() {
+        var container = document.getElementById('tradeins-table');
+        container.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>';
+        db.collection('tradeInRequests').orderBy('createdAt', 'desc').limit(100).get().then(function(snap) {
+            allTradeIns = [];
+            snap.forEach(function(doc) {
+                var d = doc.data();
+                d._id = doc.id;
+                allTradeIns.push(d);
+            });
+            document.getElementById('stat-tradeins').textContent = allTradeIns.length;
+            renderTradeIns();
+        }).catch(function(e) {
+            container.innerHTML = '<p class="text-red-500 text-center py-4">Error: ' + escHtml(e.message) + '</p>';
+        });
+    }
+
+    function renderTradeIns() {
+        var container = document.getElementById('tradeins-table');
+        var filter = document.getElementById('tradein-filter').value;
+        var filtered = allTradeIns.filter(function(t) {
+            if (filter && (t.status || 'pending') !== filter) return false;
+            return true;
+        });
+        if (filtered.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 text-center py-4">No trade-in requests' + (filter ? ' with status "' + filter + '"' : '') + '.</p>';
+            return;
+        }
+        var html = '<table class="w-full text-sm"><thead><tr class="border-b">'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Date</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Customer</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Device</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Condition</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Est. Value</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Status</th>'
+            + '</tr></thead><tbody>';
+        filtered.forEach(function(t) {
+            var dateStr = t.createdAt ? new Date(t.createdAt.toDate()).toLocaleDateString() : 'N/A';
+            var status = t.status || 'pending';
+            var statusOpts = ['pending','approved','completed','rejected'];
+            var selectHtml = '<select onchange="updateTradeInStatus(\'' + t._id + '\', this.value)" class="status-select">';
+            statusOpts.forEach(function(s) {
+                selectHtml += '<option value="' + s + '"' + (s === status ? ' selected' : '') + '>' + s + '</option>';
+            });
+            selectHtml += '</select>';
+            var condColor = t.condition === 'excellent' ? 'green' : t.condition === 'good' ? 'blue' : t.condition === 'fair' ? 'yellow' : 'red';
+            html += '<tr class="border-b hover:bg-gray-50">'
+                + '<td class="py-3 px-3 text-xs text-gray-500">' + dateStr + '</td>'
+                + '<td class="py-3 px-3"><div class="font-medium text-sm">' + escHtml(t.email || 'N/A') + '</div></td>'
+                + '<td class="py-3 px-3"><div class="font-medium text-sm">' + escHtml((t.brand || '') + ' ' + (t.model || '')) + '</div><div class="text-xs text-gray-400">' + escHtml(t.deviceType || '') + (t.storage ? ' • ' + escHtml(t.storage) : '') + '</div></td>'
+                + '<td class="py-3 px-3"><span class="text-xs bg-' + condColor + '-100 text-' + condColor + '-700 px-2 py-0.5 rounded-full capitalize">' + escHtml(t.condition || 'N/A') + '</span></td>'
+                + '<td class="py-3 px-3 font-bold text-green-600">$' + (t.estimatedValue || 0) + '</td>'
+                + '<td class="py-3 px-3">' + selectHtml + '</td>'
+                + '</tr>';
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    function updateTradeInStatus(docId, newStatus) {
+        db.collection('tradeInRequests').doc(docId).update({ status: newStatus }).then(function() {
+            var item = allTradeIns.find(function(t) { return t._id === docId; });
+            if (item) item.status = newStatus;
+            logAudit('tradein_status', 'Trade-in ' + docId + ' → ' + newStatus);
+        }).catch(function(e) { alert('Error: ' + e.message); });
+    }
+
+    // ════════════════════════════════════════════
+    //  GIFT CARDS
+    // ════════════════════════════════════════════
+    function loadGiftCards() {
+        var container = document.getElementById('giftcards-table');
+        container.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>';
+        db.collection('giftCards').orderBy('createdAt', 'desc').limit(100).get().then(function(snap) {
+            document.getElementById('stat-giftcards').textContent = snap.size;
+            if (snap.empty) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">No gift cards issued yet.</p>';
+                return;
+            }
+            var html = '<table class="w-full text-sm"><thead><tr class="border-b">'
+                + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Code</th>'
+                + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Amount</th>'
+                + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Balance</th>'
+                + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Recipient</th>'
+                + '<th class="text-left py-2 px-3 font-semibold text-gray-500">From</th>'
+                + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Status</th>'
+                + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Date</th>'
+                + '</tr></thead><tbody>';
+            snap.forEach(function(doc) {
+                var g = doc.data();
+                var dateStr = g.createdAt ? new Date(g.createdAt.toDate()).toLocaleDateString() : 'N/A';
+                var statusColor = g.status === 'active' ? 'green' : g.status === 'redeemed' ? 'blue' : 'gray';
+                html += '<tr class="border-b hover:bg-gray-50">'
+                    + '<td class="py-3 px-3 font-mono text-xs font-bold">' + escHtml(doc.id) + '</td>'
+                    + '<td class="py-3 px-3 font-bold">$' + (g.amount || 0) + '</td>'
+                    + '<td class="py-3 px-3 font-bold text-green-600">$' + (g.balance !== undefined ? g.balance : g.amount || 0) + '</td>'
+                    + '<td class="py-3 px-3"><div class="text-sm">' + escHtml(g.recipientName || 'N/A') + '</div><div class="text-xs text-gray-400">' + escHtml(g.recipientEmail || '') + '</div></td>'
+                    + '<td class="py-3 px-3 text-sm">' + escHtml(g.senderName || 'N/A') + '</td>'
+                    + '<td class="py-3 px-3"><span class="text-xs bg-' + statusColor + '-100 text-' + statusColor + '-700 px-2 py-0.5 rounded-full capitalize">' + escHtml(g.status || 'active') + '</span></td>'
+                    + '<td class="py-3 px-3 text-xs text-gray-500">' + dateStr + '</td>'
+                    + '</tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }).catch(function(e) {
+            container.innerHTML = '<p class="text-red-500 text-center py-4">Error: ' + escHtml(e.message) + '</p>';
+        });
+    }
+
+    // ════════════════════════════════════════════
+    //  REWARDS
+    // ════════════════════════════════════════════
+    function loadRewards() {
+        var container = document.getElementById('rewards-table');
+        container.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>';
+        db.collection('rewardsPoints').limit(100).get().then(function(snap) {
+            if (snap.empty) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">No rewards data yet.</p>';
+                return;
+            }
+            var html = '<table class="w-full text-sm"><thead><tr class="border-b">'
+                + '<th class="text-left py-2 px-3 font-semibold text-gray-500">User ID</th>'
+                + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Points</th>'
+                + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Adjust</th>'
+                + '</tr></thead><tbody>';
+            snap.forEach(function(doc) {
+                var d = doc.data();
+                var pts = d.points || d.totalPoints || 0;
+                html += '<tr class="border-b hover:bg-gray-50">'
+                    + '<td class="py-3 px-3 font-mono text-xs">' + escHtml(doc.id) + '</td>'
+                    + '<td class="py-3 px-3 font-bold text-brand-blue">' + pts + ' pts</td>'
+                    + '<td class="py-3 px-3">'
+                    + '<div class="flex items-center gap-2">'
+                    + '<input type="number" id="adj-' + doc.id + '" value="0" class="w-20 text-sm border rounded-lg px-2 py-1">'
+                    + '<button onclick="adjustRewards(\'' + doc.id + '\')" class="text-xs bg-brand-blue text-white px-3 py-1 rounded-full hover:bg-blue-700">Apply</button>'
+                    + '</div></td>'
+                    + '</tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }).catch(function(e) {
+            container.innerHTML = '<p class="text-red-500 text-center py-4">Error: ' + escHtml(e.message) + '</p>';
+        });
+    }
+
+    function adjustRewards(userId) {
+        var input = document.getElementById('adj-' + userId);
+        if (!input) return;
+        var adj = parseInt(input.value, 10);
+        if (isNaN(adj) || adj === 0) { alert('Enter a non-zero adjustment value.'); return; }
+        db.collection('rewardsPoints').doc(userId).get().then(function(doc) {
+            var current = 0;
+            if (doc.exists) {
+                current = doc.data().points || doc.data().totalPoints || 0;
+            }
+            var newPts = Math.max(0, current + adj);
+            return db.collection('rewardsPoints').doc(userId).set({ points: newPts, totalPoints: newPts }, { merge: true });
+        }).then(function() {
+            loadRewards();
+        }).catch(function(e) { alert('Error: ' + e.message); });
+    }
+
+    // ════════════════════════════════════════════
+    //  REVIEWS
+    // ════════════════════════════════════════════
+    function loadReviews() {
+        var container = document.getElementById('reviews-table');
+        container.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>';
+        db.collection('reviews').orderBy('createdAt', 'desc').limit(50).get().then(function(snap) {
+            if (snap.empty) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">No reviews yet.</p>';
+                return;
+            }
+            var html = '<div class="space-y-3">';
+            snap.forEach(function(doc) {
+                var r = doc.data();
+                var stars = '';
+                for (var i = 0; i < 5; i++) { stars += '<i class="' + (i < r.rating ? 'fas' : 'far') + ' fa-star text-yellow-400"></i>'; }
+                var dateStr = r.createdAt ? new Date(r.createdAt.toDate()).toLocaleDateString() : (r.date || '');
+                html += '<div class="bg-gray-50 rounded-xl p-4"><div class="flex justify-between items-start mb-2"><div class="flex items-center gap-2"><span class="font-semibold text-sm">' + escHtml(r.name || 'Anonymous') + '</span><span class="text-xs text-gray-400">• Product #' + (r.productId || '?') + '</span></div><span class="text-xs text-gray-400">' + dateStr + '</span></div><div class="flex text-sm mb-1">' + stars + '</div><p class="text-sm text-gray-600">' + escHtml(r.comment || '') + '</p><div class="flex gap-2 mt-2"><button onclick="deleteReview(\'' + doc.id + '\')" class="text-xs text-red-500 hover:text-red-700"><i class="fas fa-trash mr-1"></i>Delete</button></div></div>';
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        });
+    }
+
+    function deleteReview(docId) {
+        if (!confirm('Delete this review?')) return;
+        db.collection('reviews').doc(docId).delete().then(function() { loadReviews(); logAudit('review_delete', 'Deleted review ' + docId); });
+    }
+
+    // ════════════════════════════════════════════
+    //  CONTACTS (moved to new section below)
+    // ════════════════════════════════════════════
+
+    // ════════════════════════════════════════════
+    //  CRYPTO WALLET MANAGEMENT
+    // ════════════════════════════════════════════
+    var adminWallets = [];
+    function loadAdminWallets() {
+        db.collection('siteSettings').doc('cryptoWallets').get().then(function(doc) {
+            adminWallets = (doc.exists && doc.data().wallets) ? doc.data().wallets : [];
+            renderAdminWallets();
+        }).catch(function() { adminWallets = []; renderAdminWallets(); });
+    }
+
+    function renderAdminWallets() {
+        var container = document.getElementById('wallet-list');
+        if (!container) return;
+        if (adminWallets.length === 0) {
+            container.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">No wallets added yet.</p>';
+            return;
+        }
+        var html = '';
+        adminWallets.forEach(function(w, i) {
+            var icon = w.coin === 'BTC' ? 'fab fa-bitcoin text-yellow-500' :
+                       w.coin === 'ETH' ? 'fab fa-ethereum text-blue-500' :
+                       w.coin === 'USDT' ? 'fas fa-dollar-sign text-green-500' :
+                       w.coin === 'SOL' ? 'fas fa-sun text-purple-500' :
+                       'fas fa-coins text-gray-500';
+            html += '<div class="flex items-center gap-3 bg-white border rounded-xl p-3">'
+                + '<i class="' + icon + ' text-xl"></i>'
+                + '<div class="flex-1 min-w-0">'
+                + '<div class="flex items-center gap-2"><span class="font-semibold text-sm">' + escHtml(w.coin) + '</span>' + (w.network ? '<span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">' + escHtml(w.network) + '</span>' : '') + '</div>'
+                + '<p class="text-xs font-mono text-gray-500 truncate">' + escHtml(w.address) + '</p>'
+                + '</div>'
+                + '<button onclick="removeCryptoWallet(' + i + ')" class="text-red-400 hover:text-red-600 transition" title="Remove"><i class="fas fa-trash"></i></button>'
+                + '</div>';
+        });
+        container.innerHTML = html;
+    }
+
+    function addCryptoWallet() {
+        var coin = document.getElementById('new-wallet-coin').value;
+        var network = document.getElementById('new-wallet-network').value.trim();
+        var address = document.getElementById('new-wallet-address').value.trim();
+        if (!address) { alert('Please enter a wallet address.'); return; }
+        adminWallets.push({ coin: coin, network: network, address: address });
+        saveWallets();
+    }
+
+    function removeCryptoWallet(index) {
+        if (!confirm('Remove this wallet?')) return;
+        adminWallets.splice(index, 1);
+        saveWallets();
+    }
+
+    function saveWallets() {
+        db.collection('siteSettings').doc('cryptoWallets').set({ wallets: adminWallets }).then(function() {
+            renderAdminWallets();
+            document.getElementById('new-wallet-network').value = '';
+            document.getElementById('new-wallet-address').value = '';
+        }).catch(function(e) { alert('Failed to save: ' + e.message); });
+    }
+
+    // ════════════════════════════════════════════
+    //  PROMO / SALE SETTINGS
+    // ════════════════════════════════════════════
+    var promoConfig = { enabled: false, discount: 5, message: 'FLASH SALE — Limited Time Only!', startDate: '', endDate: '' };
+
+    function loadPromoSettings() {
+        db.collection('siteSettings').doc('promoConfig').get().then(function(doc) {
+            if (doc.exists) {
+                var d = doc.data();
+                promoConfig.enabled = !!d.enabled;
+                promoConfig.discount = d.discount || 5;
+                promoConfig.message = d.message || 'FLASH SALE — Limited Time Only!';
+                promoConfig.startDate = d.startDate || '';
+                promoConfig.endDate = d.endDate || '';
+            }
+            populatePromoForm();
+        }).catch(function() { populatePromoForm(); });
+    }
+
+    function populatePromoForm() {
+        var loading = document.getElementById('promo-settings-loading');
+        var form = document.getElementById('promo-settings-form');
+        if (loading) loading.classList.add('hidden');
+        if (form) form.classList.remove('hidden');
+
+        var toggle = document.getElementById('promo-enabled');
+        if (toggle) toggle.checked = promoConfig.enabled;
+        var pct = document.getElementById('promo-percent');
+        if (pct) pct.value = promoConfig.discount;
+        var slider = document.getElementById('promo-percent-slider');
+        if (slider) slider.value = promoConfig.discount;
+        var msg = document.getElementById('promo-message');
+        if (msg) msg.value = promoConfig.message;
+        var startEl = document.getElementById('promo-start');
+        if (startEl && promoConfig.startDate) startEl.value = promoConfig.startDate;
+        var endEl = document.getElementById('promo-end');
+        if (endEl && promoConfig.endDate) endEl.value = promoConfig.endDate;
+
+        togglePromoPreview();
+        updatePromoLiveStatus();
+    }
+
+    function togglePromoPreview() {
+        var on = document.getElementById('promo-enabled').checked;
+        var label = document.getElementById('promo-status-label');
+        var preview = document.getElementById('promo-preview');
+        if (label) {
+            label.textContent = on ? 'ON' : 'OFF';
+            label.className = 'ml-3 text-sm font-semibold ' + (on ? 'text-green-500' : 'text-red-500');
+        }
+        if (preview) {
+            if (on) preview.classList.remove('hidden');
+            else preview.classList.add('hidden');
+        }
+        updatePromoPreviewText();
+    }
+
+    function updatePromoSlider() {
+        var v = document.getElementById('promo-percent-slider').value;
+        document.getElementById('promo-percent').value = v;
+        updatePromoPreviewText();
+    }
+
+    function syncPromoSlider() {
+        var v = Math.min(50, Math.max(1, parseInt(document.getElementById('promo-percent').value) || 1));
+        document.getElementById('promo-percent-slider').value = v;
+        updatePromoPreviewText();
+    }
+
+    function updatePromoPreviewText() {
+        var pct = document.getElementById('promo-percent').value || 5;
+        var msg = document.getElementById('promo-message').value || '';
+        var previewText = document.getElementById('promo-preview-text');
+        if (previewText) previewText.textContent = pct + '% OFF — ' + msg;
+    }
+
+    function updatePromoLiveStatus() {
+        var el = document.getElementById('promo-live-status');
+        if (!el) return;
+        if (!promoConfig.enabled) {
+            el.innerHTML = '<span class="inline-flex items-center gap-1 text-red-500"><i class="fas fa-circle text-xs"></i> Promo is OFF</span>';
+            return;
+        }
+        var now = new Date();
+        var start = promoConfig.startDate ? new Date(promoConfig.startDate) : null;
+        var end = promoConfig.endDate ? new Date(promoConfig.endDate) : null;
+        if (end && now > end) {
+            el.innerHTML = '<span class="inline-flex items-center gap-1 text-gray-500"><i class="fas fa-circle text-xs"></i> Promo ended — ' + end.toLocaleString() + '</span>';
+        } else if (start && now < start) {
+            el.innerHTML = '<span class="inline-flex items-center gap-1 text-yellow-500"><i class="fas fa-circle text-xs"></i> Scheduled — starts ' + start.toLocaleString() + '</span>';
+        } else {
+            el.innerHTML = '<span class="inline-flex items-center gap-1 text-green-500"><i class="fas fa-circle text-xs animate-pulse"></i> LIVE — ' + promoConfig.discount + '% off sitewide</span>'
+                + (end ? '<span class="text-xs text-gray-400 ml-2">ends ' + end.toLocaleString() + '</span>' : '');
+        }
+    }
+
+    function savePromoSettings() {
+        var btn = document.getElementById('promo-save-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Saving...';
+
+        promoConfig.enabled = document.getElementById('promo-enabled').checked;
+        promoConfig.discount = Math.min(50, Math.max(1, parseInt(document.getElementById('promo-percent').value) || 5));
+        promoConfig.message = document.getElementById('promo-message').value.trim() || 'FLASH SALE — Limited Time Only!';
+        promoConfig.startDate = document.getElementById('promo-start').value || '';
+        promoConfig.endDate = document.getElementById('promo-end').value || '';
+
+        db.collection('siteSettings').doc('promoConfig').set(promoConfig).then(function() {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Save Promo Settings';
+            var status = document.getElementById('promo-save-status');
+            status.classList.remove('hidden');
+            setTimeout(function() { status.classList.add('hidden'); }, 3000);
+            updatePromoLiveStatus();
+            logAudit('promo_updated', 'Promo ' + (promoConfig.enabled ? 'ON' : 'OFF') + ' — ' + promoConfig.discount + '% off, ends: ' + (promoConfig.endDate || 'no end'));
+        }).catch(function(e) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Save Promo Settings';
+            alert('Failed to save promo settings: ' + e.message);
+        });
+    }
+
+    function disablePromoNow() {
+        if (!confirm('Turn off the promo immediately? Customers will see regular prices.')) return;
+        document.getElementById('promo-enabled').checked = false;
+        togglePromoPreview();
+        savePromoSettings();
+    }
+
+    // ════════════════════════════════════════════
+    //  ANNOUNCEMENT BAR
+    // ════════════════════════════════════════════
+    var announceConfig = { enabled: true, text: 'Switch to SwiftDevices and get up to $800 off your new device.', cta: 'Shop smartphones', highlight: '$800 off' };
+
+    function loadAnnouncementSettings() {
+        db.collection('siteSettings').doc('announcement').get().then(function(doc) {
+            if (doc.exists) {
+                var d = doc.data();
+                announceConfig.enabled = d.enabled !== false;
+                announceConfig.text = d.text || announceConfig.text;
+                announceConfig.cta = d.cta || announceConfig.cta;
+                announceConfig.highlight = d.highlight || announceConfig.highlight;
+            }
+            var el1 = document.getElementById('announce-enabled');
+            var el2 = document.getElementById('announce-text');
+            var el3 = document.getElementById('announce-cta');
+            var el4 = document.getElementById('announce-highlight');
+            if (el1) el1.checked = announceConfig.enabled;
+            if (el2) el2.value = announceConfig.text;
+            if (el3) el3.value = announceConfig.cta;
+            if (el4) el4.value = announceConfig.highlight;
+        }).catch(function() {});
+    }
+
+    function saveAnnouncementSettings() {
+        announceConfig.enabled = document.getElementById('announce-enabled').checked;
+        announceConfig.text = document.getElementById('announce-text').value.trim();
+        announceConfig.cta = document.getElementById('announce-cta').value.trim();
+        announceConfig.highlight = document.getElementById('announce-highlight').value.trim();
+        db.collection('siteSettings').doc('announcement').set(announceConfig).then(function() {
+            var s = document.getElementById('announce-save-status');
+            if (s) { s.classList.remove('hidden'); setTimeout(function() { s.classList.add('hidden'); }, 3000); }
+            logAudit('announcement_updated', 'Announcement bar ' + (announceConfig.enabled ? 'ON' : 'OFF') + ': ' + announceConfig.text);
+        }).catch(function(e) { alert('Error: ' + e.message); });
+    }
+
+    // ════════════════════════════════════════════
+    //  HERO CAROUSEL MANAGEMENT
+    // ════════════════════════════════════════════
+    var defaultHeroSlides = [
+        { id: 0, title: 'iPhone 17 Pro Max', subtitle: 'for as low as $2.78/mo', badge: 'LIMITED TIME', enabled: true },
+        { id: 1, title: 'Samsung Galaxy S26 Ultra', subtitle: 'for $0 with trade-in', badge: 'NEW ARRIVAL', enabled: true },
+        { id: 2, title: 'Google Pixel 10 Pro', subtitle: 'AI-powered photography', badge: 'JUST LAUNCHED', enabled: true },
+        { id: 3, title: 'iPad Pro M5', subtitle: 'Thinnest. Most powerful.', badge: 'PRO PERFORMANCE', enabled: true },
+        { id: 4, title: 'Apple Watch Ultra 3', subtitle: 'Built for the extreme', badge: 'ADVENTURE READY', enabled: true }
+    ];
+    var heroSlides = [];
+
+    function loadHeroSlides() {
+        db.collection('siteSettings').doc('heroCarousel').get().then(function(doc) {
+            if (doc.exists && doc.data().slides) {
+                heroSlides = doc.data().slides;
+            } else {
+                heroSlides = defaultHeroSlides.slice();
+            }
+            renderHeroSlidesList();
+        }).catch(function() { heroSlides = defaultHeroSlides.slice(); renderHeroSlidesList(); });
+    }
+
+    function renderHeroSlidesList() {
+        var container = document.getElementById('hero-slides-list');
+        if (!container) return;
+        if (heroSlides.length === 0) { container.innerHTML = '<p class="text-gray-500 text-sm">No slides configured.</p>'; return; }
+        var html = '';
+        heroSlides.forEach(function(slide, i) {
+            html += '<div class="flex items-center gap-3 bg-white border rounded-xl p-4">'
+                + '<div class="flex flex-col gap-1">'
+                + '<button onclick="moveHeroSlide(' + i + ', -1)" class="text-gray-400 hover:text-brand-blue text-xs" ' + (i === 0 ? 'disabled' : '') + '><i class="fas fa-chevron-up"></i></button>'
+                + '<button onclick="moveHeroSlide(' + i + ', 1)" class="text-gray-400 hover:text-brand-blue text-xs" ' + (i === heroSlides.length - 1 ? 'disabled' : '') + '><i class="fas fa-chevron-down"></i></button>'
+                + '</div>'
+                + '<span class="text-xs font-mono text-gray-400 w-6">#' + (i + 1) + '</span>'
+                + '<div class="flex-1">'
+                + '<p class="font-semibold text-sm">' + escHtml(slide.title) + '</p>'
+                + '<p class="text-xs text-gray-500">' + escHtml(slide.subtitle) + '</p>'
+                + '</div>'
+                + '<span class="text-xs bg-gray-100 px-2 py-0.5 rounded-full">' + escHtml(slide.badge) + '</span>'
+                + '<label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" class="sr-only peer" ' + (slide.enabled ? 'checked' : '') + ' onchange="toggleHeroSlide(' + i + ', this.checked)"><div class="w-10 h-5 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full after:content-[\'\'] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div></label>'
+                + '</div>';
+        });
+        container.innerHTML = html;
+    }
+
+    function moveHeroSlide(index, direction) {
+        var newIndex = index + direction;
+        if (newIndex < 0 || newIndex >= heroSlides.length) return;
+        var temp = heroSlides[index];
+        heroSlides[index] = heroSlides[newIndex];
+        heroSlides[newIndex] = temp;
+        renderHeroSlidesList();
+    }
+
+    function toggleHeroSlide(index, enabled) {
+        heroSlides[index].enabled = enabled;
+    }
+
+    function saveHeroSlides() {
+        db.collection('siteSettings').doc('heroCarousel').set({ slides: heroSlides }).then(function() {
+            var s = document.getElementById('hero-save-status');
+            if (s) { s.classList.remove('hidden'); setTimeout(function() { s.classList.add('hidden'); }, 3000); }
+            logAudit('hero_carousel_updated', 'Hero carousel order/visibility updated');
+        }).catch(function(e) { alert('Error: ' + e.message); });
+    }
+
+    // ════════════════════════════════════════════
+    //  BUNDLE MANAGEMENT
+    // ════════════════════════════════════════════
+    var bundleConfig = [];
+
+    function loadBundles() {
+        db.collection('siteSettings').doc('bundles').get().then(function(doc) {
+            if (doc.exists && doc.data().bundles) {
+                bundleConfig = doc.data().bundles;
+            } else {
+                bundleConfig = [
+                    { name: 'Samsung Essentials', icon: 'fa-star', color: 'from-blue-600 to-indigo-700', ids: [2, 19, 34] },
+                    { name: 'Apple Starter Kit', icon: 'fa-apple-whole', color: 'from-gray-800 to-gray-900', ids: [1, 51, 36] },
+                    { name: 'Budget Smart Setup', icon: 'fa-bolt', color: 'from-green-600 to-teal-700', ids: [44, 20, 48] }
+                ];
+            }
+            renderBundlesList();
+        }).catch(function() { renderBundlesList(); });
+    }
+
+    function renderBundlesList() {
+        var container = document.getElementById('bundles-list');
+        if (!container) return;
+        if (bundleConfig.length === 0) { container.innerHTML = '<p class="text-gray-500 text-sm">No bundles configured.</p>'; return; }
+        var html = '';
+        bundleConfig.forEach(function(b, i) {
+            var prodNames = b.ids.map(function(id) {
+                var p = baseProducts.find(function(x) { return x.id === id; });
+                return p ? p.name : 'ID#' + id;
+            });
+            html += '<div class="flex items-center gap-3 bg-white border rounded-xl p-4">'
+                + '<div class="w-10 h-10 bg-gradient-to-r ' + b.color + ' rounded-lg flex items-center justify-center text-white"><i class="fas ' + b.icon + '"></i></div>'
+                + '<div class="flex-1 min-w-0">'
+                + '<p class="font-semibold text-sm">' + escHtml(b.name) + '</p>'
+                + '<p class="text-xs text-gray-500 truncate">' + prodNames.map(function(n) { return escHtml(n); }).join(' + ') + '</p>'
+                + '<p class="text-xs text-gray-400 font-mono">IDs: ' + b.ids.join(', ') + '</p>'
+                + '</div>'
+                + '<button onclick="removeBundle(' + i + ')" class="text-red-400 hover:text-red-600 transition" title="Remove"><i class="fas fa-trash"></i></button>'
+                + '</div>';
+        });
+        container.innerHTML = html;
+    }
+
+    function addBundle() {
+        var name = document.getElementById('new-bundle-name').value.trim();
+        var icon = document.getElementById('new-bundle-icon').value;
+        var color = document.getElementById('new-bundle-color').value;
+        var idsStr = document.getElementById('new-bundle-ids').value.trim();
+        if (!name) { alert('Enter a bundle name.'); return; }
+        var ids = idsStr.split(',').map(function(s) { return parseInt(s.trim(), 10); }).filter(function(n) { return !isNaN(n); });
+        if (ids.length < 2) { alert('Enter at least 2 product IDs.'); return; }
+        bundleConfig.push({ name: name, icon: icon, color: color, ids: ids });
+        saveBundles('Added bundle: ' + name);
+        document.getElementById('new-bundle-name').value = '';
+        document.getElementById('new-bundle-ids').value = '';
+    }
+
+    function removeBundle(index) {
+        if (!confirm('Remove this bundle?')) return;
+        var name = bundleConfig[index].name;
+        bundleConfig.splice(index, 1);
+        saveBundles('Removed bundle: ' + name);
+    }
+
+    function saveBundles(auditMsg) {
+        db.collection('siteSettings').doc('bundles').set({ bundles: bundleConfig }).then(function() {
+            renderBundlesList();
+            if (auditMsg) logAudit('bundle_change', auditMsg);
+        }).catch(function(e) { alert('Error: ' + e.message); });
+    }
+
+    // ════════════════════════════════════════════
+    //  CONTACTS (with reply/mark-read)
+    // ════════════════════════════════════════════
+    var allContacts = [];
+
+    function loadContacts() {
+        var container = document.getElementById('contacts-table');
+        container.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>';
+        db.collection('contactMessages').orderBy('timestamp', 'desc').limit(50).get().then(function(snap) {
+            allContacts = [];
+            snap.forEach(function(doc) {
+                var c = doc.data();
+                c._id = doc.id;
+                allContacts.push(c);
+            });
+            renderContacts();
+        }).catch(function(e) {
+            container.innerHTML = '<p class="text-red-500 text-center py-4">Error: ' + escHtml(e.message) + '</p>';
+        });
+    }
+
+    function renderContacts() {
+        var container = document.getElementById('contacts-table');
+        var filter = (document.getElementById('contact-filter') || {}).value || '';
+        var filtered = allContacts.filter(function(c) {
+            if (!filter) return true;
+            var status = c.status || 'unread';
+            return status === filter;
+        });
+        if (filtered.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 text-center py-4">No messages' + (filter ? ' with status "' + filter + '"' : '') + '.</p>';
+            return;
+        }
+        var html = '<div class="space-y-3">';
+        filtered.forEach(function(c) {
+            var dateStr = c.timestamp ? new Date(c.timestamp.toDate()).toLocaleDateString() : '';
+            var status = c.status || 'unread';
+            var statusColor = status === 'replied' ? 'green' : status === 'read' ? 'blue' : 'yellow';
+            var statusIcon = status === 'replied' ? 'fa-reply' : status === 'read' ? 'fa-eye' : 'fa-envelope';
+            html += '<div class="bg-gray-50 rounded-xl p-4' + (status === 'unread' ? ' border-l-4 border-yellow-400' : '') + '">'
+                + '<div class="flex justify-between items-center mb-2">'
+                + '<div><span class="font-semibold text-sm">' + escHtml(c.name || 'N/A') + '</span><span class="text-xs text-gray-400 ml-2">' + escHtml(c.email || '') + '</span>'
+                + ' <span class="text-xs bg-' + statusColor + '-100 text-' + statusColor + '-700 px-2 py-0.5 rounded-full ml-1"><i class="fas ' + statusIcon + ' mr-0.5"></i>' + status + '</span></div>'
+                + '<span class="text-xs text-gray-400">' + dateStr + '</span></div>'
+                + '<p class="text-xs text-gray-500 mb-1"><strong>Subject:</strong> ' + escHtml(c.subject || 'N/A') + '</p>'
+                + '<p class="text-sm text-gray-600 mb-2">' + escHtml(c.message || '') + '</p>';
+            if (c.adminReply) {
+                html += '<div class="bg-blue-50 rounded-lg p-2 mb-2"><p class="text-xs text-blue-500">Admin Reply:</p><p class="text-sm text-blue-800">' + escHtml(c.adminReply) + '</p></div>';
+            }
+            html += '<div class="flex gap-2">';
+            if (status !== 'read' && status !== 'replied') {
+                html += '<button onclick="markContactRead(\'' + c._id + '\')" class="text-xs text-blue-600 hover:underline"><i class="fas fa-eye mr-1"></i>Mark Read</button>';
+            }
+            html += '<button onclick="replyToContact(\'' + c._id + '\', \'' + escHtml((c.email || '').replace(/'/g, '')) + '\')" class="text-xs text-green-600 hover:underline"><i class="fas fa-reply mr-1"></i>Reply</button>'
+                + '<button onclick="deleteContact(\'' + c._id + '\')" class="text-xs text-red-500 hover:text-red-700"><i class="fas fa-trash mr-1"></i>Delete</button>'
+                + '</div></div>';
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    function markContactRead(docId) {
+        db.collection('contactMessages').doc(docId).update({ status: 'read' }).then(function() {
+            var c = allContacts.find(function(x) { return x._id === docId; });
+            if (c) c.status = 'read';
+            renderContacts();
+        });
+    }
+
+    function replyToContact(docId, email) {
+        var reply = prompt('Reply to ' + email + ':');
+        if (!reply || !reply.trim()) return;
+        db.collection('contactMessages').doc(docId).update({ status: 'replied', adminReply: reply.trim(), repliedAt: firebase.firestore.FieldValue.serverTimestamp(), repliedBy: auth.currentUser ? auth.currentUser.email : 'admin' }).then(function() {
+            var c = allContacts.find(function(x) { return x._id === docId; });
+            if (c) { c.status = 'replied'; c.adminReply = reply.trim(); }
+            renderContacts();
+            logAudit('contact_replied', 'Replied to contact from ' + email);
+        });
+    }
+
+    function deleteContact(docId) {
+        if (!confirm('Delete this message?')) return;
+        db.collection('contactMessages').doc(docId).delete().then(function() {
+            allContacts = allContacts.filter(function(c) { return c._id !== docId; });
+            renderContacts();
+        });
+    }
+
+    // ════════════════════════════════════════════
+    //  GIFT CARD ISSUANCE
+    // ════════════════════════════════════════════
+    document.addEventListener('DOMContentLoaded', function() {
+        var gcAmountSelect = document.getElementById('new-gc-amount');
+        if (gcAmountSelect) {
+            gcAmountSelect.addEventListener('change', function() {
+                var custom = document.getElementById('new-gc-custom-amount');
+                if (custom) custom.disabled = this.value !== 'custom';
+            });
+        }
+        var custSearch = document.getElementById('customer-search');
+        if (custSearch) custSearch.addEventListener('input', renderCustomers);
+        var custSort = document.getElementById('customer-sort');
+        if (custSort) custSort.addEventListener('change', renderCustomers);
+        var contactFilter = document.getElementById('contact-filter');
+        if (contactFilter) contactFilter.addEventListener('change', renderContacts);
+    });
+
+    function issueGiftCard() {
+        var amountSelect = document.getElementById('new-gc-amount').value;
+        var amount = amountSelect === 'custom' ? parseFloat(document.getElementById('new-gc-custom-amount').value) : parseFloat(amountSelect);
+        if (isNaN(amount) || amount < 5) { alert('Enter a valid amount (min $5).'); return; }
+        var email = document.getElementById('new-gc-email').value.trim();
+        var name = document.getElementById('new-gc-name').value.trim();
+        var reason = document.getElementById('new-gc-reason').value.trim();
+        // Generate 16-char code
+        var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        var code = '';
+        var arr = new Uint8Array(16);
+        crypto.getRandomValues(arr);
+        for (var i = 0; i < 16; i++) code += chars[arr[i] % chars.length];
+        code = code.match(/.{1,4}/g).join('-');
+
+        if (!confirm('Issue a $' + amount + ' gift card' + (email ? ' to ' + email : '') + '?\nCode: ' + code)) return;
+
+        db.collection('giftCards').doc(code).set({
+            amount: amount,
+            balance: amount,
+            recipientEmail: email || '',
+            recipientName: name || '',
+            senderName: 'Admin',
+            reason: reason || '',
+            status: 'active',
+            issuedBy: auth.currentUser ? auth.currentUser.email : 'admin',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function() {
+            logAudit('giftcard_issued', 'Issued $' + amount + ' gift card ' + code + (email ? ' to ' + email : ''));
+            alert('Gift card issued!\n\nCode: ' + code + '\nAmount: $' + amount);
+            document.getElementById('new-gc-email').value = '';
+            document.getElementById('new-gc-name').value = '';
+            document.getElementById('new-gc-reason').value = '';
+            loadGiftCards();
+        }).catch(function(e) { alert('Error: ' + e.message); });
+    }
+
+    // ════════════════════════════════════════════
+    //  CUSTOMERS (with search/filter/export)
+    // ════════════════════════════════════════════
+    var allCustomersList = [];
+
+    function loadCustomers() {
+        var container = document.getElementById('customers-table');
+        container.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>';
+        db.collection('orders').orderBy('createdAt', 'desc').get().then(function(snap) {
+            var customers = {};
+            snap.forEach(function(doc) {
+                var o = doc.data();
+                var email = o.email;
+                if (!email) return;
+                if (!customers[email]) {
+                    customers[email] = { name: o.name || 'N/A', email: email, orders: 0, spent: 0, lastOrder: null };
+                }
+                customers[email].orders++;
+                customers[email].spent += o.total || 0;
+                var orderDate = o.createdAt ? (o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt)) : null;
+                if (orderDate && (!customers[email].lastOrder || orderDate > customers[email].lastOrder)) {
+                    customers[email].lastOrder = orderDate;
+                }
+            });
+            allCustomersList = Object.values(customers);
+            document.getElementById('stat-customers').textContent = allCustomersList.length;
+            renderCustomers();
+        }).catch(function(e) {
+            container.innerHTML = '<p class="text-red-500 text-center py-4">Error: ' + escHtml(e.message) + '</p>';
+        });
+    }
+
+    function renderCustomers() {
+        var container = document.getElementById('customers-table');
+        var search = ((document.getElementById('customer-search') || {}).value || '').toLowerCase();
+        var sort = ((document.getElementById('customer-sort') || {}).value || 'spent-desc');
+        var filtered = allCustomersList.filter(function(c) {
+            if (!search) return true;
+            return c.name.toLowerCase().indexOf(search) !== -1 || c.email.toLowerCase().indexOf(search) !== -1;
+        });
+        filtered.sort(function(a, b) {
+            if (sort === 'spent-desc') return b.spent - a.spent;
+            if (sort === 'spent-asc') return a.spent - b.spent;
+            if (sort === 'orders-desc') return b.orders - a.orders;
+            if (sort === 'name-asc') return a.name.localeCompare(b.name);
+            return 0;
+        });
+        if (filtered.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 text-center py-4">No customers found.</p>';
+            return;
+        }
+        var html = '<table class="w-full text-sm"><thead><tr class="border-b">'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Customer</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Email</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Orders</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Total Spent</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Last Order</th>'
+            + '</tr></thead><tbody>';
+        filtered.forEach(function(c) {
+            var lastOrderStr = c.lastOrder ? c.lastOrder.toLocaleDateString() : 'N/A';
+            html += '<tr class="border-b hover:bg-gray-50">'
+                + '<td class="py-3 px-3 font-medium">' + escHtml(c.name) + '</td>'
+                + '<td class="py-3 px-3 text-gray-500">' + escHtml(c.email) + '</td>'
+                + '<td class="py-3 px-3 text-center">' + c.orders + '</td>'
+                + '<td class="py-3 px-3 font-bold text-green-600">$' + c.spent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>'
+                + '<td class="py-3 px-3 text-xs text-gray-500">' + lastOrderStr + '</td>'
+                + '</tr>';
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    function exportCustomersCSV() {
+        if (allCustomersList.length === 0) { alert('No customers to export.'); return; }
+        var rows = [['Name', 'Email', 'Orders', 'Total Spent']];
+        allCustomersList.forEach(function(c) {
+            rows.push(['"' + (c.name || '').replace(/"/g, '""') + '"', c.email, c.orders, c.spent.toFixed(2)]);
+        });
+        var csv = rows.map(function(r) { return r.join(','); }).join('\n');
+        var blob = new Blob([csv], { type: 'text/csv' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'customers_' + new Date().toISOString().slice(0, 10) + '.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+        logAudit('export', 'Exported ' + allCustomersList.length + ' customers to CSV');
+    }
+
+    // ════════════════════════════════════════════
+    //  ORDER NOTES
+    // ════════════════════════════════════════════
+    function addOrderNote(docId) {
+        var input = document.getElementById('note-input-' + docId);
+        if (!input || !input.value.trim()) { alert('Enter a note.'); return; }
+        var noteText = input.value.trim();
+        var order = allOrders.find(function(o) { return o._id === docId; });
+        if (!order) return;
+        if (!order.notes) order.notes = [];
+        var note = {
+            text: noteText,
+            admin: auth.currentUser ? auth.currentUser.email : 'admin',
+            date: new Date().toLocaleString()
+        };
+        order.notes.push(note);
+        db.collection('orders').doc(docId).update({
+            notes: order.notes
+        }).then(function() {
+            viewOrderDetail(docId);
+            logAudit('order_note', 'Note on order ' + docId + ': ' + noteText.substring(0, 50));
+        }).catch(function(e) { alert('Error: ' + e.message); });
+    }
+
+    // ════════════════════════════════════════════
+    //  AUDIT LOG
+    // ════════════════════════════════════════════
+    function logAudit(action, details) {
+        var user = auth.currentUser;
+        db.collection('auditLog').add({
+            action: action,
+            details: details || '',
+            adminEmail: user ? user.email : 'unknown',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(function() {});
+    }
+
+    function loadAuditLog() {
+        var container = document.getElementById('auditlog-table');
+        container.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>';
+        db.collection('auditLog').orderBy('timestamp', 'desc').limit(100).get().then(function(snap) {
+            if (snap.empty) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">No audit entries yet.</p>';
+                return;
+            }
+            var html = '<table class="w-full text-sm"><thead><tr class="border-b">'
+                + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Time</th>'
+                + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Admin</th>'
+                + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Action</th>'
+                + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Details</th>'
+                + '</tr></thead><tbody>';
+            snap.forEach(function(doc) {
+                var d = doc.data();
+                var ts = d.timestamp ? new Date(d.timestamp.toDate()).toLocaleString() : 'N/A';
+                html += '<tr class="border-b hover:bg-gray-50">'
+                    + '<td class="py-2 px-3 text-xs text-gray-500">' + ts + '</td>'
+                    + '<td class="py-2 px-3 text-xs">' + escHtml(d.adminEmail || '') + '</td>'
+                    + '<td class="py-2 px-3"><span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">' + escHtml(d.action || '') + '</span></td>'
+                    + '<td class="py-2 px-3 text-xs text-gray-600">' + escHtml(d.details || '') + '</td>'
+                    + '</tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }).catch(function(e) {
+            container.innerHTML = '<p class="text-red-500 text-center py-4">Error: ' + escHtml(e.message) + '</p>';
+        });
+    }
+
+    // ════════════════════════════════════════════
+    //  COUPONS MANAGEMENT
+    // ════════════════════════════════════════════
+    var allCoupons = {};
+    // Seed SWIFT20 personal promo on first load if not present
+    (function seedSwift20() {
+        db.collection('siteSettings').doc('coupons').get().then(function(doc) {
+            var codes = (doc.exists && doc.data().codes) ? doc.data().codes : {};
+            if (!codes['SWIFT20']) {
+                codes['SWIFT20'] = { type: 'percent', value: 20, minOrder: 0, maxUses: 0, used: 0, expires: '', active: true, label: 'SWIFT20 (-20%)', assignedTo: [] };
+                db.collection('siteSettings').doc('coupons').set({ codes: codes });
+            }
+        }).catch(function() {});
+    })();
+
+    function loadCoupons() {
+        var container = document.getElementById('coupons-table');
+        container.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>';
+        db.collection('siteSettings').doc('coupons').get().then(function(doc) {
+            allCoupons = (doc.exists && doc.data().codes) ? doc.data().codes : {};
+            renderCoupons();
+        }).catch(function(e) {
+            allCoupons = {};
+            container.innerHTML = '<p class="text-red-500 text-center py-4">Error: ' + escHtml(e.message) + '</p>';
+        });
+    }
+
+    function renderCoupons() {
+        var container = document.getElementById('coupons-table');
+        var keys = Object.keys(allCoupons);
+        if (keys.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 text-center py-4">No coupon codes yet. Create one below.</p>';
+            return;
+        }
+        var html = '<table class="w-full text-sm"><thead><tr class="border-b">'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Code</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Type</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Value</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Min Order</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Uses</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Expires</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Assigned To</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Status</th>'
+            + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Actions</th>'
+            + '</tr></thead><tbody>';
+        keys.forEach(function(code) {
+            var c = allCoupons[code];
+            var valStr = c.type === 'percent' ? c.value + '%' : '$' + c.value;
+            var statusColor = c.active ? 'green' : 'red';
+            var statusLabel = c.active ? 'Active' : 'Disabled';
+            var expires = c.expires || 'Never';
+            var assignedStr = (c.assignedTo && c.assignedTo.length > 0) ? c.assignedTo.join(', ') : '<span class="text-gray-400">Anyone</span>';
+            html += '<tr class="border-b hover:bg-gray-50">'
+                + '<td class="py-2 px-3 font-mono font-bold text-sm">' + escHtml(code) + '</td>'
+                + '<td class="py-2 px-3 capitalize text-xs">' + c.type + '</td>'
+                + '<td class="py-2 px-3 font-bold">' + valStr + '</td>'
+                + '<td class="py-2 px-3 text-xs">$' + (c.minOrder || 0) + '</td>'
+                + '<td class="py-2 px-3 text-xs">' + (c.used || 0) + '/' + (c.maxUses || '∞') + '</td>'
+                + '<td class="py-2 px-3 text-xs">' + expires + '</td>'
+                + '<td class="py-2 px-3 text-xs max-w-[140px] truncate" title="' + escHtml((c.assignedTo || []).join(', ')) + '">' + assignedStr + '</td>'
+                + '<td class="py-2 px-3"><span class="text-xs bg-' + statusColor + '-100 text-' + statusColor + '-700 px-2 py-0.5 rounded-full">' + statusLabel + '</span></td>'
+                + '<td class="py-2 px-3 flex gap-2">'
+                + '<button onclick="toggleCoupon(\'' + escHtml(code) + '\')" class="text-xs text-brand-blue hover:underline">' + (c.active ? 'Disable' : 'Enable') + '</button>'
+                + '<button onclick="deleteCoupon(\'' + escHtml(code) + '\')" class="text-xs text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>'
+                + '</td></tr>';
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    function createCoupon() {
+        var code = (document.getElementById('new-coupon-code').value || '').trim().toUpperCase();
+        var type = document.getElementById('new-coupon-type').value;
+        var value = parseFloat(document.getElementById('new-coupon-value').value);
+        var minOrder = parseFloat(document.getElementById('new-coupon-min').value) || 0;
+        var maxUses = parseInt(document.getElementById('new-coupon-max').value) || 0;
+        var expires = document.getElementById('new-coupon-expires').value || '';
+        var active = document.getElementById('new-coupon-active').checked;
+        if (!code) { alert('Enter a coupon code.'); return; }
+        if (isNaN(value) || value <= 0) { alert('Enter a valid value.'); return; }
+        if (type === 'percent' && value > 100) { alert('Percentage cannot exceed 100.'); return; }
+        var assignedTo = (document.getElementById('new-coupon-assigned').value || '').trim();
+        var assignedEmails = assignedTo ? assignedTo.split(',').map(function(e) { return e.trim().toLowerCase(); }).filter(function(e) { return e.length > 0; }) : [];
+        allCoupons[code] = { type: type, value: value, minOrder: minOrder, maxUses: maxUses, used: 0, expires: expires, active: active, label: code + ' (' + (type === 'percent' ? '-' + value + '%' : '-$' + value) + ')', assignedTo: assignedEmails };
+        saveCoupons('Created coupon: ' + code + (assignedEmails.length ? ' for ' + assignedEmails.join(', ') : ''));
+        document.getElementById('new-coupon-code').value = '';
+        document.getElementById('new-coupon-value').value = '';
+        document.getElementById('new-coupon-assigned').value = '';
+    }
+
+    function toggleCoupon(code) {
+        if (allCoupons[code]) {
+            allCoupons[code].active = !allCoupons[code].active;
+            saveCoupons((allCoupons[code].active ? 'Enabled' : 'Disabled') + ' coupon: ' + code);
+        }
+    }
+
+    function deleteCoupon(code) {
+        if (!confirm('Delete coupon "' + code + '"?')) return;
+        delete allCoupons[code];
+        saveCoupons('Deleted coupon: ' + code);
+    }
+
+    function saveCoupons(auditMsg) {
+        db.collection('siteSettings').doc('coupons').set({ codes: allCoupons }).then(function() {
+            renderCoupons();
+            if (auditMsg) logAudit('coupon_change', auditMsg);
+        }).catch(function(e) { alert('Error saving: ' + e.message); });
+    }
+
+    // ════════════════════════════════════════════
+    //  ANALYTICS
+    // ════════════════════════════════════════════
+    function loadAnalytics() {
+        drawRevenueChart();
+        drawStatusChart();
+        drawCategoryChart();
+        drawTopProducts();
+        drawLowStockAlerts();
+    }
+
+    function drawRevenueChart() {
+        var canvas = document.getElementById('revenue-chart');
+        if (!canvas) return;
+        var ctx = canvas.getContext('2d');
+        var w = canvas.width = canvas.parentElement.clientWidth - 32;
+        var h = canvas.height = 200;
+        ctx.clearRect(0, 0, w, h);
+
+        var dailyRev = {};
+        var now = new Date();
+        for (var d = 29; d >= 0; d--) {
+            var dt = new Date(now);
+            dt.setDate(dt.getDate() - d);
+            var key = (dt.getMonth() + 1) + '/' + dt.getDate();
+            dailyRev[key] = 0;
+        }
+        allOrders.forEach(function(o) {
+            if (!o.createdAt) return;
+            var od = o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
+            var key = (od.getMonth() + 1) + '/' + od.getDate();
+            if (dailyRev[key] !== undefined) dailyRev[key] += o.total || 0;
+        });
+
+        var labels = Object.keys(dailyRev);
+        var values = Object.values(dailyRev);
+        var maxVal = Math.max.apply(null, values) || 1;
+
+        var padL = 50, padB = 30, padT = 10, padR = 10;
+        var chartW = w - padL - padR, chartH = h - padT - padB;
+
+        ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 1;
+        for (var i = 0; i <= 4; i++) {
+            var y = padT + chartH - (chartH / 4 * i);
+            ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(w - padR, y); ctx.stroke();
+            ctx.fillStyle = '#9ca3af'; ctx.font = '10px Inter';
+            ctx.fillText('$' + Math.round(maxVal / 4 * i), 2, y + 3);
+        }
+
+        ctx.beginPath(); ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 2;
+        var barW = chartW / labels.length;
+        labels.forEach(function(lbl, i) {
+            var x = padL + i * barW + barW / 2;
+            var valH = (values[i] / maxVal) * chartH;
+            var y = padT + chartH - valH;
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(37,99,235,0.1)';
+        ctx.beginPath();
+        labels.forEach(function(lbl, i) {
+            var x = padL + i * barW + barW / 2;
+            var valH = (values[i] / maxVal) * chartH;
+            var y = padT + chartH - valH;
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.lineTo(padL + (labels.length - 1) * barW + barW / 2, padT + chartH);
+        ctx.lineTo(padL + barW / 2, padT + chartH);
+        ctx.fill();
+
+        ctx.fillStyle = '#6b7280'; ctx.font = '9px Inter';
+        labels.forEach(function(lbl, i) {
+            if (i % 5 === 0) {
+                var x = padL + i * barW + barW / 2;
+                ctx.fillText(lbl, x - 10, h - 5);
+            }
+        });
+    }
+
+    function drawStatusChart() {
+        var canvas = document.getElementById('status-chart');
+        if (!canvas) return;
+        var ctx = canvas.getContext('2d');
+        var w = canvas.width = canvas.parentElement.clientWidth - 32;
+        var h = canvas.height = 200;
+        ctx.clearRect(0, 0, w, h);
+
+        var statusCounts = {};
+        allOrders.forEach(function(o) {
+            var s = (o.status || 'processing').replace(/_/g, ' ');
+            statusCounts[s] = (statusCounts[s] || 0) + 1;
+        });
+
+        var labels = Object.keys(statusCounts);
+        var values = Object.values(statusCounts);
+        var total = values.reduce(function(a, b) { return a + b; }, 0) || 1;
+        var colors = ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#6b7280'];
+
+        var cx = w / 2, cy = h / 2, r = 70;
+        var startAngle = -Math.PI / 2;
+        labels.forEach(function(lbl, i) {
+            var sliceAngle = (values[i] / total) * Math.PI * 2;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, r, startAngle, startAngle + sliceAngle);
+            ctx.fillStyle = colors[i % colors.length];
+            ctx.fill();
+            startAngle += sliceAngle;
+        });
+
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(cx, cy, 40, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#1f2937'; ctx.font = 'bold 18px Inter'; ctx.textAlign = 'center';
+        ctx.fillText(total, cx, cy + 6);
+
+        var legendY = 15;
+        labels.forEach(function(lbl, i) {
+            ctx.fillStyle = colors[i % colors.length];
+            ctx.fillRect(w - 140, legendY, 10, 10);
+            ctx.fillStyle = '#4b5563'; ctx.font = '11px Inter'; ctx.textAlign = 'left';
+            ctx.fillText(lbl + ' (' + values[i] + ')', w - 125, legendY + 9);
+            legendY += 18;
+        });
+    }
+
+    function drawCategoryChart() {
+        var canvas = document.getElementById('category-chart');
+        if (!canvas) return;
+        var ctx = canvas.getContext('2d');
+        var w = canvas.width = canvas.parentElement.clientWidth - 32;
+        var h = canvas.height = 200;
+        ctx.clearRect(0, 0, w, h);
+
+        var catRev = {};
+        allOrders.forEach(function(o) {
+            (o.items || []).forEach(function(item) {
+                var bp = baseProducts.find(function(p) { return p.id === item.id; });
+                var cat = bp ? bp.category : 'other';
+                catRev[cat] = (catRev[cat] || 0) + (item.price * (item.qty || 1));
+            });
+        });
+
+        var labels = Object.keys(catRev);
+        var values = Object.values(catRev);
+        var maxVal = Math.max.apply(null, values) || 1;
+        var colors = ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#6b7280'];
+
+        var padL = 90, padR = 10, padT = 10, padB = 10;
+        var chartW = w - padL - padR;
+        var barH = Math.min(30, (h - padT - padB) / labels.length - 5);
+
+        labels.forEach(function(lbl, i) {
+            var barW = (values[i] / maxVal) * chartW;
+            var y = padT + i * (barH + 8);
+            ctx.fillStyle = colors[i % colors.length];
+            ctx.beginPath();
+            if (ctx.roundRect) { ctx.roundRect(padL, y, barW, barH, 4); } else { ctx.rect(padL, y, barW, barH); }
+            ctx.fill();
+            ctx.fillStyle = '#4b5563'; ctx.font = '11px Inter'; ctx.textAlign = 'right';
+            ctx.fillText(lbl, padL - 5, y + barH / 2 + 4);
+            ctx.fillStyle = '#1f2937'; ctx.font = 'bold 11px Inter'; ctx.textAlign = 'left';
+            ctx.fillText('$' + Math.round(values[i]).toLocaleString(), padL + barW + 5, y + barH / 2 + 4);
+        });
+    }
+
+    function drawTopProducts() {
+        var container = document.getElementById('top-products-list');
+        if (!container) return;
+        var productSales = {};
+        allOrders.forEach(function(o) {
+            (o.items || []).forEach(function(item) {
+                var pid = item.id;
+                if (!productSales[pid]) productSales[pid] = { name: item.name || 'Product #' + pid, qty: 0, revenue: 0 };
+                productSales[pid].qty += item.qty || 1;
+                productSales[pid].revenue += item.price * (item.qty || 1);
+            });
+        });
+        var sorted = Object.values(productSales).sort(function(a, b) { return b.revenue - a.revenue; }).slice(0, 10);
+        if (sorted.length === 0) { container.innerHTML = '<p class="text-gray-500 text-sm">No sales data yet.</p>'; return; }
+        var html = '<div class="space-y-2">';
+        sorted.forEach(function(p, i) {
+            html += '<div class="flex items-center gap-3 py-1.5"><span class="text-xs font-bold text-gray-400 w-5">#' + (i + 1) + '</span>'
+                + '<div class="flex-1 min-w-0"><p class="text-sm font-medium truncate">' + escHtml(p.name) + '</p></div>'
+                + '<span class="text-xs text-gray-500">' + p.qty + ' sold</span>'
+                + '<span class="text-sm font-bold text-green-600">$' + Math.round(p.revenue).toLocaleString() + '</span></div>';
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    function drawLowStockAlerts() {
+        var container = document.getElementById('low-stock-alerts');
+        if (!container) return;
+        var lowStock = mergedProducts.filter(function(p) { return p.stock <= 5; }).sort(function(a, b) { return a.stock - b.stock; });
+        if (lowStock.length === 0) {
+            container.innerHTML = '<p class="text-green-600 text-sm"><i class="fas fa-check-circle mr-1"></i>All products are well stocked.</p>';
+            return;
+        }
+        var html = '<div class="space-y-2">';
+        lowStock.forEach(function(p) {
+            var color = p.stock <= 0 ? 'red' : 'orange';
+            html += '<div class="flex items-center gap-3 py-1.5 border-b border-gray-100">'
+                + '<span class="text-xs bg-' + color + '-100 text-' + color + '-700 px-2 py-0.5 rounded-full font-bold">' + p.stock + '</span>'
+                + '<span class="text-sm font-medium">' + escHtml(p.name) + '</span>'
+                + '<span class="text-xs text-gray-400">' + p.category + '</span>'
+                + '<button onclick="openProductModal(' + p.id + ');switchTab(\'products\')" class="text-xs text-brand-blue hover:underline ml-auto">Edit</button>'
+                + '</div>';
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    // ════════════════════════════════════════════
+    //  BULK OPERATIONS
+    // ════════════════════════════════════════════
+    function openBulkStockModal() {
+        document.getElementById('bulk-stock-modal').classList.remove('hidden');
+    }
+
+    function openBulkPriceModal() {
+        document.getElementById('bulk-price-modal').classList.remove('hidden');
+    }
+
+    function applyBulkStock() {
+        var cat = document.getElementById('bulk-stock-cat').value;
+        var stockVal = parseInt(document.getElementById('bulk-stock-value').value, 10);
+        if (isNaN(stockVal) || stockVal < 0) { alert('Enter a valid stock number.'); return; }
+        var targets = baseProducts.filter(function(p) { return !cat || p.category === cat; });
+        if (!confirm('Set stock to ' + stockVal + ' for ' + targets.length + ' products?')) return;
+        targets.forEach(function(p) {
+            if (!productOverrides[String(p.id)]) productOverrides[String(p.id)] = {};
+            productOverrides[String(p.id)].stock = stockVal;
+        });
+        db.collection('siteSettings').doc('productOverrides').set({ overrides: productOverrides }).then(function() {
+            mergeProducts();
+            renderProducts();
+            document.getElementById('bulk-stock-modal').classList.add('hidden');
+            logAudit('bulk_stock', 'Set stock=' + stockVal + ' for ' + targets.length + ' products' + (cat ? ' in ' + cat : ''));
+        }).catch(function(e) { alert('Error: ' + e.message); });
+    }
+
+    function applyBulkPrice() {
+        var cat = document.getElementById('bulk-price-cat').value;
+        var type = document.getElementById('bulk-price-type').value;
+        var val = parseFloat(document.getElementById('bulk-price-value').value);
+        if (isNaN(val) || val <= 0) { alert('Enter a valid value.'); return; }
+        var targets = baseProducts.filter(function(p) { return !cat || p.category === cat; });
+        if (!confirm('Apply price change to ' + targets.length + ' products?')) return;
+        targets.forEach(function(p) {
+            if (!productOverrides[String(p.id)]) productOverrides[String(p.id)] = {};
+            var currentPrice = productOverrides[String(p.id)].price || p.price;
+            var newPrice;
+            if (type === 'percent-off') newPrice = Math.round(currentPrice * (1 - val / 100) * 100) / 100;
+            else if (type === 'percent-up') newPrice = Math.round(currentPrice * (1 + val / 100) * 100) / 100;
+            else newPrice = Math.max(0, currentPrice - val);
+            productOverrides[String(p.id)].oldPrice = currentPrice;
+            productOverrides[String(p.id)].price = newPrice;
+        });
+        db.collection('siteSettings').doc('productOverrides').set({ overrides: productOverrides }).then(function() {
+            mergeProducts();
+            renderProducts();
+            document.getElementById('bulk-price-modal').classList.add('hidden');
+            logAudit('bulk_price', type + ' ' + val + ' for ' + targets.length + ' products' + (cat ? ' in ' + cat : ''));
+        }).catch(function(e) { alert('Error: ' + e.message); });
+    }
+
+    // ════════════════════════════════════════════
+    //  EXPORT CSV
+    // ════════════════════════════════════════════
+    function exportOrdersCSV() {
+        if (allOrders.length === 0) { alert('No orders to export.'); return; }
+        var rows = [['Order ID', 'Customer', 'Email', 'Total', 'Payment', 'Status', 'Date']];
+        allOrders.forEach(function(o) {
+            var dateStr = o.createdAt ? (o.createdAt.toDate ? new Date(o.createdAt.toDate()).toISOString() : o.createdAt) : '';
+            rows.push([
+                o.orderId || o._id || '',
+                '"' + (o.name || '').replace(/"/g, '""') + '"',
+                o.email || '',
+                (o.total || 0).toFixed(2),
+                o.paymentMethod || 'card',
+                o.status || 'processing',
+                dateStr
+            ]);
+        });
+        var csv = rows.map(function(r) { return r.join(','); }).join('\n');
+        var blob = new Blob([csv], { type: 'text/csv' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'orders_' + new Date().toISOString().slice(0, 10) + '.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+        logAudit('export', 'Exported ' + allOrders.length + ' orders to CSV');
+    }
+
+    // ════════════════════════════════════════════
+    //  BLOCKCHAIN VERIFICATION
+    // ════════════════════════════════════════════
+    function getBlockchainExplorerUrl(coin, txHash) {
+        switch ((coin || '').toUpperCase()) {
+            case 'BTC': return 'https://www.blockchain.com/btc/tx/' + encodeURIComponent(txHash);
+            case 'ETH': return 'https://etherscan.io/tx/' + encodeURIComponent(txHash);
+            case 'USDT': return 'https://etherscan.io/tx/' + encodeURIComponent(txHash);
+            case 'SOL': return 'https://solscan.io/tx/' + encodeURIComponent(txHash);
+            case 'LTC': return 'https://blockchair.com/litecoin/transaction/' + encodeURIComponent(txHash);
+            case 'XRP': return 'https://xrpscan.com/tx/' + encodeURIComponent(txHash);
+            case 'DOGE': return 'https://blockchair.com/dogecoin/transaction/' + encodeURIComponent(txHash);
+            case 'USDC': return 'https://etherscan.io/tx/' + encodeURIComponent(txHash);
+            default: return 'https://www.blockchain.com/search?search=' + encodeURIComponent(txHash);
+        }
+    }
+
+    function verifyCryptoPayment(docId, coin, txHash) {
+        if (!confirm('Have you verified this transaction on the blockchain explorer?\\n\\nCoin: ' + coin + '\\nTX: ' + txHash.substring(0, 20) + '...\\n\\nThis will mark payment as verified and confirm the order.')) return;
+        db.collection('orders').doc(docId).update({
+            cryptoVerified: true,
+            cryptoVerifiedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            cryptoVerifiedBy: auth.currentUser ? auth.currentUser.email : 'admin',
+            status: 'confirmed'
+        }).then(function() {
+            var order = allOrders.find(function(o) { return o._id === docId; });
+            if (order) { order.cryptoVerified = true; order.status = 'confirmed'; }
+            logAudit('crypto_verified', 'Order ' + docId + ' crypto payment verified. TX: ' + txHash);
+            document.getElementById('order-modal').classList.add('hidden');
+            renderOrders();
+            alert('Payment verified! Order confirmed.');
+        }).catch(function(e) { alert('Error: ' + e.message); });
+    }
+
+    function rejectCryptoPayment(docId) {
+        var reason = prompt('Reason for rejecting this crypto payment:');
+        if (!reason) return;
+        db.collection('orders').doc(docId).update({
+            cryptoVerified: false,
+            cryptoRejectedReason: reason,
+            status: 'cancelled'
+        }).then(function() {
+            var order = allOrders.find(function(o) { return o._id === docId; });
+            if (order) { order.status = 'cancelled'; }
+            logAudit('crypto_rejected', 'Order ' + docId + ' crypto payment rejected. Reason: ' + reason);
+            document.getElementById('order-modal').classList.add('hidden');
+            renderOrders();
+            alert('Payment rejected. Order cancelled.');
+        }).catch(function(e) { alert('Error: ' + e.message); });
+    }
+
+    function confirmBankPayment(docId) {
+        if (!confirm('Have you verified this bank transfer receipt?\\n\\nThis will confirm the payment and process the order.')) return;
+        db.collection('orders').doc(docId).update({
+            bankPaymentConfirmed: true,
+            bankConfirmedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            bankConfirmedBy: auth.currentUser ? auth.currentUser.email : 'admin',
+            status: 'confirmed'
+        }).then(function() {
+            var order = allOrders.find(function(o) { return o._id === docId; });
+            if (order) { order.bankPaymentConfirmed = true; order.status = 'confirmed'; }
+            logAudit('bank_payment_confirmed', 'Order ' + docId + ' bank payment confirmed.');
+            document.getElementById('order-modal').classList.add('hidden');
+            renderOrders();
+            alert('Bank payment confirmed! Order is now processing.');
+        }).catch(function(e) { alert('Error: ' + e.message); });
+    }
+
+    function rejectBankPayment(docId) {
+        var reason = prompt('Reason for rejecting this bank transfer:');
+        if (!reason) return;
+        db.collection('orders').doc(docId).update({
+            bankPaymentRejected: true,
+            bankRejectedReason: reason,
+            status: 'cancelled'
+        }).then(function() {
+            var order = allOrders.find(function(o) { return o._id === docId; });
+            if (order) { order.status = 'cancelled'; }
+            logAudit('bank_payment_rejected', 'Order ' + docId + ' bank payment rejected. Reason: ' + reason);
+            document.getElementById('order-modal').classList.add('hidden');
+            renderOrders();
+            alert('Bank payment rejected. Order cancelled.');
+        }).catch(function(e) { alert('Error: ' + e.message); });
+    }
+
+    function getCarrierTrackingUrl(carrier, trackingNumber) {
+        var num = encodeURIComponent(trackingNumber);
+        switch ((carrier || '').toLowerCase()) {
+            case 'fedex': return 'https://www.fedex.com/fedextrack/?trknbr=' + num;
+            case 'ups': return 'https://www.ups.com/track?tracknum=' + num;
+            case 'usps': return 'https://tools.usps.com/go/TrackConfirmAction?tLabels=' + num;
+            case 'dhl': return 'https://www.dhl.com/us-en/home/tracking.html?tracking-id=' + num;
+            default: return '#';
+        }
+    }
+
+    function saveTracking(docId) {
+        var carrier = document.getElementById('tracking-carrier-' + docId).value;
+        var trackNum = document.getElementById('tracking-number-' + docId).value.trim();
+        if (!carrier || !trackNum) { alert('Please select a carrier and enter a tracking number.'); return; }
+        var updateData = {
+            trackingCarrier: carrier,
+            trackingNumber: trackNum
+        };
+        db.collection('orders').doc(docId).update(updateData).then(function() {
+            var order = allOrders.find(function(o) { return o._id === docId; });
+            if (order) { order.trackingCarrier = carrier; order.trackingNumber = trackNum; }
+            logAudit('tracking_updated', 'Order ' + docId + ' tracking: ' + carrier.toUpperCase() + ' ' + trackNum);
+            alert('Tracking info saved! ' + carrier.toUpperCase() + ': ' + trackNum);
+            viewOrderDetail(docId);
+        }).catch(function(e) { alert('Error saving tracking: ' + e.message); });
+    }
+
+    // ════════════════════════════════════════════
+    //  UTILITY
+    // ════════════════════════════════════════════
+    function escHtml(str) {
+        if (!str) return '';
+        var d = document.createElement('div');
+        d.textContent = str;
+        return d.innerHTML;
+    }
+    </script>
+</body>
+</html>
