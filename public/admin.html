@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://www.gstatic.com https://apis.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data: https://*.firebasestorage.app https://www.att.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com; frame-src 'self' https://accounts.google.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://www.gstatic.com https://apis.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data: https://*.firebasestorage.app https://www.att.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://firestore.googleapis.com https://identitytoolkit.googleapis.com; frame-src 'self' https://accounts.google.com;">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -25,6 +25,7 @@
     <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-functions-compat.js"></script>
     <script>
         var firebaseConfig = {
             apiKey: "AIzaSyAbBODZeHGStQFU_06ShU3ZXpi95reNz8U",
@@ -120,7 +121,7 @@
                 </div>
                 <div class="bg-white rounded-2xl p-5 shadow-sm">
                     <p class="text-gray-500 text-xs uppercase tracking-wide">Products</p>
-                    <p class="text-3xl font-bold text-indigo-600 mt-1" id="stat-products">78</p>
+                    <p class="text-3xl font-bold text-indigo-600 mt-1" id="stat-products">113</p>
                 </div>
                 <div class="bg-white rounded-2xl p-5 shadow-sm">
                     <p class="text-gray-500 text-xs uppercase tracking-wide">Trade-Ins</p>
@@ -142,6 +143,7 @@
                     <button onclick="switchTab('giftcards')" id="atab-giftcards" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-gift mr-1"></i>Gift Cards</button>
                     <button onclick="switchTab('rewards')" id="atab-rewards" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-coins mr-1"></i>Rewards</button>
                     <button onclick="switchTab('reviews')" id="atab-reviews" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-star mr-1"></i>Reviews</button>
+                    <button onclick="switchTab('blog')" id="atab-blog" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-newspaper mr-1"></i>Blog</button>
                     <button onclick="switchTab('contacts')" id="atab-contacts" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-envelope mr-1"></i>Contacts</button>
                     <button onclick="switchTab('coupons')" id="atab-coupons" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-tags mr-1"></i>Coupons</button>
                     <button onclick="switchTab('analytics')" id="atab-analytics" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-chart-line mr-1"></i>Analytics</button>
@@ -186,7 +188,7 @@
                                 <option value="processing">Processing</option>
                                 <option value="shipped">Shipped</option>
                                 <option value="delivered">Delivered</option>
-                                <option value="awaiting_crypto_payment">Awaiting Crypto</option>
+                                <option value="awaiting_payment">Awaiting Payment</option>
                                 <option value="cancelled">Cancelled</option>
                             </select>
                             <button onclick="loadOrders()" class="text-brand-blue text-sm hover:underline"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
@@ -307,6 +309,16 @@
                     <div id="reviews-table">
                         <div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>
                     </div>
+                </div>
+
+                <!-- ==================== BLOG TAB ==================== -->
+                <div id="panel-blog" class="p-6 hidden">
+                    <div class="flex justify-between items-center mb-4"><div><h2 class="text-lg font-bold text-brand-dark">Blog Publishing</h2><p class="text-sm text-gray-500">Draft, publish, and update articles shown in Support &amp; Resources.</p></div><button onclick="resetBlogForm()" class="text-brand-blue text-sm hover:underline"><i class="fas fa-plus mr-1"></i>New article</button></div>
+                    <form id="blog-form" onsubmit="saveBlogPost(event)" class="bg-white border rounded-xl p-4 mb-6 grid gap-3"><input type="hidden" id="blog-edit-id">
+                        <div class="grid md:grid-cols-2 gap-3"><label class="text-sm font-medium">Title<input id="blog-title" required maxlength="120" class="mt-1 w-full border rounded-lg px-3 py-2"></label><label class="text-sm font-medium">Category<input id="blog-category" required maxlength="40" placeholder="Guide, Trends, Tutorial" class="mt-1 w-full border rounded-lg px-3 py-2"></label></div>
+                        <label class="text-sm font-medium">Cover image URL<input id="blog-image" type="url" required class="mt-1 w-full border rounded-lg px-3 py-2"></label><label class="text-sm font-medium">Short summary<textarea id="blog-excerpt" required maxlength="300" rows="2" class="mt-1 w-full border rounded-lg px-3 py-2"></textarea></label><label class="text-sm font-medium">Article body<textarea id="blog-body" required maxlength="12000" rows="8" class="mt-1 w-full border rounded-lg px-3 py-2"></textarea></label>
+                        <div class="flex gap-3 items-center"><button type="submit" class="bg-brand-blue text-white px-5 py-2 rounded-full text-sm font-bold">Save article</button><label class="text-sm flex items-center gap-2"><input type="checkbox" id="blog-published"> Publish now</label><span id="blog-form-message" class="text-sm text-gray-500"></span></div>
+                    </form><div id="blog-admin-list" class="space-y-3"><p class="text-center py-6 text-gray-500">Loading articles...</p></div>
                 </div>
 
                 <!-- ==================== CONTACTS TAB ==================== -->
@@ -786,12 +798,6 @@
     // ════════════════════════════════════════════
     //  ADMIN AUTH
     // ════════════════════════════════════════════
-    var ADMIN_EMAILS = ['admin@swiftdevices.com', 'jeffreid6525@gmail.com', 'swiftdevices@technologist.com'];
-    function isAdmin(email) {
-        if (ADMIN_EMAILS.length === 0) return true;
-        return ADMIN_EMAILS.includes(email.toLowerCase());
-    }
-
     function adminLogin() {
         var email = document.getElementById('admin-email').value;
         var password = document.getElementById('admin-password').value;
@@ -817,44 +823,36 @@
         var loading = document.getElementById('auth-loading');
         var form = document.getElementById('auth-form');
         var denied = document.getElementById('auth-denied');
-        if (user) {
-            user.getIdTokenResult().then(function(tokenResult) {
-                var hasAdminClaim = tokenResult.claims.admin === true;
-                if (hasAdminClaim || isAdmin(user.email)) {
-                    gate.classList.add('hidden');
-                    dashboard.classList.remove('hidden');
-                    document.getElementById('admin-name').textContent = user.displayName || user.email;
-                    loadAllData();
-                } else {
-                    loading.classList.add('hidden');
-                    form.classList.add('hidden');
-                    denied.classList.remove('hidden');
-                }
-            }).catch(function() {
-                if (isAdmin(user.email)) {
-                    gate.classList.add('hidden');
-                    dashboard.classList.remove('hidden');
-                    document.getElementById('admin-name').textContent = user.displayName || user.email;
-                    loadAllData();
-                } else {
-                    loading.classList.add('hidden');
-                    form.classList.add('hidden');
-                    denied.classList.remove('hidden');
-                }
-            });
-        } else {
+        if (!user) {
             gate.classList.remove('hidden');
             dashboard.classList.add('hidden');
             loading.classList.add('hidden');
             form.classList.remove('hidden');
             denied.classList.add('hidden');
+            return;
         }
+        user.getIdTokenResult(true).then(function(tokenResult) {
+            if (tokenResult.claims.admin === true) {
+                gate.classList.add('hidden');
+                dashboard.classList.remove('hidden');
+                document.getElementById('admin-name').textContent = user.displayName || user.email;
+                loadAllData();
+                return;
+            }
+            loading.classList.add('hidden');
+            form.classList.add('hidden');
+            denied.classList.remove('hidden');
+        }).catch(function() {
+            loading.classList.add('hidden');
+            form.classList.add('hidden');
+            denied.classList.remove('hidden');
+        });
     });
 
-    // ════════════════════════════════════════════
+        // ════════════════════════════════════════════
     //  TAB SWITCHING
     // ════════════════════════════════════════════
-    var ALL_TABS = ['products','orders','customers','tradeins','giftcards','rewards','reviews','contacts','coupons','analytics','auditlog','settings'];
+    var ALL_TABS = ['products','orders','customers','tradeins','giftcards','rewards','reviews','blog','contacts','coupons','analytics','auditlog','settings'];
 
     function switchTab(tab) {
         ALL_TABS.forEach(function(t) {
@@ -881,6 +879,7 @@
         loadGiftCards();
         loadRewards();
         loadReviews();
+        loadBlogPosts();
         loadContacts();
         loadCoupons();
         loadAdminWallets();
@@ -893,7 +892,7 @@
     }
 
     // ════════════════════════════════════════════
-    //  PRODUCT CATALOG (78 products)
+    //  PRODUCT CATALOG (113 products)
     // ════════════════════════════════════════════
     var baseProducts = [
         {id:1,name:"iPhone 17 Pro Max",brand:"Apple",category:"smartphones",price:1199,oldPrice:1299,badge:"NEW"},
@@ -990,7 +989,25 @@
         {id:95,name:"iPhone 17 Pro Max Silver",brand:"Apple",category:"smartphones",price:1320,oldPrice:null,badge:"NEW"},
         {id:96,name:"iPhone 17 Pro Max 512GB",brand:"Apple",category:"smartphones",price:1510,oldPrice:null,badge:"NEW"},
         {id:97,name:"iPhone 17 Pro Max (JP) 512GB Orange",brand:"Apple",category:"smartphones",price:1510,oldPrice:null,badge:"JP eSIM"},
-        {id:98,name:"iPhone 17 Pro Max (JP) 512GB Silver",brand:"Apple",category:"smartphones",price:1510,oldPrice:null,badge:"JP eSIM"}
+        {id:98,name:"iPhone 17 Pro Max (JP) 512GB Silver",brand:"Apple",category:"smartphones",price:1510,oldPrice:null,badge:"JP eSIM"},
+        {id:101,name:"iPhone 18 Pro Max",brand:"Apple",category:"smartphones",price:1299,oldPrice:null,badge:"NEW"},
+        {id:102,name:"iPhone 18 Pro",brand:"Apple",category:"smartphones",price:1099,oldPrice:null,badge:"NEW"},
+        {id:103,name:"iPhone Duo",brand:"Apple",category:"smartphones",price:1999,oldPrice:null,badge:"NEW"},
+        {id:104,name:"Apple Watch Series 12 42mm",brand:"Apple",category:"wearables",price:399,oldPrice:null,badge:"NEW"},
+        {id:105,name:"Apple Watch Ultra 4",brand:"Apple",category:"wearables",price:799,oldPrice:null,badge:"NEW"},
+        {id:106,name:"AirPods 5",brand:"Apple",category:"audio",price:129,oldPrice:null,badge:"NEW"},
+        {id:107,name:"Google Pixel 11 256GB",brand:"Google",category:"smartphones",price:899,oldPrice:null,badge:"NEW"},
+        {id:108,name:"Google Pixel 11 Pro 256GB",brand:"Google",category:"smartphones",price:1099,oldPrice:null,badge:"NEW"},
+        {id:109,name:"Google Pixel 11 Pro XL 256GB",brand:"Google",category:"smartphones",price:1299,oldPrice:null,badge:"NEW"},
+        {id:110,name:"Google Pixel Watch 5 41mm",brand:"Google",category:"wearables",price:399,oldPrice:null,badge:"NEW"},
+        {id:111,name:"Samsung Galaxy Z Fold8 Ultra 256GB",brand:"Samsung",category:"smartphones",price:2099,oldPrice:null,badge:"NEW"},
+        {id:112,name:"Samsung Galaxy Z Fold8 256GB",brand:"Samsung",category:"smartphones",price:1899,oldPrice:null,badge:"NEW"},
+        {id:113,name:"Samsung Galaxy Z Flip8 256GB",brand:"Samsung",category:"smartphones",price:1199,oldPrice:null,badge:"NEW"},
+        {id:114,name:"Samsung Galaxy S26 FE 128GB",brand:"Samsung",category:"smartphones",price:699,oldPrice:null,badge:"NEW"},
+        {id:115,name:"Samsung Galaxy Watch9 40mm",brand:"Samsung",category:"wearables",price:429,oldPrice:null,badge:"NEW"},
+        {id:116,name:"Motorola razr 2026 256GB",brand:"Motorola",category:"smartphones",price:799,oldPrice:null,badge:"NEW"},
+        {id:117,name:"Motorola edge 2026 256GB",brand:"Motorola",category:"smartphones",price:599,oldPrice:null,badge:"NEW"},
+        {id:118,name:"moto g stylus 2026 256GB",brand:"Motorola",category:"smartphones",price:499,oldPrice:null,badge:"NEW"}
     ];
 
     var productOverrides = {};
@@ -1019,7 +1036,7 @@
                 price: o.price !== undefined ? o.price : p.price,
                 oldPrice: o.oldPrice !== undefined ? o.oldPrice : p.oldPrice,
                 badge: o.badge !== undefined ? o.badge : p.badge,
-                stock: o.stock !== undefined ? o.stock : 10,
+                stock: o.stock !== undefined ? o.stock : 0,
                 defaultPrice: p.price,
                 defaultOldPrice: p.oldPrice,
                 defaultBadge: p.badge,
@@ -1185,7 +1202,7 @@
             var status = o.status || 'processing';
             var dateStr = o.createdAt ? new Date(o.createdAt.toDate()).toLocaleDateString() : 'N/A';
             var payMethod = o.paymentMethod || 'card';
-            var statusOpts = ['confirmed','processing','shipped','delivered','awaiting_crypto_payment','cancelled'];
+            var statusOpts = ['confirmed','processing','shipped','delivered','awaiting_payment','cancelled'];
             var selectHtml = '<select onchange="updateOrderStatus(\'' + o._id + '\', this.value)" class="status-select">';
             statusOpts.forEach(function(s) {
                 selectHtml += '<option value="' + s + '"' + (s === status ? ' selected' : '') + '>' + s.replace(/_/g,' ') + '</option>';
@@ -1220,31 +1237,20 @@
     }
 
     function updateOrderStatus(docId, newStatus) {
+        var update = { orderNumber: docId, status: newStatus };
         if (newStatus === 'shipped') {
             var carrier = prompt('Enter shipping carrier (fedex, ups, usps, dhl):');
             var trackNum = prompt('Enter tracking number:');
-            if (carrier && trackNum) {
-                carrier = carrier.trim().toLowerCase();
-                trackNum = trackNum.trim();
-                db.collection('orders').doc(docId).update({
-                    status: newStatus,
-                    trackingCarrier: carrier,
-                    trackingNumber: trackNum,
-                    shippedAt: firebase.firestore.FieldValue.serverTimestamp()
-                }).then(function() {
-                    var order = allOrders.find(function(o) { return o._id === docId; });
-                    if (order) { order.status = newStatus; order.trackingCarrier = carrier; order.trackingNumber = trackNum; }
-                    logAudit('order_shipped', 'Order ' + docId + ' shipped via ' + carrier.toUpperCase() + ' — ' + trackNum);
-                    alert('Order marked as shipped! Tracking: ' + carrier.toUpperCase() + ' ' + trackNum);
-                }).catch(function(e) { alert('Error: ' + e.message); });
-                return;
-            }
+            if (!carrier || !trackNum) return;
+            update.trackingCarrier = carrier.trim().toLowerCase();
+            update.trackingNumber = trackNum.trim();
         }
-        db.collection('orders').doc(docId).update({ status: newStatus }).then(function() {
+        firebase.app().functions('us-central1').httpsCallable('adminUpdateOrder')(update).then(function() {
             var order = allOrders.find(function(o) { return o._id === docId; });
-            if (order) order.status = newStatus;
-            logAudit('order_status', 'Order ' + docId + ' → ' + newStatus);
-        }).catch(function(e) { alert('Error updating status: ' + e.message); });
+            if (order) { order.status = newStatus; if (update.trackingCarrier) { order.trackingCarrier = update.trackingCarrier; order.trackingNumber = update.trackingNumber; } }
+            logAudit(newStatus === 'shipped' ? 'order_shipped' : 'order_status', 'Order ' + docId + ' → ' + newStatus);
+            renderOrders();
+        }).catch(function(e) { alert('Error updating order: ' + e.message); });
     }
 
     function viewOrderDetail(docId) {
@@ -1484,6 +1490,7 @@
                 + '<th class="text-left py-2 px-3 font-semibold text-gray-500">From</th>'
                 + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Status</th>'
                 + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Date</th>'
+                + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Action</th>'
                 + '</tr></thead><tbody>';
             snap.forEach(function(doc) {
                 var g = doc.data();
@@ -1497,6 +1504,7 @@
                     + '<td class="py-3 px-3 text-sm">' + escHtml(g.senderName || 'N/A') + '</td>'
                     + '<td class="py-3 px-3"><span class="text-xs bg-' + statusColor + '-100 text-' + statusColor + '-700 px-2 py-0.5 rounded-full capitalize">' + escHtml(g.status || 'active') + '</span></td>'
                     + '<td class="py-3 px-3 text-xs text-gray-500">' + dateStr + '</td>'
+                    + '<td class="py-3 px-3">' + (g.status === 'pending_payment' ? '<button onclick="activateGiftCard(this.dataset.code)" data-code="' + escHtml(doc.id) + '" class="text-xs bg-green-600 text-white px-3 py-1.5 rounded-lg font-semibold">Activate after payment</button>' : '—') + '</td>'
                     + '</tr>';
             });
             html += '</tbody></table>';
@@ -1957,6 +1965,43 @@
     }
 
     // ════════════════════════════════════════════
+    // BLOG CMS: only authorized admins reach this dashboard; public pages read published posts.
+    var blogCache = {};
+    function loadBlogPosts() {
+        var list = document.getElementById('blog-admin-list');
+        if (!list) return;
+        list.innerHTML = '<p class="text-center py-6 text-gray-500">Loading articles...</p>';
+        db.collection('blogPosts').get().then(function(snapshot) {
+            blogCache = {};
+            var posts = [];
+            snapshot.forEach(function(doc) { var post = doc.data(); post.id = doc.id; blogCache[doc.id] = post; posts.push(post); });
+            posts.sort(function(a,b) { return blogDate(b.updatedAt || b.createdAt) - blogDate(a.updatedAt || a.createdAt); });
+            if (!posts.length) { list.innerHTML = '<p class="text-center py-6 text-gray-500">No CMS articles yet. The existing support-page articles remain visible until you publish one.</p>'; return; }
+            list.innerHTML = posts.map(function(p) { return '<article class="bg-white border rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div><h3 class="font-bold">' + escHtml(p.title || 'Untitled') + '</h3><p class="text-sm text-gray-500">' + escHtml(p.category || 'Article') + ' · ' + (p.published ? 'Published' : 'Draft') + (p.updatedAt ? ' · Updated ' + new Date(blogDate(p.updatedAt)).toLocaleDateString() : '') + '</p><p class="text-sm text-gray-600 mt-1">' + escHtml(p.excerpt || '') + '</p></div><div class="flex gap-3 shrink-0"><button onclick="editBlogPost(\'' + p.id + '\')" class="text-brand-blue text-sm font-semibold">Edit</button><button onclick="deleteBlogPost(\'' + p.id + '\')" class="text-red-600 text-sm font-semibold">Delete</button></div></article>'; }).join('');
+        }).catch(function(err) { list.innerHTML = '<p class="text-center py-6 text-red-600">Could not load articles. Check Firestore access and rules.</p>'; console.error(err); });
+    }
+    function blogDate(value) { if (!value) return 0; return value.toDate ? value.toDate().getTime() : new Date(value).getTime(); }
+    function resetBlogForm() { document.getElementById('blog-form').reset(); document.getElementById('blog-edit-id').value = ''; document.getElementById('blog-form-message').textContent = ''; }
+    function editBlogPost(id) {
+        var p = blogCache[id]; if (!p) return;
+        document.getElementById('blog-edit-id').value = id; document.getElementById('blog-title').value = p.title || ''; document.getElementById('blog-category').value = p.category || '';
+        document.getElementById('blog-image').value = p.image || ''; document.getElementById('blog-excerpt').value = p.excerpt || ''; document.getElementById('blog-body').value = p.body || '';
+        document.getElementById('blog-published').checked = !!p.published; document.getElementById('blog-form').scrollIntoView({behavior:'smooth', block:'start'});
+    }
+    function saveBlogPost(event) {
+        event.preventDefault(); var msg = document.getElementById('blog-form-message'); msg.textContent = 'Saving...';
+        var id = document.getElementById('blog-edit-id').value, published = document.getElementById('blog-published').checked;
+        var imageUrl = document.getElementById('blog-image').value.trim();
+        try { var imageHost = new URL(imageUrl).hostname; if (new URL(imageUrl).protocol !== 'https:' || !(imageHost === 'www.att.com' || imageHost.endsWith('.att.com') || imageHost.endsWith('.firebasestorage.app'))) throw new Error('Use an HTTPS image from AT&T or Firebase Storage.'); } catch (imageError) { msg.textContent = imageError.message || 'Enter a valid HTTPS image URL.'; return; }
+        var previous = id ? blogCache[id] : null;
+        var data = { title: document.getElementById('blog-title').value.trim(), category: document.getElementById('blog-category').value.trim(), image: imageUrl, excerpt: document.getElementById('blog-excerpt').value.trim(), body: document.getElementById('blog-body').value.trim(), published: published, updatedAt: firebase.firestore.FieldValue.serverTimestamp(), updatedBy: auth.currentUser ? auth.currentUser.email : '' };
+        if (!previous) data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        if (published && (!previous || !previous.published)) data.publishedAt = firebase.firestore.FieldValue.serverTimestamp();
+        var ref = id ? db.collection('blogPosts').doc(id).set(data, {merge:true}) : db.collection('blogPosts').add(data);
+        ref.then(function() { msg.textContent = 'Saved.'; logAudit('blog_saved', (published ? 'Published ' : 'Saved draft ') + data.title); resetBlogForm(); loadBlogPosts(); }).catch(function(err) { msg.textContent = 'Save failed: ' + err.message; });
+    }
+    function deleteBlogPost(id) { if (!confirm('Delete this article permanently?')) return; db.collection('blogPosts').doc(id).delete().then(function() { logAudit('blog_deleted', 'Deleted blog article ' + id); loadBlogPosts(); }).catch(function(err) { alert('Could not delete article: ' + err.message); }); }
+
     //  CONTACTS (with reply/mark-read)
     // ════════════════════════════════════════════
     var allContacts = [];
@@ -2066,7 +2111,7 @@
     function issueGiftCard() {
         var amountSelect = document.getElementById('new-gc-amount').value;
         var amount = amountSelect === 'custom' ? parseFloat(document.getElementById('new-gc-custom-amount').value) : parseFloat(amountSelect);
-        if (isNaN(amount) || amount < 5) { alert('Enter a valid amount (min $5).'); return; }
+        if (isNaN(amount) || amount < 10) { alert('Enter a valid amount (min $10).'); return; }
         var email = document.getElementById('new-gc-email').value.trim();
         var name = document.getElementById('new-gc-name').value.trim();
         var reason = document.getElementById('new-gc-reason').value.trim();
@@ -2205,7 +2250,8 @@
             date: new Date().toLocaleString()
         };
         order.notes.push(note);
-        db.collection('orders').doc(docId).update({
+        firebase.app().functions('us-central1').httpsCallable('adminUpdateOrder')({
+            orderNumber: docId,
             notes: order.notes
         }).then(function() {
             viewOrderDetail(docId);
@@ -2681,15 +2727,10 @@
     }
 
     function verifyCryptoPayment(docId, coin, txHash) {
-        if (!confirm('Have you verified this transaction on the blockchain explorer?\\n\\nCoin: ' + coin + '\\nTX: ' + txHash.substring(0, 20) + '...\\n\\nThis will mark payment as verified and confirm the order.')) return;
-        db.collection('orders').doc(docId).update({
-            cryptoVerified: true,
-            cryptoVerifiedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            cryptoVerifiedBy: auth.currentUser ? auth.currentUser.email : 'admin',
-            status: 'confirmed'
-        }).then(function() {
+        if (!confirm('Have you verified this transaction on the blockchain explorer?\n\nCoin: ' + coin + '\nTX: ' + txHash.substring(0, 20) + '...\n\nThis will mark payment as verified and confirm the order.')) return;
+        firebase.app().functions('us-central1').httpsCallable('verifyManualPayment')({ orderNumber: docId, method: 'crypto' }).then(function() {
             var order = allOrders.find(function(o) { return o._id === docId; });
-            if (order) { order.cryptoVerified = true; order.status = 'confirmed'; }
+            if (order) { order.cryptoVerified = true; order.paymentStatus = 'paid'; order.status = 'confirmed'; }
             logAudit('crypto_verified', 'Order ' + docId + ' crypto payment verified. TX: ' + txHash);
             document.getElementById('order-modal').classList.add('hidden');
             renderOrders();
@@ -2700,13 +2741,9 @@
     function rejectCryptoPayment(docId) {
         var reason = prompt('Reason for rejecting this crypto payment:');
         if (!reason) return;
-        db.collection('orders').doc(docId).update({
-            cryptoVerified: false,
-            cryptoRejectedReason: reason,
-            status: 'cancelled'
-        }).then(function() {
+        firebase.app().functions('us-central1').httpsCallable('adminUpdateOrder')({ orderNumber: docId, status: 'cancelled', reason: reason }).then(function() {
             var order = allOrders.find(function(o) { return o._id === docId; });
-            if (order) { order.status = 'cancelled'; }
+            if (order) { order.status = 'cancelled'; order.paymentStatus = 'rejected'; }
             logAudit('crypto_rejected', 'Order ' + docId + ' crypto payment rejected. Reason: ' + reason);
             document.getElementById('order-modal').classList.add('hidden');
             renderOrders();
@@ -2715,15 +2752,10 @@
     }
 
     function confirmBankPayment(docId) {
-        if (!confirm('Have you verified this bank transfer receipt?\\n\\nThis will confirm the payment and process the order.')) return;
-        db.collection('orders').doc(docId).update({
-            bankPaymentConfirmed: true,
-            bankConfirmedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            bankConfirmedBy: auth.currentUser ? auth.currentUser.email : 'admin',
-            status: 'confirmed'
-        }).then(function() {
+        if (!confirm('Have you verified this bank transfer receipt?\n\nThis will confirm the payment and process the order.')) return;
+        firebase.app().functions('us-central1').httpsCallable('verifyManualPayment')({ orderNumber: docId, method: 'bank' }).then(function() {
             var order = allOrders.find(function(o) { return o._id === docId; });
-            if (order) { order.bankPaymentConfirmed = true; order.status = 'confirmed'; }
+            if (order) { order.bankPaymentConfirmed = true; order.paymentStatus = 'paid'; order.status = 'confirmed'; }
             logAudit('bank_payment_confirmed', 'Order ' + docId + ' bank payment confirmed.');
             document.getElementById('order-modal').classList.add('hidden');
             renderOrders();
@@ -2734,13 +2766,9 @@
     function rejectBankPayment(docId) {
         var reason = prompt('Reason for rejecting this bank transfer:');
         if (!reason) return;
-        db.collection('orders').doc(docId).update({
-            bankPaymentRejected: true,
-            bankRejectedReason: reason,
-            status: 'cancelled'
-        }).then(function() {
+        firebase.app().functions('us-central1').httpsCallable('adminUpdateOrder')({ orderNumber: docId, status: 'cancelled', reason: reason }).then(function() {
             var order = allOrders.find(function(o) { return o._id === docId; });
-            if (order) { order.status = 'cancelled'; }
+            if (order) { order.status = 'cancelled'; order.paymentStatus = 'rejected'; }
             logAudit('bank_payment_rejected', 'Order ' + docId + ' bank payment rejected. Reason: ' + reason);
             document.getElementById('order-modal').classList.add('hidden');
             renderOrders();
@@ -2767,7 +2795,7 @@
             trackingCarrier: carrier,
             trackingNumber: trackNum
         };
-        db.collection('orders').doc(docId).update(updateData).then(function() {
+        firebase.app().functions('us-central1').httpsCallable('adminUpdateOrder')(Object.assign({ orderNumber: docId }, updateData)).then(function() {
             var order = allOrders.find(function(o) { return o._id === docId; });
             if (order) { order.trackingCarrier = carrier; order.trackingNumber = trackNum; }
             logAudit('tracking_updated', 'Order ' + docId + ' tracking: ' + carrier.toUpperCase() + ' ' + trackNum);

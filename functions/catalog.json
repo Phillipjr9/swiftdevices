@@ -1,0 +1,793 @@
+[
+  {
+    "id": 1,
+    "name": "iPhone 17 Pro Max",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 1308.99
+  },
+  {
+    "id": 10,
+    "name": "iPad Air 13-inch M4",
+    "brand": "Apple",
+    "category": "tablets",
+    "price": 948.99
+  },
+  {
+    "id": 14,
+    "name": "Apple Watch Ultra 3",
+    "brand": "Apple",
+    "category": "wearables",
+    "price": 798.99
+  },
+  {
+    "id": 18,
+    "name": "AirPods Pro 3",
+    "brand": "Apple",
+    "category": "audio",
+    "price": 248.99
+  },
+  {
+    "id": 22,
+    "name": "iPhone 17",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 798.99
+  },
+  {
+    "id": 25,
+    "name": "Google Pixel Watch 4 45mm",
+    "brand": "Google",
+    "category": "wearables",
+    "price": 448.99
+  },
+  {
+    "id": 29,
+    "name": "Beats Solo 4",
+    "brand": "Beats",
+    "category": "audio",
+    "price": 198.99
+  },
+  {
+    "id": 33,
+    "name": "Apple MagSafe 25W Charger",
+    "brand": "Apple",
+    "category": "accessories",
+    "price": 38.99
+  },
+  {
+    "id": 37,
+    "name": "Belkin Magnetic Power Bank 8K",
+    "brand": "Belkin",
+    "category": "accessories",
+    "price": 58.99
+  },
+  {
+    "id": 2,
+    "name": "Samsung Galaxy S26 Ultra",
+    "brand": "Samsung",
+    "category": "smartphones",
+    "price": 1298.99
+  },
+  {
+    "id": 11,
+    "name": "iPad Air 11-inch M4",
+    "brand": "Apple",
+    "category": "tablets",
+    "price": 748.99
+  },
+  {
+    "id": 15,
+    "name": "Apple Watch Series 11",
+    "brand": "Apple",
+    "category": "wearables",
+    "price": 498.99
+  },
+  {
+    "id": 19,
+    "name": "Galaxy Buds4 Pro",
+    "brand": "Samsung",
+    "category": "audio",
+    "price": 248.99
+  },
+  {
+    "id": 23,
+    "name": "Motorola razr+ 2025",
+    "brand": "Motorola",
+    "category": "smartphones",
+    "price": 998.99
+  },
+  {
+    "id": 26,
+    "name": "Samsung Galaxy Watch8 Classic 47mm",
+    "brand": "Samsung",
+    "category": "wearables",
+    "price": 548.99
+  },
+  {
+    "id": 30,
+    "name": "JBL Charge 6",
+    "brand": "JBL",
+    "category": "audio",
+    "price": 198.99
+  },
+  {
+    "id": 34,
+    "name": "Samsung 45W USB-C Power Adapter",
+    "brand": "Samsung",
+    "category": "accessories",
+    "price": 48.99
+  },
+  {
+    "id": 38,
+    "name": "Samsung 15W Wireless Charger",
+    "brand": "Samsung",
+    "category": "accessories",
+    "price": 58.99
+  },
+  {
+    "id": 3,
+    "name": "iPhone 17 Pro",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 1184.99
+  },
+  {
+    "id": 12,
+    "name": "Galaxy Tab S10 FE 5G",
+    "brand": "Samsung",
+    "category": "tablets",
+    "price": 598.99
+  },
+  {
+    "id": 16,
+    "name": "Samsung Galaxy Watch8",
+    "brand": "Samsung",
+    "category": "wearables",
+    "price": 398.99
+  },
+  {
+    "id": 20,
+    "name": "Google Pixel Buds 2A",
+    "brand": "Google",
+    "category": "audio",
+    "price": 128.99
+  },
+  {
+    "id": 24,
+    "name": "Moto g Stylus 2025",
+    "brand": "Motorola",
+    "category": "smartphones",
+    "price": 294.99
+  },
+  {
+    "id": 27,
+    "name": "Apple Watch SE 3 44mm",
+    "brand": "Apple",
+    "category": "wearables",
+    "price": 328.99
+  },
+  {
+    "id": 31,
+    "name": "JBL Flip 7",
+    "brand": "JBL",
+    "category": "audio",
+    "price": 148.99
+  },
+  {
+    "id": 35,
+    "name": "Samsung 25W Magnetic Charging Pad",
+    "brand": "Samsung",
+    "category": "accessories",
+    "price": 48.99
+  },
+  {
+    "id": 39,
+    "name": "Belkin 70W Travel Charger",
+    "brand": "Belkin",
+    "category": "accessories",
+    "price": 58.99
+  },
+  {
+    "id": 4,
+    "name": "Samsung Galaxy Z Fold7",
+    "brand": "Samsung",
+    "category": "smartphones",
+    "price": 1998.99
+  },
+  {
+    "id": 13,
+    "name": "Galaxy Tab A11+ 5G",
+    "brand": "Samsung",
+    "category": "tablets",
+    "price": 278.99
+  },
+  {
+    "id": 17,
+    "name": "Apple Watch Series 11 42mm",
+    "brand": "Apple",
+    "category": "wearables",
+    "price": 428.99
+  },
+  {
+    "id": 21,
+    "name": "Beats Studio Pro",
+    "brand": "Beats",
+    "category": "audio",
+    "price": 348.99
+  },
+  {
+    "id": 28,
+    "name": "Apple Watch SE 3 40mm",
+    "brand": "Apple",
+    "category": "wearables",
+    "price": 298.99
+  },
+  {
+    "id": 32,
+    "name": "JBL Xtreme 4",
+    "brand": "JBL",
+    "category": "audio",
+    "price": 378.99
+  },
+  {
+    "id": 36,
+    "name": "Apple iPhone Air MagSafe Battery",
+    "brand": "Apple",
+    "category": "accessories",
+    "price": 98.99
+  },
+  {
+    "id": 40,
+    "name": "Samsung Galaxy Buds3 FE",
+    "brand": "Samsung",
+    "category": "audio",
+    "price": 148.99
+  },
+  {
+    "id": 5,
+    "name": "Samsung Galaxy Z Flip7",
+    "brand": "Samsung",
+    "category": "smartphones",
+    "price": 1098.99
+  },
+  {
+    "id": 6,
+    "name": "Google Pixel 10 Pro XL",
+    "brand": "Google",
+    "category": "smartphones",
+    "price": 1248.99
+  },
+  {
+    "id": 7,
+    "name": "iPhone Air",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 854.99
+  },
+  {
+    "id": 8,
+    "name": "Google Pixel 10 Pro",
+    "brand": "Google",
+    "category": "smartphones",
+    "price": 1048.99
+  },
+  {
+    "id": 9,
+    "name": "Google Pixel 10",
+    "brand": "Google",
+    "category": "smartphones",
+    "price": 848.99
+  },
+  {
+    "id": 41,
+    "name": "iPhone 17e",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 614.99
+  },
+  {
+    "id": 42,
+    "name": "Samsung Galaxy S26+",
+    "brand": "Samsung",
+    "category": "smartphones",
+    "price": 1098.99
+  },
+  {
+    "id": 43,
+    "name": "Samsung Galaxy S26",
+    "brand": "Samsung",
+    "category": "smartphones",
+    "price": 898.99
+  },
+  {
+    "id": 44,
+    "name": "Google Pixel 10a",
+    "brand": "Google",
+    "category": "smartphones",
+    "price": 498.99
+  },
+  {
+    "id": 45,
+    "name": "Samsung Galaxy Watch Ultra",
+    "brand": "Samsung",
+    "category": "wearables",
+    "price": 648.99
+  },
+  {
+    "id": 46,
+    "name": "Samsung Galaxy Watch8 44mm",
+    "brand": "Samsung",
+    "category": "wearables",
+    "price": 448.99
+  },
+  {
+    "id": 47,
+    "name": "Samsung Galaxy A16 5G",
+    "brand": "Samsung",
+    "category": "smartphones",
+    "price": 198.99
+  },
+  {
+    "id": 48,
+    "name": "Google Pixel Watch 4 41mm",
+    "brand": "Google",
+    "category": "wearables",
+    "price": 348.99
+  },
+  {
+    "id": 49,
+    "name": "Google Pixel 9a",
+    "brand": "Google",
+    "category": "smartphones",
+    "price": 498.99
+  },
+  {
+    "id": 50,
+    "name": "Beats Solo Buds+",
+    "brand": "Beats",
+    "category": "audio",
+    "price": 78.99
+  },
+  {
+    "id": 51,
+    "name": "Beats Studio Buds+",
+    "brand": "Beats",
+    "category": "audio",
+    "price": 168.99
+  },
+  {
+    "id": 52,
+    "name": "JBL Tune 670NC",
+    "brand": "JBL",
+    "category": "audio",
+    "price": 98.99
+  },
+  {
+    "id": 53,
+    "name": "JBL Go 4",
+    "brand": "JBL",
+    "category": "audio",
+    "price": 48.99
+  },
+  {
+    "id": 54,
+    "name": "Belkin 65W Dual USB-C Charger",
+    "brand": "Belkin",
+    "category": "accessories",
+    "price": 58.99
+  },
+  {
+    "id": 55,
+    "name": "Belkin 25W 3-in-1 Compact Travel",
+    "brand": "Belkin",
+    "category": "accessories",
+    "price": 98.99
+  },
+  {
+    "id": 56,
+    "name": "Samsung 60W Power Wall Adapter",
+    "brand": "Samsung",
+    "category": "accessories",
+    "price": 53.99
+  },
+  {
+    "id": 57,
+    "name": "Belkin 3-in-1 Magnetic Travel Pad",
+    "brand": "Belkin",
+    "category": "accessories",
+    "price": 148.99
+  },
+  {
+    "id": 58,
+    "name": "Belkin BoostCharge Pro Wireless Pad",
+    "brand": "Belkin",
+    "category": "accessories",
+    "price": 48.99
+  },
+  {
+    "id": 59,
+    "name": "Belkin 3-in-1 Magnetic Stand",
+    "brand": "Belkin",
+    "category": "accessories",
+    "price": 148.99
+  },
+  {
+    "id": 63,
+    "name": "iPhone 16 Pro Max",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 1098.99
+  },
+  {
+    "id": 64,
+    "name": "iPhone 16 Pro",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 898.99
+  },
+  {
+    "id": 65,
+    "name": "iPhone 16",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 698.99
+  },
+  {
+    "id": 66,
+    "name": "iPhone 16 Plus",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 798.99
+  },
+  {
+    "id": 67,
+    "name": "iPhone 15 Pro Max",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 898.99
+  },
+  {
+    "id": 68,
+    "name": "iPhone 15 Pro",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 798.99
+  },
+  {
+    "id": 69,
+    "name": "iPhone 15",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 598.99
+  },
+  {
+    "id": 70,
+    "name": "Samsung Galaxy S25 Ultra",
+    "brand": "Samsung",
+    "category": "smartphones",
+    "price": 1098.99
+  },
+  {
+    "id": 71,
+    "name": "Samsung Galaxy S25+",
+    "brand": "Samsung",
+    "category": "smartphones",
+    "price": 848.99
+  },
+  {
+    "id": 72,
+    "name": "Samsung Galaxy S25",
+    "brand": "Samsung",
+    "category": "smartphones",
+    "price": 698.99
+  },
+  {
+    "id": 73,
+    "name": "Samsung Galaxy S24 Ultra",
+    "brand": "Samsung",
+    "category": "smartphones",
+    "price": 898.99
+  },
+  {
+    "id": 74,
+    "name": "Samsung Galaxy Z Fold6",
+    "brand": "Samsung",
+    "category": "smartphones",
+    "price": 1498.99
+  },
+  {
+    "id": 75,
+    "name": "Samsung Galaxy Z Flip6",
+    "brand": "Samsung",
+    "category": "smartphones",
+    "price": 798.99
+  },
+  {
+    "id": 76,
+    "name": "Google Pixel 9 Pro",
+    "brand": "Google",
+    "category": "smartphones",
+    "price": 798.99
+  },
+  {
+    "id": 77,
+    "name": "Google Pixel 9",
+    "brand": "Google",
+    "category": "smartphones",
+    "price": 548.99
+  },
+  {
+    "id": 78,
+    "name": "Samsung Galaxy Watch7",
+    "brand": "Samsung",
+    "category": "wearables",
+    "price": 248.99
+  },
+  {
+    "id": 79,
+    "name": "iPhone 14 (USA)",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 475.99
+  },
+  {
+    "id": 80,
+    "name": "iPhone 14 Starlight (USA)",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 475.99
+  },
+  {
+    "id": 81,
+    "name": "iPhone 16e (Open Box)",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 499.99
+  },
+  {
+    "id": 82,
+    "name": "iPhone 16e (eSIM Activate)",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 399.99
+  },
+  {
+    "id": 83,
+    "name": "iPhone Air Gold",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 854.99
+  },
+  {
+    "id": 84,
+    "name": "iPhone Air 512GB Gold",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 1099.99
+  },
+  {
+    "id": 85,
+    "name": "iPhone Air 1TB Blue",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 1299.99
+  },
+  {
+    "id": 86,
+    "name": "iPhone 17e Pink",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 589.99
+  },
+  {
+    "id": 87,
+    "name": "iPhone 17e White",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 589.99
+  },
+  {
+    "id": 88,
+    "name": "iPhone 17 Blue (JP eSIM)",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 794.99
+  },
+  {
+    "id": 89,
+    "name": "iPhone 17 Lavender (JP eSIM)",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 794.99
+  },
+  {
+    "id": 90,
+    "name": "iPhone 17 Sage (JP eSIM)",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 794.99
+  },
+  {
+    "id": 91,
+    "name": "iPhone 17 White (JP eSIM)",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 794.99
+  },
+  {
+    "id": 92,
+    "name": "iPhone 17 Pro Blue",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 1184.99
+  },
+  {
+    "id": 93,
+    "name": "iPhone 17 Pro Silver",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 1184.99
+  },
+  {
+    "id": 94,
+    "name": "iPhone 17 Pro 512GB",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 1394.99
+  },
+  {
+    "id": 95,
+    "name": "iPhone 17 Pro Max Silver",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 1319.99
+  },
+  {
+    "id": 96,
+    "name": "iPhone 17 Pro Max 512GB",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 1509.99
+  },
+  {
+    "id": 97,
+    "name": "iPhone 17 Pro Max (JP) 512GB Orange",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 1509.99
+  },
+  {
+    "id": 98,
+    "name": "iPhone 17 Pro Max (JP) 512GB Silver",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 1509.99
+  },
+  {
+    "id": 101,
+    "name": "iPhone 18 Pro Max",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 1298.99
+  },
+  {
+    "id": 102,
+    "name": "iPhone 18 Pro",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 1098.99
+  },
+  {
+    "id": 103,
+    "name": "iPhone Duo",
+    "brand": "Apple",
+    "category": "smartphones",
+    "price": 1998.99
+  },
+  {
+    "id": 104,
+    "name": "Apple Watch Series 12 42mm",
+    "brand": "Apple",
+    "category": "wearables",
+    "price": 398.99
+  },
+  {
+    "id": 105,
+    "name": "Apple Watch Ultra 4",
+    "brand": "Apple",
+    "category": "wearables",
+    "price": 798.99
+  },
+  {
+    "id": 106,
+    "name": "AirPods 5",
+    "brand": "Apple",
+    "category": "audio",
+    "price": 128.99
+  },
+  {
+    "id": 107,
+    "name": "Google Pixel 11 256GB",
+    "brand": "Google",
+    "category": "smartphones",
+    "price": 898.99
+  },
+  {
+    "id": 108,
+    "name": "Google Pixel 11 Pro 256GB",
+    "brand": "Google",
+    "category": "smartphones",
+    "price": 1098.99
+  },
+  {
+    "id": 109,
+    "name": "Google Pixel 11 Pro XL 256GB",
+    "brand": "Google",
+    "category": "smartphones",
+    "price": 1298.99
+  },
+  {
+    "id": 110,
+    "name": "Google Pixel Watch 5 41mm",
+    "brand": "Google",
+    "category": "wearables",
+    "price": 398.99
+  },
+  {
+    "id": 111,
+    "name": "Samsung Galaxy Z Fold8 Ultra 256GB",
+    "brand": "Samsung",
+    "category": "smartphones",
+    "price": 2098.99
+  },
+  {
+    "id": 112,
+    "name": "Samsung Galaxy Z Fold8 256GB",
+    "brand": "Samsung",
+    "category": "smartphones",
+    "price": 1898.99
+  },
+  {
+    "id": 113,
+    "name": "Samsung Galaxy Z Flip8 256GB",
+    "brand": "Samsung",
+    "category": "smartphones",
+    "price": 1198.99
+  },
+  {
+    "id": 114,
+    "name": "Samsung Galaxy S26 FE 128GB",
+    "brand": "Samsung",
+    "category": "smartphones",
+    "price": 698.99
+  },
+  {
+    "id": 115,
+    "name": "Samsung Galaxy Watch9 40mm",
+    "brand": "Samsung",
+    "category": "wearables",
+    "price": 428.99
+  },
+  {
+    "id": 116,
+    "name": "Motorola razr 2026 256GB",
+    "brand": "Motorola",
+    "category": "smartphones",
+    "price": 798.99
+  },
+  {
+    "id": 117,
+    "name": "Motorola edge 2026 256GB",
+    "brand": "Motorola",
+    "category": "smartphones",
+    "price": 598.99
+  },
+  {
+    "id": 118,
+    "name": "moto g stylus 2026 256GB",
+    "brand": "Motorola",
+    "category": "smartphones",
+    "price": 498.99
+  }
+]
