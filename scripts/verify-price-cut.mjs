@@ -96,6 +96,18 @@ for (const [label, text, rows] of [['baseline', baseline, before], ['working', w
   if (lines !== rows.length) failures.push(`${label}: ${lines} product literals but ${rows.length} parsed - objects must stay one per line or a SKU escapes this check`);
 }
 
+// 4. The campaign manifest. Checks 1-3 all iterate from the baseline, so deleting
+//    a newly added SKU would pass every one of them - which is the exact failure
+//    this branch is meant to prevent.
+const CAMPAIGN_SKUS = [99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116];
+const afterIds = new Set(after.map((p) => p.id));
+for (const id of CAMPAIGN_SKUS) {
+  if (!afterIds.has(id)) failures.push(`campaign SKU id ${id} is missing from the working catalog`);
+}
+for (const p of added) {
+  if (!CAMPAIGN_SKUS.includes(p.id)) failures.push(`id ${p.id} (${p.name}) is in the catalog but not in CAMPAIGN_SKUS - update the manifest when adding a device`);
+}
+
 console.log(JSON.stringify({
   ok: failures.length === 0,
   rate,

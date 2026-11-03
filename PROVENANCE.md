@@ -38,8 +38,25 @@ The imported artifact hotlinked ~90 product photos from
 6 of those assets already returned 404, and in a browser the failure rate was
 13/97. `scripts/vendor-images.mjs` downloaded the reachable set into
 `public/img/products/` and repointed every reference to `/img/products/...`;
-unreachable ones got a labelled "PHOTO PENDING" placeholder, and the iPhone 18 /
-Watch Series 12 / AirPods 5 images come from Apple's own image CDN.
+unreachable ones got a labelled "PHOTO PENDING" placeholder.
+
+Apple imagery for the added SKUs comes from `store.storeimages.cdn-apple.com`,
+fetched from slugs that appear on Apple's own current product pages rather than
+from guessed names. Two of them are family art, not per-SKU art, and that is a
+known imprecision:
+
+- `apple-iphone-duo-star-white.jpg` / `apple-iphone-duo-night-sky.jpg` — finish
+  specific (`iphone-duo-finish-select-*-202609`).
+- `apple-watch-ultra-4.jpg` — `ultra-case-unselect-gallery-1-202609`, which shows
+  **both** the Natural and Black Titanium cases; ids 113 and 114 share it.
+- `apple-ipad-pro-m5.jpg` — `ipad-pro-model-select-gallery-1-202405`, the iPad Pro
+  size-comparison image; ids 115 and 116 share it. Apple still serves this slug for
+  the M5 family, but it depicts both sizes.
+
+The finish-only Ultra 4 slugs Apple uses on that page are 64×64 swatches, and the
+only iPad Pro shots on the M5 buy page are bundled with a Magic Keyboard, so
+neither was used rather than substituting a picture of something that is not the
+listed item.
 
 These are third-party marketing assets now stored on this project's own origin.
 Self-hosting them is a stronger claim on them than hotlinking was. Replacing them
