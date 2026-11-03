@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300" role="img" aria-label="Samsung Galaxy Z Flip8 placeholder image">
+  <rect width="300" height="300" fill="#f8fafc"/>
+  <rect x="112" y="42" width="76" height="106" rx="12" fill="#1f2430"/>
+  <rect x="112" y="152" width="76" height="106" rx="12" fill="#2b3242"/>
+  <rect x="112" y="146" width="76" height="8" rx="3" fill="#6b7688"/>
+  <rect x="119" y="49" width="62" height="92" rx="9" fill="#3c4354"/>
+  <rect x="119" y="159" width="62" height="92" rx="9" fill="#454d61"/>
+  <text x="150" y="286" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#64748b">Galaxy Z Flip8</text>
+</svg>

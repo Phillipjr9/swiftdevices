@@ -26,6 +26,44 @@ is byte-identical to what the CDN returned:
 | `public/manifest.json` | `e8675cc76274897d22d1a7cb3e38419d2c3842a919885683065a998eee07ae08` |
 | `public/logo.png` | `53642b92023005dcaf63fbf71200b89a17a5fc070e5855379afe4e0d1a893be6` |
 
+Those digests describe commit `d509987`. Later work on
+`feat/thanksgiving-2026-price-cut` edits `public/index.html` and adds
+`public/img/*.svg`; files touched there are no longer byte-identical to what the
+CDN served, and the table above should be read as the baseline, not the branch.
+
+### Product imagery is vendored, and that is a licensing decision
+
+The imported artifact hotlinked ~90 product photos from
+`www.att.com/scmsassets/...` — a carrier CDN that this project does not control.
+6 of those assets already returned 404, and in a browser the failure rate was
+13/97. `scripts/vendor-images.mjs` downloaded the reachable set into
+`public/img/products/` and repointed every reference to `/img/products/...`;
+unreachable ones got a labelled "PHOTO PENDING" placeholder.
+
+Apple imagery for the added SKUs comes from `store.storeimages.cdn-apple.com`,
+fetched from slugs that appear on Apple's own current product pages rather than
+from guessed names. Two of them are family art, not per-SKU art, and that is a
+known imprecision:
+
+- `apple-iphone-duo-star-white.jpg` / `apple-iphone-duo-night-sky.jpg` — finish
+  specific (`iphone-duo-finish-select-*-202609`).
+- `apple-watch-ultra-4.jpg` — `ultra-case-unselect-gallery-1-202609`, which shows
+  **both** the Natural and Black Titanium cases; ids 113 and 114 share it.
+- `apple-ipad-pro-m5.jpg` — `ipad-pro-model-select-gallery-1-202405`, the iPad Pro
+  size-comparison image; ids 115 and 116 share it. Apple still serves this slug for
+  the M5 family, but it depicts both sizes.
+
+The finish-only Ultra 4 slugs Apple uses on that page are 64×64 swatches, and the
+only iPad Pro shots on the M5 buy page are bundled with a Magic Keyboard, so
+neither was used rather than substituting a picture of something that is not the
+listed item.
+
+These are third-party marketing assets now stored on this project's own origin.
+Self-hosting them is a stronger claim on them than hotlinking was. Replacing them
+with photography the store owns — or with supplier-approved asset feeds — is the
+follow-up, and deleting `public/img/products/` plus reverting that one commit
+undoes the vendoring without touching the catalog work.
+
 ## What this does not include
 
 - **Firestore security rules.** They are server-side configuration and cannot be
