@@ -31,6 +31,22 @@ Those digests describe commit `d509987`. Later work on
 `public/img/*.svg`; files touched there are no longer byte-identical to what the
 CDN served, and the table above should be read as the baseline, not the branch.
 
+### Product imagery is vendored, and that is a licensing decision
+
+The imported artifact hotlinked ~90 product photos from
+`www.att.com/scmsassets/...` — a carrier CDN that this project does not control.
+6 of those assets already returned 404, and in a browser the failure rate was
+13/97. `scripts/vendor-images.mjs` downloaded the reachable set into
+`public/img/products/` and repointed every reference to `/img/products/...`;
+unreachable ones got a labelled "PHOTO PENDING" placeholder, and the iPhone 18 /
+Watch Series 12 / AirPods 5 images come from Apple's own image CDN.
+
+These are third-party marketing assets now stored on this project's own origin.
+Self-hosting them is a stronger claim on them than hotlinking was. Replacing them
+with photography the store owns — or with supplier-approved asset feeds — is the
+follow-up, and deleting `public/img/products/` plus reverting that one commit
+undoes the vendoring without touching the catalog work.
+
 ## What this does not include
 
 - **Firestore security rules.** They are server-side configuration and cannot be

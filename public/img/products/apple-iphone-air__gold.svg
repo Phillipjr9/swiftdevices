@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300" role="img" aria-label="apple-iphone-air - gold - photo pending">
+  <rect width="300" height="300" fill="#f8fafc"/>
+  <rect x="105" y="52" width="90" height="176" rx="20" fill="none" stroke="#cbd5e1" stroke-width="6" stroke-dasharray="14 10"/>
+  <circle cx="150" cy="126" r="26" fill="none" stroke="#cbd5e1" stroke-width="6"/>
+  <path d="M150 100v52M124 126h52" stroke="#cbd5e1" stroke-width="6" stroke-linecap="round"/>
+  <text x="150" y="252" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#94a3b8">PHOTO PENDING</text>
+  <text x="150" y="272" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="12" font-weight="bold" fill="#64748b">apple-iphone-air - gold</text>
+</svg>
