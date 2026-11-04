@@ -48,6 +48,9 @@ test('raw review and question documents are admin-only; public display data is p
   assert.match(rules, /match \/productQA\/\{questionId\} \{\s+allow read: if isAdmin\(\);/);
   assert.match(functions, /exports\.listPublicReviews = onCall/);
   assert.match(functions, /exports\.listProductQuestions = onCall/);
+  assert.match(functions, /enforcePublicReadRateLimit\(request, 'public_reviews'\)/);
+  assert.match(functions, /enforcePublicReadRateLimit\(request, 'public_questions'\)/);
+  assert.match(functions, /const PUBLIC_READ_RATE_LIMIT = 60/);
   assert.doesNotMatch(storefront, /collection\(['"]reviews['"]\)\.(where|orderBy)/);
   assert.doesNotMatch(storefront, /collection\(['"]productQA['"]\)\.(where|orderBy)/);
 });

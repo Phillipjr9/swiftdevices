@@ -19,7 +19,7 @@ The site has a substantial storefront and customer-facing surface: a 113-item ca
 - Made unknown inventory default to zero and added transactional inventory reservation/release. A scheduled function expires unpaid orders after 24 hours; actual stock counts must be set by an administrator before products can be purchased.
 - Added claim-only admin authorization and a secure local claim-management script. Admin access still requires an operator to assign the claim in the intended Firebase project.
 - Restricted customer gift-card requests to pending/inactive records, added a post-payment admin activation action, and moved redemption/reward updates to a callable.
-- Removed unverified review badges, escaped customer-provided review/Q&A content, and moved public review/Q&A reads to sanitized callables so email/user IDs in legacy records are not exposed to storefront clients.
+- Removed unverified review badges, escaped customer-provided review/Q&A content, and moved public review/Q&A reads to sanitized, IP-rate-limited callables so email/user IDs in legacy records are not exposed to storefront clients.
 - Added backend unit tests, inline-script syntax checks, CI workflow, checkout indexes, and `OPERATIONS.md` deployment prerequisites.
 
 ### Still requires project/business decisions or live verification

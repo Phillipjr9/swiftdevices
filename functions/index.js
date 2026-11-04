@@ -10,6 +10,28 @@ initializeApp();
 const db = getFirestore();
 const RATE_WINDOW_MS = 15 * 60 * 1000;
 const RATE_LIMIT = 12;
+const PUBLIC_READ_RATE_LIMIT = 60;
+
+async function enforcePublicReadRateLimit(request, scope) {
+  const ip = String(request.rawRequest?.ip || 'unknown').slice(0, 80);
+  const rateId = createHash('sha256').update(ip).digest('hex');
+  const rateRef = db.collection('_publicRateLimits').doc(`${scope}_${rateId}`);
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(rateRef);
+    const now = Date.now();
+    const data = snap.exists ? snap.data() : {};
+    const windowStart = data.windowStart?.toMillis?.() || 0;
+    const count = windowStart > now - RATE_WINDOW_MS ? Number(data.count || 0) : 0;
+    if (count >= PUBLIC_READ_RATE_LIMIT) {
+      throw new HttpsError('resource-exhausted', 'Too many requests. Please wait a few minutes and try again.');
+    }
+    tx.set(rateRef, {
+      count: count + 1,
+      windowStart: count ? data.windowStart : Timestamp.fromMillis(now),
+      expiresAt: Timestamp.fromMillis(now + RATE_WINDOW_MS * 2),
+    });
+  });
+}
 
 function isValidOrderNumber(orderNumber) {
   return /^SW-(?:\d{6}|[A-Za-z0-9_-]{20})$/.test(orderNumber);
@@ -327,6 +349,7 @@ exports.listPublicReviews = onCall({ region: 'us-central1', maxInstances: 10 }, 
     if (!Number.isInteger(productId) || !CATALOG_BY_ID.has(productId)) throw new HttpsError('invalid-argument', 'Invalid product.');
     query = query.where('productId', '==', productId);
   }
+  await enforcePublicReadRateLimit(request, 'public_reviews');
   const snapshot = await query.orderBy('createdAt', 'desc').limit(limit).get();
   return { reviews: snapshot.docs.map((doc) => toPublicReview(doc.data())) };
 });
@@ -334,6 +357,7 @@ exports.listPublicReviews = onCall({ region: 'us-central1', maxInstances: 10 }, 
 exports.listProductQuestions = onCall({ region: 'us-central1', maxInstances: 10 }, async (request) => {
   const productId = Number(request.data?.productId);
   if (!Number.isInteger(productId) || !CATALOG_BY_ID.has(productId)) throw new HttpsError('invalid-argument', 'Invalid product.');
+  await enforcePublicReadRateLimit(request, 'public_questions');
   const snapshot = await db.collection('productQA').where('productId', '==', productId)
     .orderBy('createdAt', 'desc').limit(20).get();
   return { questions: snapshot.docs.map((doc) => toPublicQuestion(doc.data())) };

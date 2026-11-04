@@ -22,7 +22,7 @@ This repository now routes order creation, payment-status lookup, reward redempt
 
 - No automated payment provider/webhook, refund processor, carrier fulfillment, dynamic sales-tax service, or transactional email service is configured in this repository. Manual operations are explicit and payment status cannot be self-confirmed by a browser return page.
 - Checkout receipts are limited to 200 KB and currently stored in the Firestore order document. A production storage bucket with private access and retention controls is preferable before receipt volume grows.
-- Customer forms and newsletter signups still include direct browser-side Firestore submissions. Their rules validate payload shape, but abuse monitoring/App Check and retention procedures need a project-level decision.
+- Customer forms and newsletter signups still include direct browser-side Firestore submissions. Their rules validate payload shape, but abuse monitoring/App Check and retention procedures need a project-level decision. Public review and Q&A read callables are IP-rate-limited to 60 requests per 15-minute window per source IP; this is a basic abuse control, not a substitute for App Check or monitoring.
 - The fixed 8% tax and zero shipping amount are interim values, not legal or carrier calculations. Confirm actual jurisdiction, nexus, exemptions, and delivery costs with the business's tax/fulfillment providers.
 - The scheduled `expirePendingOrders` function uses Cloud Scheduler and may require a billing-enabled Firebase/Google Cloud plan. The `_publicRateLimits.expiresAt` and `checkoutRequests.expiresAt` TTL policies in `firestore.indexes.json` must be applied. Verify TTL is enabled for both collections in the target project.
 
