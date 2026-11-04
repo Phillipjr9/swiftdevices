@@ -1,6 +1,6 @@
 # Commerce security and launch operations
 
-This repository now routes order creation, payment-status lookup, reward redemption, and gift-card redemption through trusted Cloud Functions. The following setup still requires an authorized project operator; this repository cannot safely guess real stock, tax obligations, payment credentials, or administrator identities.
+This repository now routes order creation, payment-status lookup, reward redemption, and gift-card redemption through trusted Cloud Functions. New order creation is fail-closed unless the trusted `CHECKOUT_READY=true` environment flag is set. Keep it unset until the selected Stripe Tax and FedEx rate integrations are implemented, configured, and staging-tested. The following setup still requires an authorized project operator; this repository cannot safely guess real stock, tax obligations, payment credentials, or administrator identities.
 
 ## Required before accepting orders
 

@@ -12,6 +12,7 @@ const db = getFirestore();
 const RATE_WINDOW_MS = 15 * 60 * 1000;
 const RATE_LIMIT = 12;
 const PUBLIC_READ_RATE_LIMIT = 60;
+const CHECKOUT_READY = process.env.CHECKOUT_READY === 'true';
 
 async function enforcePublicReadRateLimit(request, scope) {
   const ip = String(request.rawRequest?.ip || 'unknown').slice(0, 80);
@@ -166,6 +167,7 @@ function validateOrderInput(data) {
 
 /** Server-authoritative order creation, pricing, coupon use, points and inventory reservation. */
 exports.placeOrder = onCall({ region: 'us-central1', maxInstances: 20 }, async (request) => {
+  if (!CHECKOUT_READY) throw new HttpsError('failed-precondition', 'Checkout is temporarily paused while U.S. tax and carrier shipping calculations are configured.');
   const data = request.data || {};
   if (!validateOrderInput(data)) throw new HttpsError('invalid-argument', 'Check your items, contact details, shipping address, and payment method.');
   const email = cleanText(data.email, 254).toLowerCase();
