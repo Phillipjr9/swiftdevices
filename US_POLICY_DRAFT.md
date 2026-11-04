@@ -1,50 +1,31 @@
-# SwiftDevices U.S. policy draft
+# SwiftDevices U.S. policy alignment
 
-**Status: internal draft — not customer-facing and not legal/tax advice.** These are recommended operating defaults for review by the business owner and, where appropriate, U.S. counsel and a sales-tax professional. Do not publish or deploy this draft until the operating details are confirmed and checkout implements them accurately.
+**Basis:** existing customer-facing copy and checkout behavior in this repository. This document records the policies already stated on the site and the remaining mismatches; it does not add assumed business facts. It is an internal implementation note, not legal or tax advice.
 
-## Recommended initial scope
+## Current U.S. offer as represented on the website
 
-- Sell and ship in U.S. dollars to verified U.S. street addresses only.
-- Start with the contiguous 48 states. Do not accept Alaska, Hawaii, U.S. territories, APO/FPO, or international addresses until carrier coverage, rates, delivery expectations, and tax handling are confirmed. The current server only checks that country is `US`; it does **not** enforce this proposed state/address restriction.
-- Keep orders in `pending` status until the selected bank-transfer or cryptocurrency payment has been independently verified. A receipt, transaction hash, or browser return is not proof of payment. Do not dispatch before verification.
+- **Market and currency:** U.S. delivery addresses; product and checkout prices are in U.S. dollars.
+- **Published business/contact details:** support phone `1-800-SWIFT-01`; returns page email `swiftdevices@technologist.com`; checkout bank-payment instructions show `65 Main St, Hastings-On-Hudson, NY 10706, United States`. The bank-instruction address is not independently established as a return address, so it should not be labeled one without confirmation.
+- **Standard shipping:** no charge on eligible U.S. orders; stated estimate is 5–7 business days.
+- **Express shipping:** stated estimate is 2–3 business days and free on orders of $500 or more.
+- **Same-day delivery:** stated as available in select metropolitan areas; confirm availability and any charge with support.
+- **Returns:** request within 30 days after delivery; “no questions asked”; item in original condition and packaging with included accessories; free prepaid return labels promised within 24 hours. Refunds are stated as 5–7 business days after receipt and inspection. Gift cards, software/digital content with broken seals, and items damaged by misuse/accident are listed as exclusions.
+- **Payment:** cryptocurrency and bank transfer, manually verified. Bank transfer is the only option for orders of $20,000 or more; it is also available below that threshold. An order remains pending until payment is confirmed.
+- **Tax disclosure:** checkout currently calculates a flat 8% and labels it “Tax (8%).” This is a description of the current implementation, not confirmation that 8% satisfies every applicable U.S. state and local tax obligation.
 
-## Shipping and delivery — proposed customer wording
+## Alignment completed in this branch
 
-> **U.S. shipping.** SwiftDevices currently offers standard shipping at no charge to eligible addresses in the contiguous United States. We will confirm service availability and any delivery estimate before accepting an order. Delivery estimates are not guaranteed. We will provide tracking information after an order is dispatched. We do not currently ship to Alaska, Hawaii, U.S. territories, APO/FPO addresses, or international destinations. Orders remain pending until payment is verified. Contact support before ordering if you are unsure whether an address is eligible.
+- Terms now state the existing standard, express, and same-day delivery claims, note that U.S. availability should be confirmed, and align the refund processing statement to the 5–7 business-day claim already on the Returns page.
+- Terms disclose that the current 8% checkout tax is a flat estimate, not a location-specific tax calculation.
 
-**Operational requirements before publishing:** configure the checkout to reject unsupported destinations; verify that free shipping is financially sustainable; define order handling and carrier handoff; add an actual support contact and an honest delivery estimate if one can be maintained. Keep shipping charges at $0 only if the business approves absorbing those costs.
+## Remaining implementation gaps (do not describe these as working features)
 
-## Sales tax — must be configured before accepting orders
+- The checkout code sets shipping cost to $0 and does not select standard, express, or same-day services. Express and same-day delivery promises therefore need real fulfillment/availability handling if they are to be honored.
+- Server checkout currently accepts any `US` country address; the UI does not encode a service-area matrix for “eligible U.S. orders” or select metropolitan areas.
+- The 8% tax is applied uniformly. A destination-based tax service or a verified configuration based on the seller's actual collection obligations is needed for compliant tax handling. The published disclosure makes the implementation clear but does not cure a tax-compliance gap.
+- The Returns page and Support FAQ promise free labels within 24 hours; staff need a process that meets that promise. Terms and Returns copy have been aligned to the site's 5–7 business-day refund statement. Cryptocurrency refunds still require a documented manual process.
+- Existing return/contact details are taken from the site. Confirm the return address and warranty/consumer-law exceptions before making further legal changes.
 
-> **Taxes.** Any applicable sales tax will be calculated from the delivery address and the items in the order, shown before the customer places the order, and collected/remitted as required by law.
+## Source pages inspected
 
-This wording is only appropriate after a tax professional or approved tax provider has established where SwiftDevices has collection obligations and checkout calculates the correct destination- and product-specific amount. The current single 8% rate is not a U.S.-wide tax calculation and must not be described as one. Do not replace it with a guessed rate or zero rate. Until correct calculation is implemented, pause U.S. checkout or obtain a documented, state-specific configuration from the business's tax adviser.
-
-## Returns and refunds — proposed baseline for owner review
-
-> **Requesting a return.** Contact SwiftDevices support with your order number within 30 calendar days after delivery. Wait for a return authorization and instructions before sending anything back. Unless an item arrived damaged, defective, or incorrect, the item should be returned in resalable condition with its included accessories and packaging. We will explain any return-shipping charge before the return is sent. For an item that arrived damaged, defective, or incorrect, contact us promptly so we can investigate and provide appropriate next steps.
->
-> **Refunds.** After an authorized return is received and inspected, we will confirm the outcome and process an approved refund using a method appropriate to the original payment. Processing and bank posting times vary. If the original payment was cryptocurrency or manual bank transfer, support will explain the refund method and timing before the refund is initiated. Any non-returnable categories or deductions will be disclosed before purchase and applied only as permitted by law.
-
-This removes unsupported guarantees of prepaid labels within 24 hours and fixed refund timing. The current website's exact return eligibility, fees, inspection process, payment-refund process, and legal exceptions need owner/counsel approval before replacing the published page.
-
-## Payment status — proposed wording
-
-> Bank transfers and cryptocurrency payments are reviewed manually. Your order is not paid or ready to ship until SwiftDevices independently confirms receipt. A submitted receipt, transaction hash, or visit to a return page does not itself confirm payment. Cryptocurrency transfers may be irreversible once sent; verify the amount, network, and destination with support before paying.
-
-Only list payment methods that the business can actually receive and reconcile. Do not promise a refund path for a payment method until that procedure has been tested.
-
-## What must be confirmed before turning this draft into live pages
-
-1. Legal seller name, business address, support email/phone, and return address.
-2. Whether free standard shipping is approved, exact serviceable states/ZIP codes, excluded address types, carrier, and realistic delivery estimate.
-3. The seller's tax registration/nexus footprint, taxable catalog categories, and approved destination-based checkout tax solution/rates.
-4. Return window, item-condition rules, return-label payer, exceptions required by law, inspection workflow, refund method, and realistic processing target.
-5. Which payment methods remain enabled and the documented verification, cancellation, and refund steps for each.
-
-## Current repository gaps this draft is intended to resolve
-
-- Checkout currently charges a flat 8% tax and $0 shipping; neither is validated against actual U.S. jurisdictions or carrier costs.
-- The backend accepts any address with country `US`; state/ZIP service-area restrictions are not enforced.
-- The public Returns page promises 30-day full refunds, free return labels within 24 hours, and 5–7 business-day refunds; Terms says 5–10 business days. Those commitments are not backed by an automated return-label/refund workflow and should not be published unless staff can reliably meet them.
-- Terms says delivery estimates are guidelines but does not provide a verified estimate or fully define serviceable U.S. locations.
+`public/index.html`, `public/support.html`, `public/returns.html`, `public/terms.html`, `public/contact.html`, and `functions/index.js`.
