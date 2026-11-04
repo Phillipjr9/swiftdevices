@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://www.gstatic.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://api.web3forms.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://www.gstatic.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://firestore.googleapis.com https://api.web3forms.com;">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -168,6 +168,7 @@
     <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-functions-compat.js"></script>
 
 
     <script>
@@ -182,6 +183,7 @@
         });
         firebase.analytics();
         var db = firebase.firestore();
+        var functions = firebase.app().functions('us-central1');
     </script>
 </head>
 <body class="font-sans text-gray-800 bg-gray-50 antialiased">
@@ -216,8 +218,12 @@
                 <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-blue-100 flex items-center justify-center">
                     <i class="fas fa-spinner fa-spin text-3xl text-brand-blue"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-gray-800 mb-2">Confirming your payment...</h2>
-                <p class="text-gray-500">Please wait while we verify your order.</p>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Check payment status</h2>
+                <p class="text-gray-500 mb-5">Enter the order email to see whether our team has verified your payment. This page never confirms payment by itself.</p>
+                <label for="payment-status-email" class="block text-left text-sm font-semibold text-gray-700 mb-2">Email used for the order</label>
+                <input type="email" id="payment-status-email" autocomplete="email" class="w-full px-4 py-3 border border-gray-300 rounded-xl mb-3" required>
+                <button id="check-payment-status" type="button" onclick="checkPaymentStatus()" class="w-full bg-brand-blue text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700">Check status</button>
+                <p id="payment-status-message" class="mt-3 text-sm text-gray-500" role="status" aria-live="polite"></p>
             </div>
 
             <!-- Success State -->
@@ -237,8 +243,8 @@
                     </div>
                 </div>
                 <div class="fade-up">
-                    <h1 class="text-3xl font-extrabold text-gray-800 mb-2">Payment Successful!</h1>
-                    <p class="text-gray-500 mb-1">Your cryptocurrency payment has been received.</p>
+                    <h1 class="text-3xl font-extrabold text-gray-800 mb-2">Payment Confirmed</h1>
+                    <p class="text-gray-500 mb-1">Your payment has been verified by SwiftDevices.</p>
                     <p class="text-gray-400 text-sm mb-8">Thank you for your order!</p>
                 </div>
                 <div class="fade-up fade-up-2">
@@ -255,7 +261,7 @@
                         <div class="space-y-3">
                             <div class="flex justify-between text-sm">
                                 <span class="text-gray-500">Payment Method</span>
-                                <span class="font-medium text-gray-700"><i class="fab fa-bitcoin text-orange-500 mr-1"></i>Cryptocurrency</span>
+                                <span class="font-medium text-gray-700">Verified</span>
                             </div>
                             <div class="flex justify-between text-sm">
                                 <span class="text-gray-500">Status</span>
@@ -276,6 +282,15 @@
                         <i class="fas fa-store"></i> Continue Shopping
                     </a>
                 </div>
+            </div>
+
+            <!-- Pending state: a return visit is not proof of payment. -->
+            <div id="pending-state" class="hidden">
+                <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-amber-100 flex items-center justify-center"><i class="fas fa-clock text-4xl text-amber-600"></i></div>
+                <h1 class="text-3xl font-extrabold text-gray-800 mb-2">Payment is pending verification</h1>
+                <p class="text-gray-600 mb-5">We have not yet confirmed receipt. Do not send a second payment. You can check again later or contact support with your order number.</p>
+                <p class="font-mono font-bold text-brand-dark mb-8" id="pending-order-number"></p>
+                <a href="support.html#order-tracking" class="inline-flex items-center justify-center bg-brand-blue text-white px-6 py-3 rounded-xl font-semibold">Track Order</a>
             </div>
 
             <!-- Error State -->
@@ -361,98 +376,50 @@
     </footer>
 
     <script>
-        // Web3Forms Configuration
-        var WEB3FORMS_KEY = '0e7ad91d-7aa7-4810-8358-be2628922caa';
-
-        function sendCryptoConfirmationEmail(order, orderNum) {
-            var items = (order.items || []);
-            var itemsText = items.map(function(i) {
-                var line = (i.name || 'Product #' + i.id) + ' x' + (i.qty || 1) + ' — $' + (i.price * (i.qty || 1)).toFixed(2);
-                if (i.image) line += '\n  Image: ' + i.image;
-                return line;
-            }).join('\n');
-            var ship = order.shipping || {};
-            var customerEmail = ship.email || order.email || '';
-            fetch('https://api.web3forms.com/submit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    access_key: WEB3FORMS_KEY,
-                    botcheck: '',
-                    subject: 'SwiftDevices Order Confirmation #' + orderNum,
-                    from_name: 'SwiftDevices',
-                    name: (ship.firstName || '') + ' ' + (ship.lastName || ''),
-                    email: customerEmail,
-                    ccemail: customerEmail,
-                    message: 'Order: ' + orderNum + '\n\nItems:\n' + itemsText + '\n\nSubtotal: $' + (order.subtotal || 0).toFixed(2) + '\nTax: $' + (order.tax || 0).toFixed(2) + '\nTotal: $' + (order.total || 0).toFixed(2) + '\n\nPayment: Cryptocurrency\nShipping: ' + [ship.address, ship.city, ship.state, ship.zip].filter(Boolean).join(', ') + '\n\n---\nSwiftDevices Support: swiftdevices@technologist.com\nhttps://swiftdevices-e2972.web.app'
-                })
-            }).then(function(r) { return r.json(); })
-              .then(function(res) {
-                  if (res.success) console.log('Crypto order confirmation email sent');
-                  else console.warn('Email send failed:', res.message);
-              })
-              .catch(function(err) { console.warn('Email send failed:', err); });
-        }
-
         (function() {
             var params = new URLSearchParams(window.location.search);
-            var orderNum = params.get('order');
-
-            var loadingEl = document.getElementById('loading-state');
-            var successEl = document.getElementById('success-state');
-            var errorEl = document.getElementById('error-state');
-
-            if (!orderNum || !/^SW-\d{6}$/.test(orderNum)) {
-                loadingEl.classList.add('hidden');
-                errorEl.classList.remove('hidden');
-                document.getElementById('error-message').textContent = 'Invalid or missing order number. Please check your email for order details.';
+            var orderNumber = (params.get('order') || '').toUpperCase();
+            if (!/^SW-(?:\d{6}|[A-Za-z0-9_-]{20})$/.test(orderNumber)) {
+                document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('error-state').classList.remove('hidden');
+                document.getElementById('error-message').textContent = 'Invalid or missing order number. Please check your order details.';
                 return;
             }
-
-            // Look up the order and update status
-            db.collection('orders').doc(orderNum).get().then(function(doc) {
-                if (!doc.exists) {
-                    loadingEl.classList.add('hidden');
-                    errorEl.classList.remove('hidden');
-                    document.getElementById('error-message').textContent = 'Order ' + orderNum + ' not found. If you just paid, please allow a moment and check your order on the Support page.';
-                    return;
-                }
-
-                var order = doc.data();
-
-                // Update order status to confirmed if it was awaiting payment
-                var updatePromise;
-                if (order.status === 'awaiting_crypto_payment') {
-                    updatePromise = db.collection('orders').doc(orderNum).update({
-                        status: 'confirmed',
-                        paidAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                } else {
-                    updatePromise = Promise.resolve();
-                }
-
-                updatePromise.then(function() {
-                    document.getElementById('order-number').textContent = orderNum;
-                    if (order.total) {
-                        document.getElementById('order-total').textContent = '$' + order.total.toFixed(2);
-                        document.getElementById('order-total-row').classList.remove('hidden');
-                    }
-                    loadingEl.classList.add('hidden');
-                    successEl.classList.remove('hidden');
-                    // Send confirmation email for crypto payment
-                    sendCryptoConfirmationEmail(order, orderNum);
-                }).catch(function() {
-                    // Even if update fails, show success since payment went through on NOWPayments side
-                    document.getElementById('order-number').textContent = orderNum;
-                    loadingEl.classList.add('hidden');
-                    successEl.classList.remove('hidden');
-                });
-
-            }).catch(function() {
-                loadingEl.classList.add('hidden');
-                errorEl.classList.remove('hidden');
-            });
+            document.getElementById('loading-state').dataset.orderNumber = orderNumber;
         })();
+
+        function checkPaymentStatus() {
+            var loading = document.getElementById('loading-state');
+            var orderNumber = loading.dataset.orderNumber;
+            var email = document.getElementById('payment-status-email').value.trim();
+            var message = document.getElementById('payment-status-message');
+            var button = document.getElementById('check-payment-status');
+            if (!email) { message.textContent = 'Enter the email used at checkout.'; return; }
+            button.disabled = true;
+            button.textContent = 'Checking...';
+            message.textContent = '';
+            firebase.app().functions('us-central1').httpsCallable('getOrderPaymentStatus')({ orderNumber: orderNumber, email: email })
+                .then(function(result) {
+                    var order = result.data || {};
+                    loading.classList.add('hidden');
+                    if (order.paymentStatus === 'paid') {
+                        document.getElementById('order-number').textContent = order.orderNumber;
+                        document.getElementById('order-total').textContent = '$' + Number(order.total || 0).toFixed(2);
+                        document.getElementById('order-total-row').classList.remove('hidden');
+                        document.getElementById('success-state').classList.remove('hidden');
+                    } else {
+                        document.getElementById('pending-order-number').textContent = 'Order ' + order.orderNumber;
+                        document.getElementById('pending-state').classList.remove('hidden');
+                    }
+                })
+                .catch(function() {
+                    message.textContent = 'We could not find an order matching those details. Check the email and try again.';
+                })
+                .finally(function() {
+                    button.disabled = false;
+                    button.textContent = 'Check status';
+                });
+        }
     </script>
 </body>
 </html>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://www.gstatic.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://www.gstatic.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data: https://www.att.com https://*.firebasestorage.app; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://firestore.googleapis.com;">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -53,6 +53,7 @@
     <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-functions-compat.js"></script>
     <script>
         firebase.initializeApp({
             apiKey: "AIzaSyAbBODZeHGStQFU_06ShU3ZXpi95reNz8U",
@@ -124,7 +125,7 @@
                 <h2 class="text-4xl font-bold text-brand-dark mb-3">Tech News & Tips</h2>
                 <p class="text-gray-600">Stay updated with the latest in tech</p>
             </div>
-            <div class="grid md:grid-cols-3 gap-8">
+            <div class="grid md:grid-cols-3 gap-8" id="blog-post-grid">
                 <article class="blog-card bg-gray-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer group">
                     <div class="h-48 overflow-hidden">
                         <img src="https://www.att.com/scmsassets/global/devices/phones/apple/apple-iphone-17-pro-max/defaultimage/cosmic-orange-hero-zoom.png" alt="Tech Trends 2026" class="w-full h-full object-cover" loading="lazy">
@@ -132,11 +133,11 @@
                     <div class="p-6">
                         <div class="flex items-center gap-3 text-xs text-gray-500 mb-3">
                             <span class="bg-brand-blue/10 text-brand-blue px-2 py-1 rounded-full font-semibold">Trends</span>
-                            <span>March 18, 2026</span>
+                            <span>Updated November 3, 2026</span>
                             <span>5 min read</span>
                         </div>
-                        <h3 class="font-bold text-lg text-brand-dark mb-2 group-hover:text-brand-blue transition-colors">Top 10 Tech Trends to Watch in 2026</h3>
-                        <p class="text-gray-600 text-sm line-clamp-2">From AI-powered devices to foldable screens, discover the technologies shaping the future of consumer electronics.</p>
+                        <h3 class="font-bold text-lg text-brand-dark mb-2 group-hover:text-brand-blue transition-colors">2026 Tech Trends: What to Look for Before Your Next Upgrade</h3>
+                        <p class="text-gray-600 text-sm line-clamp-2">A fresh look at on-device AI, foldable phones, battery life, and the features that matter most across this year's phone and wearable lineups.</p>
                     </div>
                 </article>
                 <article class="blog-card bg-gray-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer group">
@@ -146,11 +147,11 @@
                     <div class="p-6">
                         <div class="flex items-center gap-3 text-xs text-gray-500 mb-3">
                             <span class="bg-green-500/10 text-green-600 px-2 py-1 rounded-full font-semibold">Guide</span>
-                            <span>March 15, 2026</span>
+                            <span>Updated November 3, 2026</span>
                             <span>8 min read</span>
                         </div>
-                        <h3 class="font-bold text-lg text-brand-dark mb-2 group-hover:text-brand-blue transition-colors">Ultimate Smartphone Buying Guide: Find Your Perfect Match</h3>
-                        <p class="text-gray-600 text-sm line-clamp-2">Whether you need an iPhone, Galaxy, or Pixel, we break down everything you need to know before upgrading your phone.</p>
+                        <h3 class="font-bold text-lg text-brand-dark mb-2 group-hover:text-brand-blue transition-colors">Smartphone Buying Guide: Choose the Right Phone for You</h3>
+                        <p class="text-gray-600 text-sm line-clamp-2">Compare the current iPhone, Galaxy, and Pixel families by screen size, camera, storage, software support, and budget before choosing your next phone.</p>
                     </div>
                 </article>
                 <article class="blog-card bg-gray-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer group">
@@ -160,27 +161,36 @@
                     <div class="p-6">
                         <div class="flex items-center gap-3 text-xs text-gray-500 mb-3">
                             <span class="bg-purple-500/10 text-purple-600 px-2 py-1 rounded-full font-semibold">Tutorial</span>
-                            <span>March 10, 2026</span>
+                            <span>Updated November 3, 2026</span>
                             <span>6 min read</span>
                         </div>
-                        <h3 class="font-bold text-lg text-brand-dark mb-2 group-hover:text-brand-blue transition-colors">Best Smartwatches of 2026: Apple Watch vs Galaxy Watch vs Pixel Watch</h3>
-                        <p class="text-gray-600 text-sm line-clamp-2">Compare the top smartwatches side by side. We cover health tracking, battery life, and which one is right for you.</p>
+                        <h3 class="font-bold text-lg text-brand-dark mb-2 group-hover:text-brand-blue transition-colors">Smartwatch Guide 2026: Apple Watch vs Galaxy Watch vs Pixel Watch</h3>
+                        <p class="text-gray-600 text-sm line-clamp-2">Compare health and fitness tracking, battery life, phone compatibility, and cellular options to find the right watch for your everyday routine.</p>
                     </div>
                 </article>
             </div>
         </div>
     </section>
 
+    <div id="blog-article-modal" class="hidden fixed inset-0 z-[100] bg-black/60 items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="blog-article-title" onclick="if(event.target===this)closeBlogArticle()">
+        <article class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6 sm:p-8 relative">
+            <button onclick="closeBlogArticle()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-900" aria-label="Close article"><i class="fas fa-times"></i></button>
+            <h2 id="blog-article-title" class="text-2xl sm:text-3xl font-bold text-brand-dark pr-8 mb-5"></h2>
+            <div id="blog-article-body" class="text-gray-700 leading-7 whitespace-pre-wrap"></div>
+        </article>
+    </div>
+
     <!-- Order Tracking Section -->
     <section class="py-16 bg-gray-50" id="order-tracking">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-10">
                 <h2 class="text-4xl font-bold text-brand-dark mb-3"><i class="fas fa-shipping-fast text-brand-blue mr-2"></i>Track Your Order</h2>
-                <p class="text-gray-600">Enter your order number to check the delivery status</p>
+                <p class="text-gray-600">Enter your order number and checkout email to securely check delivery status</p>
             </div>
             <div class="bg-white rounded-2xl shadow-lg p-8">
                 <form onsubmit="trackOrder(event)" class="flex flex-col sm:flex-row gap-4 mb-8">
-                    <input type="text" id="tracking-input" placeholder="Enter order number (e.g., SW-123456)" class="flex-1 px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20" required>
+                    <input type="text" id="tracking-input" placeholder="Enter your order number (e.g., SW-123456)" class="flex-1 px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20" required>
+                    <input type="email" id="tracking-email" placeholder="Email used at checkout" autocomplete="email" class="flex-1 px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20" required>
                     <button type="submit" id="track-btn" class="bg-brand-blue text-white px-8 py-3 rounded-full font-bold hover:bg-blue-700 transition shadow-lg">Track Order</button>
                 </form>
                 <div id="tracking-result" class="hidden"></div>
@@ -207,7 +217,7 @@
                         <i class="fas fa-chevron-down faq-icon text-gray-400 text-sm"></i>
                     </button>
                     <div class="faq-answer px-5 pb-5 text-gray-600 text-sm leading-relaxed">
-                        We accept Cryptocurrency (Bitcoin, Ethereum, USDT, Solana) and Bank Transfer. For orders over $20,000, only Bank Transfer is available. All transactions are secured with industry-standard encryption.
+                        We accept Cryptocurrency (Bitcoin, Ethereum, USDT, Solana) and Bank Transfer. For orders of $20,000 or more, only Bank Transfer is available. Payment is verified manually; an order stays pending until funds are confirmed.
                     </div>
                 </div>
                 <div class="faq-item bg-gray-50 rounded-xl overflow-hidden">
@@ -324,6 +334,41 @@
     </footer>
 
     <script>
+        // Published articles are sourced from the admin CMS; static editorial cards remain a fallback.
+        function loadPublishedBlogPosts() {
+            if (!window.db) return;
+            db.collection('blogPosts').where('published', '==', true).get().then(function(snapshot) {
+                if (!snapshot || snapshot.empty) return;
+                var posts = [];
+                snapshot.forEach(function(doc) { var p = doc.data(); p.id = doc.id; posts.push(p); });
+                posts.sort(function(a,b) { return blogTimestamp(b.publishedAt || b.updatedAt) - blogTimestamp(a.publishedAt || a.updatedAt); });
+                var grid = document.getElementById('blog-post-grid'); if (!grid) return;
+                grid.textContent = '';
+                posts.forEach(function(post) {
+                    var card = document.createElement('article'); card.className = 'blog-card bg-gray-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all group';
+                    var imageWrap = document.createElement('div'); imageWrap.className = 'h-48 overflow-hidden';
+                    var image = document.createElement('img'); image.src = blogSafeImage(post.image); image.alt = post.title || 'Blog article'; image.loading = 'lazy'; image.className = 'w-full h-full object-cover'; imageWrap.appendChild(image);
+                    var content = document.createElement('div'); content.className = 'p-6';
+                    var meta = document.createElement('div'); meta.className = 'flex items-center gap-3 text-xs text-gray-500 mb-3';
+                    var category = document.createElement('span'); category.className = 'bg-brand-blue/10 text-brand-blue px-2 py-1 rounded-full font-semibold'; category.textContent = post.category || 'Article';
+                    var date = document.createElement('span'); date.textContent = 'Updated ' + new Date(blogTimestamp(post.updatedAt || post.publishedAt)).toLocaleDateString(); meta.append(category,date);
+                    var title = document.createElement('h3'); title.className = 'font-bold text-lg text-brand-dark mb-2 group-hover:text-brand-blue transition-colors'; title.textContent = post.title || 'Article';
+                    var excerpt = document.createElement('p'); excerpt.className = 'text-gray-600 text-sm line-clamp-3'; excerpt.textContent = post.excerpt || '';
+                    var more = document.createElement('button'); more.type='button'; more.className='mt-4 text-brand-blue text-sm font-semibold hover:underline'; more.textContent='Read article'; more.addEventListener('click',function(){ showBlogArticle(post); });
+                    content.append(meta,title,excerpt,more); card.append(imageWrap,content); grid.appendChild(card);
+                });
+            }).catch(function(err) { console.warn('Blog CMS unavailable; showing editorial fallback.', err); });
+        }
+        function blogTimestamp(value) { if (!value) return Date.now(); var d = value.toDate ? value.toDate() : new Date(value); return isNaN(d.getTime()) ? Date.now() : d.getTime(); }
+        function blogSafeImage(value) { try { var u = new URL(value, location.href); return ['https:','http:'].includes(u.protocol) ? u.href : 'logo.png'; } catch(e) { return 'logo.png'; } }
+        function showBlogArticle(post) {
+            var modal = document.getElementById('blog-article-modal');
+            document.getElementById('blog-article-title').textContent = post.title || 'Article';
+            document.getElementById('blog-article-body').textContent = post.body || post.excerpt || '';
+            modal.classList.remove('hidden'); modal.classList.add('flex'); document.body.style.overflow='hidden';
+        }
+        function closeBlogArticle() { var modal=document.getElementById('blog-article-modal'); modal.classList.add('hidden'); modal.classList.remove('flex'); document.body.style.overflow=''; }
+
         function toggleFaq(btn) {
             const item = btn.parentElement;
             const wasOpen = item.classList.contains('open');
@@ -354,126 +399,45 @@
 
         function trackOrder(e) {
             e.preventDefault();
-            var input = document.getElementById('tracking-input');
-            var val = input.value.trim().toUpperCase();
-            if (!val) return;
-
-            var resultDiv = document.getElementById('tracking-result');
-            var notFoundDiv = document.getElementById('tracking-not-found');
-            var btn = document.getElementById('track-btn');
-            resultDiv.classList.add('hidden');
-            notFoundDiv.classList.add('hidden');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Searching...';
-
-            db.collection('orders').doc(val).get().then(function(doc) {
-                btn.disabled = false;
-                btn.innerHTML = 'Track Order';
-                if (!doc.exists) {
-                    notFoundDiv.classList.remove('hidden');
-                    return;
-                }
-                var order = doc.data();
-                var createdDate = order.createdAt ? order.createdAt.toDate() : new Date();
-                var eta = new Date(createdDate);
-                eta.setDate(eta.getDate() + 5);
-                var fmtDate = function(d) { return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); };
-                var fmtTime = function(d) { return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); };
-
-                var statusSteps = [
-                    { key: 'confirmed', label: 'Order Confirmed', icon: 'fa-check' },
-                    { key: 'processing', label: 'Processing & Packed', icon: 'fa-box' },
-                    { key: 'shipped', label: 'In Transit', icon: 'fa-truck' },
-                    { key: 'delivered', label: 'Delivered', icon: 'fa-home' }
-                ];
-                var statusOrder = ['confirmed', 'processing', 'shipped', 'delivered'];
-                var currentIdx = statusOrder.indexOf(order.status || 'confirmed');
-
-                var html = '<div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">';
-                html += '<div><p class="text-sm text-gray-500">Order Number</p><p class="font-bold text-brand-dark">' + order.orderNumber + '</p></div>';
-                html += '<div class="text-right"><p class="text-sm text-gray-500">Estimated Delivery</p><p class="font-bold text-green-600">' + fmtDate(eta) + '</p></div>';
-                html += '</div>';
-
-                // Order items
-                if (order.items && order.items.length) {
-                    html += '<div class="mb-6 pb-4 border-b border-gray-200">';
-                    html += '<h4 class="font-bold text-brand-dark mb-3">Items Ordered</h4>';
-                    order.items.forEach(function(item) {
-                        html += '<div class="flex items-center gap-3 mb-2">';
-                        html += '<img src="' + (item.image || '') + '" alt="' + item.name + '" class="w-12 h-12 object-contain rounded-lg bg-gray-50" loading="lazy">';
-                        html += '<div class="flex-1"><p class="font-medium text-sm">' + item.name + '</p><p class="text-xs text-gray-500">' + item.brand + ' &middot; Qty: ' + item.qty + '</p></div>';
-                        html += '<p class="font-semibold text-sm">$' + (item.price * item.qty).toLocaleString() + '</p>';
-                        html += '</div>';
-                    });
-                    html += '<div class="flex justify-between mt-3 pt-3 border-t border-gray-100 font-bold"><span>Total</span><span class="text-brand-blue">$' + (order.total || 0).toLocaleString() + '</span></div>';
-                    html += '</div>';
-                }
-
-                // Shipping info
-                if (order.shipping) {
-                    var s = order.shipping;
-                    html += '<div class="mb-6 pb-4 border-b border-gray-200">';
-                    html += '<h4 class="font-bold text-brand-dark mb-2">Shipping To</h4>';
-                    html += '<p class="text-sm text-gray-600">' + s.firstName + ' ' + s.lastName + '</p>';
-                    html += '<p class="text-sm text-gray-600">' + s.address + '</p>';
-                    html += '<p class="text-sm text-gray-600">' + s.city + ', ' + s.state + ' ' + s.zip + '</p>';
-                    html += '<p class="text-sm text-gray-500 mt-1">Payment: ' + (order.paymentMethod || 'N/A').charAt(0).toUpperCase() + (order.paymentMethod || 'N/A').slice(1) + '</p>';
-                    html += '</div>';
-                }
-
-                // Carrier tracking info
-                if (order.trackingNumber && order.trackingCarrier) {
-                    var carrierName = getCarrierDisplayName(order.trackingCarrier);
-                    var trackUrl = getCarrierTrackingUrl(order.trackingCarrier, order.trackingNumber);
-                    html += '<div class="mb-6 pb-4 border-b border-gray-200 bg-blue-50 rounded-xl p-4">';
-                    html += '<h4 class="font-bold text-brand-dark mb-2"><i class="fas fa-truck text-brand-blue mr-2"></i>Shipment Tracking</h4>';
-                    html += '<div class="flex flex-col sm:flex-row sm:items-center gap-3">';
-                    html += '<div class="flex-1"><p class="text-sm text-gray-500">Carrier</p><p class="font-semibold">' + carrierName + '</p></div>';
-                    html += '<div class="flex-1"><p class="text-sm text-gray-500">Tracking Number</p><p class="font-mono text-sm font-semibold">' + order.trackingNumber + '</p></div>';
-                    if (trackUrl) {
-                        html += '<a href="' + trackUrl + '" target="_blank" rel="noopener" class="inline-flex items-center gap-2 bg-brand-blue text-white px-5 py-2.5 rounded-full font-bold hover:bg-blue-700 transition shadow-lg text-sm"><i class="fas fa-external-link-alt"></i>Track on ' + carrierName + '</a>';
+            var orderNumber = document.getElementById('tracking-input').value.trim().toUpperCase();
+            var email = document.getElementById('tracking-email').value.trim();
+            var result = document.getElementById('tracking-result');
+            var notFound = document.getElementById('tracking-not-found');
+            var button = document.getElementById('track-btn');
+            result.classList.add('hidden'); notFound.classList.add('hidden');
+            button.disabled = true; button.textContent = 'Searching...';
+            firebase.app().functions('us-central1').httpsCallable('trackOrder')({ orderNumber: orderNumber, email: email })
+                .then(function(response) {
+                    var order = response.data;
+                    result.textContent = '';
+                    var head = document.createElement('div'); head.className = 'flex justify-between items-start mb-5 pb-4 border-b';
+                    var number = document.createElement('div');
+                    var label = document.createElement('p'); label.className = 'text-sm text-gray-500'; label.textContent = 'Order Number';
+                    var value = document.createElement('p'); value.className = 'font-bold text-brand-dark'; value.textContent = order.orderNumber;
+                    number.append(label,value);
+                    var status = document.createElement('div'); status.className = 'text-right';
+                    var statusLabel = document.createElement('p'); statusLabel.className = 'text-sm text-gray-500'; statusLabel.textContent = 'Current status';
+                    var statusValue = document.createElement('p'); statusValue.className = 'font-bold text-brand-blue capitalize'; statusValue.textContent = String(order.status || 'processing').replaceAll('_',' ');
+                    status.append(statusLabel,statusValue); head.append(number,status); result.appendChild(head);
+                    if (order.createdAt) { var created = document.createElement('p'); created.className = 'text-xs text-gray-500 mb-4'; created.textContent = 'Placed ' + new Date(order.createdAt).toLocaleString(); result.appendChild(created); }
+                    if (order.trackingNumber && order.trackingCarrier) {
+                        var carrier = getCarrierDisplayName(order.trackingCarrier), url = getCarrierTrackingUrl(order.trackingCarrier, order.trackingNumber);
+                        if (url) { var link = document.createElement('a'); link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.className = 'inline-flex items-center gap-2 text-brand-blue font-semibold mb-4'; link.textContent = 'Track with ' + carrier + ' · ' + order.trackingNumber; result.appendChild(link); }
                     }
-                    html += '</div></div>';
-                }
-
-                // Status timeline
-                html += '<h4 class="font-bold text-brand-dark mb-4">Order Status</h4>';
-                html += '<div class="relative"><div class="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div><div class="space-y-6">';
-                statusSteps.forEach(function(step, i) {
-                    var done = i <= currentIdx;
-                    var active = i === currentIdx;
-                    var bgClass = done ? (active ? 'bg-brand-blue animate-pulse' : 'bg-green-500') : 'bg-gray-200';
-                    var textClass = done ? (active ? 'text-brand-blue' : 'text-brand-dark') : 'text-gray-400';
-                    var iconColor = done ? 'text-white' : 'text-gray-400';
-                    var dateStr = '';
-                    if (done) {
-                        var stepDate = new Date(createdDate);
-                        stepDate.setHours(stepDate.getHours() + i * 12);
-                        dateStr = fmtDate(stepDate) + ' - ' + fmtTime(stepDate);
-                    } else {
-                        dateStr = 'Pending';
+                    if (order.items && order.items.length) {
+                        var heading = document.createElement('h3'); heading.className = 'font-bold text-brand-dark mt-3 mb-2'; heading.textContent = 'Items in this order'; result.appendChild(heading);
+                        var list = document.createElement('ul'); list.className = 'space-y-2';
+                        order.items.forEach(function(item) { var li = document.createElement('li'); li.className = 'text-sm text-gray-700 flex justify-between'; var name = document.createElement('span'); name.textContent = item.name; var qty = document.createElement('span'); qty.textContent = 'Qty ' + item.qty; li.append(name,qty); list.appendChild(li); });
+                        result.appendChild(list);
                     }
-                    html += '<div class="flex gap-4 relative">';
-                    html += '<div class="w-8 h-8 ' + bgClass + ' rounded-full flex items-center justify-center z-10 flex-shrink-0"><i class="fas ' + step.icon + ' ' + iconColor + ' text-xs"></i></div>';
-                    html += '<div><p class="font-semibold ' + textClass + '">' + step.label + '</p><p class="text-sm text-gray-500">' + dateStr + '</p>';
-                    if (step.key === 'shipped' && done && order.trackingNumber && order.trackingCarrier) {
-                        var cName = getCarrierDisplayName(order.trackingCarrier);
-                        var tUrl = getCarrierTrackingUrl(order.trackingCarrier, order.trackingNumber);
-                        html += '<p class="text-xs text-blue-600 mt-1"><i class="fas fa-truck mr-1"></i>' + cName + ': <a href="' + tUrl + '" target="_blank" rel="noopener" class="font-mono hover:underline">' + order.trackingNumber + '</a></p>';
-                    }
-                    html += '</div>';
-                    html += '</div>';
-                });
-                html += '</div></div>';
-
-                resultDiv.innerHTML = html;
-                resultDiv.classList.remove('hidden');
-            }).catch(function(err) {
-                btn.disabled = false;
-                btn.innerHTML = 'Track Order';
-                notFoundDiv.classList.remove('hidden');
-            });
+                    result.classList.remove('hidden');
+                }).catch(function(error) {
+                    notFound.querySelector('p.font-semibold').textContent = 'Order not found';
+                    notFound.querySelectorAll('p.text-gray-500')[0].textContent = error.code === 'functions/resource-exhausted' ? 'Too many attempts. Please wait a few minutes and try again.' : 'Check the order number and checkout email, then try again.';
+                    notFound.classList.remove('hidden');
+                }).finally(function() { button.disabled = false; button.textContent = 'Track Order'; });
         }
+        document.addEventListener('DOMContentLoaded', loadPublishedBlogPosts);
     </script>
 </body>
 </html>

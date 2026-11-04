@@ -1,0 +1,177 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isOwner() { return signedIn() && request.auth.token.keys().hasAny(['admin']) && request.auth.token.admin == true; }
+    function hasAdminRole(role) { return isOwner() || (signedIn() && request.auth.token.keys().hasAny(['adminRole']) && request.auth.token.adminRole == role); }
+    function isAdmin() { return isOwner() || (signedIn() && request.auth.token.keys().hasAny(['adminRole']) && request.auth.token.adminRole in ['orders', 'catalog', 'finance', 'support']); }
+    function canViewOrders() { return hasAdminRole('orders') || hasAdminRole('finance') || hasAdminRole('support'); }
+    function canCatalog() { return hasAdminRole('catalog'); }
+    function canFinance() { return hasAdminRole('finance'); }
+    function canSupport() { return hasAdminRole('support'); }
+    function owns(uid) { return signedIn() && request.auth.uid == uid; }
+    function validEmail(value) {
+      return value is string && value.size() <= 254 && value.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$');
+    }
+
+    // Orders are created and priced only by trusted Cloud Functions (Admin SDK).
+    match /orders/{orderId} {
+      allow create, delete: if false;
+      allow get: if canViewOrders() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow list: if canViewOrders() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow update: if false;
+    }
+
+    match /siteSettings/{settingId} {
+      allow get: if isOwner()
+        || settingId in ['productOverrides', 'promoConfig', 'announcement', 'heroCarousel', 'bundles', 'cryptoWallets']
+        || (canCatalog() && settingId in ['productOverrides', 'promoConfig', 'announcement', 'heroCarousel', 'bundles'])
+        || (canFinance() && settingId in ['cryptoWallets', 'coupons']);
+      allow list: if isOwner();
+      allow create, update, delete: if isOwner()
+        || (canCatalog() && settingId in ['productOverrides', 'promoConfig', 'announcement', 'heroCarousel', 'bundles'])
+        || (canFinance() && settingId in ['cryptoWallets', 'coupons']);
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if canSupport();
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.productId is int
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1 && request.resource.data.rating <= 5
+        && request.resource.data.comment is string
+        && request.resource.data.comment.size() <= 3000
+        && request.resource.data.name is string
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.verified == false
+        && request.resource.data.keys().hasOnly(['userId','productId','rating','comment','name','verified','createdAt']);
+      allow update, delete: if canSupport();
+    }
+
+    match /productQA/{questionId} {
+      allow read: if canSupport();
+      allow create: if signedIn()
+        && request.resource.data.productId is int
+        && request.resource.data.question is string
+        && request.resource.data.question.size() > 0
+        && request.resource.data.question.size() <= 2000
+        && request.resource.data.userEmail == request.auth.token.email
+        && request.resource.data.userName is string
+        && request.resource.data.userName.size() <= 100
+        && request.resource.data.answer == null
+        && request.resource.data.keys().hasOnly(['productId','question','userName','userEmail','answer','createdAt']);
+      allow update, delete: if canSupport();
+    }
+
+    match /blogPosts/{postId} {
+      allow read: if canCatalog() || resource.data.published == true;
+      allow create, update, delete: if canCatalog();
+    }
+
+    match /userAddresses/{uid} {
+      allow read: if owns(uid) || canSupport();
+      allow create, update: if owns(uid)
+        && request.resource.data.addresses is list
+        && request.resource.data.addresses.size() <= 10;
+      allow delete: if owns(uid) || canSupport();
+    }
+
+    match /rewardsPoints/{uid} {
+      allow get: if owns(uid) || canFinance();
+      allow list: if canFinance();
+      allow create, update, delete: if canFinance();
+    }
+
+    match /rewardsLedger/{entryId} {
+      allow get: if canFinance() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow list: if canFinance() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow create, update, delete: if false;
+    }
+
+    match /accountDeletionRequests/{uid} {
+      allow read: if canSupport();
+      allow update: if canSupport()
+        && resource.data.status == 'pending'
+        && request.resource.data.status == 'reviewed'
+        && request.resource.data.reviewedBy == request.auth.token.email
+        && request.resource.data.reviewedAt == request.time
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedBy','reviewedAt']);
+      allow create, delete: if false;
+    }
+
+    match /contactMessages/{messageId} {
+      allow create: if request.resource.data.keys().hasOnly(['firstName','lastName','email','subject','message','timestamp'])
+        && request.resource.data.firstName is string && request.resource.data.firstName.size() <= 80
+        && request.resource.data.lastName is string && request.resource.data.lastName.size() <= 80
+        && validEmail(request.resource.data.email)
+        && request.resource.data.subject is string && request.resource.data.subject.size() <= 160
+        && request.resource.data.message is string && request.resource.data.message.size() > 0 && request.resource.data.message.size() <= 5000;
+      allow read, update, delete: if canSupport();
+    }
+
+    match /tradeInRequests/{requestId} {
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.deviceType is string && request.resource.data.deviceType.size() <= 80
+        && request.resource.data.brand is string && request.resource.data.brand.size() <= 80
+        && request.resource.data.model is string && request.resource.data.model.size() <= 120
+        && request.resource.data.storage is string && request.resource.data.storage.size() <= 40
+        && request.resource.data.condition is string && request.resource.data.condition.size() <= 40
+        && request.resource.data.estimatedValue is number && request.resource.data.estimatedValue >= 0 && request.resource.data.estimatedValue <= 100000
+        && request.resource.data.status == 'pending'
+        && request.resource.data.keys().hasOnly(['uid','email','deviceType','brand','model','storage','condition','estimatedValue','status','createdAt']);
+      allow read, update, delete: if canSupport();
+    }
+
+    match /subscribers/{subscriberId} {
+      allow create: if request.resource.data.email is string
+        && request.resource.data.email.size() <= 254
+        && request.resource.data.email.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$')
+        && request.resource.data.source in ['newsletter','promo_popup'];
+      allow read, update, delete: if isOwner();
+    }
+
+    match /giftCards/{giftCardId} {
+      // Customers can request an inactive card only for themselves. Activation and
+      // redemption are reserved for trusted server code/admins.
+      allow create: if canFinance() || (signedIn()
+        && request.resource.data.senderUid == request.auth.uid
+        && request.resource.data.senderEmail == request.auth.token.email
+        && request.resource.data.code == giftCardId
+        && request.resource.data.status == 'pending_payment'
+        && request.resource.data.balance == 0
+        && request.resource.data.amount is number
+        && request.resource.data.amount >= 10 && request.resource.data.amount <= 500
+        && request.resource.data.recipientEmail is string
+        && request.resource.data.recipientEmail.size() <= 254
+        && (request.resource.data.recipientEmail == '' || validEmail(request.resource.data.recipientEmail))
+        && request.resource.data.recipientName is string
+        && request.resource.data.recipientName.size() <= 100
+        && request.resource.data.senderName is string
+        && request.resource.data.senderName.size() <= 100
+        && request.resource.data.message is string
+        && request.resource.data.message.size() <= 500
+        && request.resource.data.keys().hasOnly(['code','amount','balance','recipientName','recipientEmail','senderName','senderEmail','senderUid','message','status','createdAt']));
+      allow get: if canFinance() || (signedIn() && (resource.data.redeemedBy == request.auth.uid || resource.data.senderUid == request.auth.uid || resource.data.recipientEmail == request.auth.token.email));
+      allow list: if canFinance();
+      allow update, delete: if canFinance();
+    }
+
+    match /auditLog/{logId} {
+      allow read: if isOwner();
+      allow create: if isAdmin()
+        && request.resource.data.adminEmail == request.auth.token.email
+        && request.resource.data.action is string
+        && request.resource.data.action.size() <= 100
+        && request.resource.data.details is string
+        && request.resource.data.details.size() <= 1000;
+      allow update, delete: if false;
+    }
+
+    match /_publicRateLimits/{limitId} { allow read, write: if false; }
+    match /checkoutRequests/{requestId} { allow read, write: if false; }
+    match /{document=**} { allow read, write: if false; }
+  }
+}

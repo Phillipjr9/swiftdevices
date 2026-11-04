@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://www.gstatic.com https://apis.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://api.web3forms.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://www.gstatic.com https://apis.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://firestore.googleapis.com https://identitytoolkit.googleapis.com">
     <meta property="og:title" content="Gift Cards - SwiftDevices">
     <meta property="og:description" content="Send the perfect tech gift. SwiftDevices digital gift cards available in multiple denominations.">
     <title>Gift Cards - SwiftDevices</title>
@@ -23,6 +23,7 @@
     <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-functions-compat.js"></script>
 
 </head>
 <body class="font-sans bg-gray-50 text-gray-800">
@@ -45,7 +46,7 @@
                 <span>The Perfect Tech Gift</span>
             </div>
             <h1 class="text-4xl lg:text-6xl font-bold mb-4">SwiftDevices Gift Cards</h1>
-            <p class="text-xl text-gray-300 max-w-2xl mx-auto">Give the gift of choice. Send a digital gift card instantly via email. Redeemable on any product in our store.</p>
+            <p class="text-xl text-gray-300 max-w-2xl mx-auto">Give the gift of choice with a digital card. Cards stay inactive until payment is verified; delivery to recipients is coordinated by support.</p>
         </div>
     </section>
 
@@ -114,7 +115,7 @@
                     <textarea id="gc-message" rows="3" maxlength="500" placeholder="Happy birthday! Enjoy some new tech..." class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-brand-blue"></textarea>
                 </div>
                 <button type="submit" id="gc-submit-btn" class="w-full bg-brand-blue text-white py-4 rounded-full font-bold text-lg hover:bg-blue-700 transition shadow-lg">
-                    <i class="fas fa-paper-plane mr-2"></i>Purchase & Send Gift Card
+                    <i class="fas fa-paper-plane mr-2"></i>Place Gift Card Order
                 </button>
                 <p class="text-xs text-gray-400 text-center">Gift card code will be generated and saved to your account</p>
             </form>
@@ -203,7 +204,8 @@
             for (var s = 0; s < 3; s++) {
                 var seg = '';
                 for (var i = 0; i < 4; i++) {
-                    seg += chars.charAt(Math.floor(Math.random() * chars.length));
+                    var random = new Uint32Array(1); crypto.getRandomValues(random);
+                    seg += chars.charAt(random[0] % chars.length);
                 }
                 segments.push(seg);
             }
@@ -211,7 +213,6 @@
         }
 
         // Web3Forms Configuration
-        var WEB3FORMS_KEY = '0e7ad91d-7aa7-4810-8358-be2628922caa';
 
         function purchaseGiftCard(event) {
             event.preventDefault();
@@ -239,29 +240,13 @@
             };
 
             db.collection('giftCards').doc(code).set(data).then(function() {
-                btn.innerHTML = '<i class="fas fa-check mr-2"></i>Gift Card Created!';
+                btn.innerHTML = '<i class="fas fa-check mr-2"></i>Order Pending Payment';
                 btn.classList.remove('bg-brand-blue', 'hover:bg-blue-700');
                 btn.classList.add('bg-green-600');
-                alert('Gift card order placed!\n\nCode: ' + code + '\nAmount: $' + selectedAmount + '\n\nTo activate this gift card, please send $' + selectedAmount + ' via cryptocurrency or bank transfer.\n\nBank: Citi Bank\nAccount: 6883023077\nRouting: 021000089\nReference: GC-' + code + '\n\nOnce payment is confirmed, the gift card will be activated and sent to ' + data.recipientName + '.\n\nContact: swiftdevices@technologist.com');
-                // Send gift card email to recipient via Web3Forms
-                if (data.recipientEmail) {
-                    fetch('https://api.web3forms.com/submit', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            access_key: WEB3FORMS_KEY,
-                            botcheck: '',
-                            subject: 'You received a SwiftDevices Gift Card from ' + (data.senderName || 'Someone') + '!',
-                            from_name: data.senderName || 'Someone',
-                            name: data.recipientName || 'Friend',
-                            email: data.recipientEmail,
-                            message: 'You have received a $' + data.amount + ' SwiftDevices Gift Card!\n\nGift Card Code: ' + code + '\n\n' + (data.message ? 'Message: ' + data.message + '\n\n' : '') + 'Redeem at: https://swiftdevices-e2972.web.app'
-                        })
-                    }).catch(function(err) { console.warn('Gift card email failed:', err); });
-                }
+                alert('Gift card order created with pending payment status.\n\nCode: ' + code + '\nAmount: $' + selectedAmount + '\n\nThis code is inactive until SwiftDevices verifies payment. Keep it safe and contact support after transfer confirmation.');
                 setTimeout(function() {
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Purchase & Send Gift Card';
+                    btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Place Gift Card Order';
                     btn.classList.add('bg-brand-blue', 'hover:bg-blue-700');
                     btn.classList.remove('bg-green-600');
                     event.target.reset();
@@ -270,7 +255,7 @@
             }).catch(function(err) {
                 alert('Error purchasing gift card: ' + err.message);
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Purchase & Send Gift Card';
+                btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Place Gift Card Order';
             });
         }
 
@@ -282,37 +267,17 @@
             }
             var code = document.getElementById('gc-redeem-code').value.trim().toUpperCase();
             var result = document.getElementById('redeem-result');
-
-            db.collection('giftCards').doc(code).get().then(function(doc) {
-                if (!doc.exists) {
-                    result.className = 'mt-3 bg-red-50 text-red-600 p-3 rounded-xl text-sm';
-                    result.innerHTML = '<i class="fas fa-times-circle mr-1"></i>Invalid gift card code.';
-                    result.classList.remove('hidden');
-                    return;
-                }
-                var gc = doc.data();
-                if (gc.status !== 'active' || gc.balance <= 0) {
-                    result.className = 'mt-3 bg-red-50 text-red-600 p-3 rounded-xl text-sm';
-                    result.innerHTML = '<i class="fas fa-times-circle mr-1"></i>This gift card has already been redeemed.';
-                    result.classList.remove('hidden');
-                    return;
-                }
-                var balance = gc.balance;
-                // Add balance as reward points (1 dollar = 100 points equivalent)
-                var pointsToAdd = balance * 100;
-                var batch = db.batch();
-                batch.update(db.collection('giftCards').doc(code), { status: 'redeemed', balance: 0, redeemedBy: auth.currentUser.uid, redeemedAt: firebase.firestore.FieldValue.serverTimestamp() });
-                batch.set(db.collection('rewardsPoints').doc(auth.currentUser.uid), { points: firebase.firestore.FieldValue.increment(pointsToAdd), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-                batch.commit().then(function() {
-                    result.className = 'mt-3 bg-green-50 text-green-600 p-3 rounded-xl text-sm';
-                    result.innerHTML = '<i class="fas fa-check-circle mr-1"></i>Gift card redeemed! $' + balance + ' (' + pointsToAdd.toLocaleString() + ' reward points) added to your account.';
-                    result.classList.remove('hidden');
-                    document.getElementById('gc-redeem-code').value = '';
-                });
+            result.className = 'mt-3 bg-blue-50 text-blue-700 p-3 rounded-xl text-sm';
+            result.textContent = 'Checking gift card...';
+            result.classList.remove('hidden');
+            firebase.app().functions('us-central1').httpsCallable('redeemGiftCard')({ code: code }).then(function(response) {
+                var data = response.data || {};
+                result.className = 'mt-3 bg-green-50 text-green-600 p-3 rounded-xl text-sm';
+                result.textContent = 'Gift card redeemed! $' + Number(data.balance || 0).toFixed(2) + ' (' + Number(data.points || 0).toLocaleString() + ' reward points) added to your account.';
+                document.getElementById('gc-redeem-code').value = '';
             }).catch(function(err) {
                 result.className = 'mt-3 bg-red-50 text-red-600 p-3 rounded-xl text-sm';
-                result.innerHTML = '<i class="fas fa-times-circle mr-1"></i>Error: ' + err.message;
-                result.classList.remove('hidden');
+                result.textContent = err.message || 'Could not redeem this gift card.';
             });
         }
 

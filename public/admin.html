@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://www.gstatic.com https://apis.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data: https://*.firebasestorage.app https://www.att.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com; frame-src 'self' https://accounts.google.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://www.gstatic.com https://apis.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data: https://*.firebasestorage.app https://www.att.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://firestore.googleapis.com https://identitytoolkit.googleapis.com; frame-src 'self' https://accounts.google.com;">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -25,6 +25,7 @@
     <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-functions-compat.js"></script>
     <script>
         var firebaseConfig = {
             apiKey: "AIzaSyAbBODZeHGStQFU_06ShU3ZXpi95reNz8U",
@@ -105,22 +106,26 @@
 
         <!-- Stats Row -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-6">
                 <div class="stat-card text-white rounded-2xl p-5">
-                    <p class="text-white/70 text-xs uppercase tracking-wide">Total Orders</p>
+                    <p class="text-white/70 text-xs uppercase tracking-wide">Orders (page)</p>
                     <p class="text-3xl font-bold mt-1" id="stat-orders">--</p>
                 </div>
                 <div class="bg-white rounded-2xl p-5 shadow-sm">
-                    <p class="text-gray-500 text-xs uppercase tracking-wide">Revenue</p>
+                    <p class="text-gray-500 text-xs uppercase tracking-wide">Paid Revenue (page)</p>
                     <p class="text-3xl font-bold text-green-600 mt-1" id="stat-revenue">--</p>
                 </div>
                 <div class="bg-white rounded-2xl p-5 shadow-sm">
-                    <p class="text-gray-500 text-xs uppercase tracking-wide">Customers</p>
+                    <p class="text-gray-500 text-xs uppercase tracking-wide">Pending Payments (page)</p>
+                    <p class="text-3xl font-bold text-amber-600 mt-1" id="stat-pending-payments">--</p>
+                </div>
+                <div class="bg-white rounded-2xl p-5 shadow-sm">
+                    <p class="text-gray-500 text-xs uppercase tracking-wide">Customers (page)</p>
                     <p class="text-3xl font-bold text-brand-blue mt-1" id="stat-customers">--</p>
                 </div>
                 <div class="bg-white rounded-2xl p-5 shadow-sm">
                     <p class="text-gray-500 text-xs uppercase tracking-wide">Products</p>
-                    <p class="text-3xl font-bold text-indigo-600 mt-1" id="stat-products">78</p>
+                    <p class="text-3xl font-bold text-indigo-600 mt-1" id="stat-products">113</p>
                 </div>
                 <div class="bg-white rounded-2xl p-5 shadow-sm">
                     <p class="text-gray-500 text-xs uppercase tracking-wide">Trade-Ins</p>
@@ -142,6 +147,7 @@
                     <button onclick="switchTab('giftcards')" id="atab-giftcards" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-gift mr-1"></i>Gift Cards</button>
                     <button onclick="switchTab('rewards')" id="atab-rewards" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-coins mr-1"></i>Rewards</button>
                     <button onclick="switchTab('reviews')" id="atab-reviews" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-star mr-1"></i>Reviews</button>
+                    <button onclick="switchTab('blog')" id="atab-blog" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-newspaper mr-1"></i>Blog</button>
                     <button onclick="switchTab('contacts')" id="atab-contacts" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-envelope mr-1"></i>Contacts</button>
                     <button onclick="switchTab('coupons')" id="atab-coupons" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-tags mr-1"></i>Coupons</button>
                     <button onclick="switchTab('analytics')" id="atab-analytics" class="px-5 py-4 text-sm font-medium text-gray-500 whitespace-nowrap hover:text-brand-blue transition"><i class="fas fa-chart-line mr-1"></i>Analytics</button>
@@ -175,26 +181,34 @@
 
                 <!-- ==================== ORDERS TAB ==================== -->
                 <div id="panel-orders" class="p-6 hidden">
-                    <div class="flex justify-between items-center mb-4">
+                    <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between mb-4">
                         <h2 class="text-lg font-bold text-brand-dark">Orders</h2>
-                        <div class="flex gap-2">
-                            <input type="text" id="order-search" oninput="renderOrders()" placeholder="Search orders..." class="text-sm border rounded-lg px-3 py-2 w-40">
-                            <button onclick="exportOrdersCSV()" class="text-sm bg-green-600 text-white px-3 py-2 rounded-lg font-semibold hover:bg-green-700"><i class="fas fa-file-csv mr-1"></i>Export CSV</button>
+                        <div class="flex flex-wrap gap-2">
+                            <input type="date" id="orders-from-date" aria-label="Orders from date" class="text-sm border rounded-lg px-3 py-2">
+                            <input type="date" id="orders-to-date" aria-label="Orders to date" class="text-sm border rounded-lg px-3 py-2">
+                            <button onclick="loadOrders(true)" class="text-sm bg-brand-blue text-white px-3 py-2 rounded-lg font-semibold hover:bg-blue-700">Apply dates</button>
+                            <input type="text" id="order-search" oninput="renderOrders()" placeholder="Search this page..." class="text-sm border rounded-lg px-3 py-2 w-40">
+                            <button onclick="exportOrdersCSV()" class="text-sm bg-green-600 text-white px-3 py-2 rounded-lg font-semibold hover:bg-green-700"><i class="fas fa-file-csv mr-1"></i>Export this page</button>
                             <select id="order-filter" onchange="renderOrders()" class="text-sm border rounded-lg px-3 py-2">
                                 <option value="">All Statuses</option>
                                 <option value="confirmed">Confirmed</option>
                                 <option value="processing">Processing</option>
                                 <option value="shipped">Shipped</option>
                                 <option value="delivered">Delivered</option>
-                                <option value="awaiting_crypto_payment">Awaiting Crypto</option>
+                                <option value="awaiting_payment">Awaiting Payment</option>
+                                <option value="payment_pending">Payment Pending</option>
+                                <option value="payment_paid">Payment Paid</option>
+                                <option value="payment_refunded">Refunded</option>
                                 <option value="cancelled">Cancelled</option>
                             </select>
-                            <button onclick="loadOrders()" class="text-brand-blue text-sm hover:underline"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
+                            <button onclick="loadOrders(true)" class="text-brand-blue text-sm hover:underline"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
                         </div>
                     </div>
+                    <p class="text-xs text-gray-400 mb-2">Date range applies to the full order query. Search, status filters, summary cards, and CSV export apply to the current 100-order page.</p>
                     <div id="orders-table" class="overflow-x-auto">
                         <div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>
                     </div>
+                    <div id="orders-pagination" class="flex items-center justify-between gap-3 mt-4"></div>
                 </div>
 
                 <!-- ==================== CUSTOMERS TAB ==================== -->
@@ -309,6 +323,16 @@
                     </div>
                 </div>
 
+                <!-- ==================== BLOG TAB ==================== -->
+                <div id="panel-blog" class="p-6 hidden">
+                    <div class="flex justify-between items-center mb-4"><div><h2 class="text-lg font-bold text-brand-dark">Blog Publishing</h2><p class="text-sm text-gray-500">Draft, publish, and update articles shown in Support &amp; Resources.</p></div><button onclick="resetBlogForm()" class="text-brand-blue text-sm hover:underline"><i class="fas fa-plus mr-1"></i>New article</button></div>
+                    <form id="blog-form" onsubmit="saveBlogPost(event)" class="bg-white border rounded-xl p-4 mb-6 grid gap-3"><input type="hidden" id="blog-edit-id">
+                        <div class="grid md:grid-cols-2 gap-3"><label class="text-sm font-medium">Title<input id="blog-title" required maxlength="120" class="mt-1 w-full border rounded-lg px-3 py-2"></label><label class="text-sm font-medium">Category<input id="blog-category" required maxlength="40" placeholder="Guide, Trends, Tutorial" class="mt-1 w-full border rounded-lg px-3 py-2"></label></div>
+                        <label class="text-sm font-medium">Cover image URL<input id="blog-image" type="url" required class="mt-1 w-full border rounded-lg px-3 py-2"></label><label class="text-sm font-medium">Short summary<textarea id="blog-excerpt" required maxlength="300" rows="2" class="mt-1 w-full border rounded-lg px-3 py-2"></textarea></label><label class="text-sm font-medium">Article body<textarea id="blog-body" required maxlength="12000" rows="8" class="mt-1 w-full border rounded-lg px-3 py-2"></textarea></label>
+                        <div class="flex gap-3 items-center"><button type="submit" class="bg-brand-blue text-white px-5 py-2 rounded-full text-sm font-bold">Save article</button><label class="text-sm flex items-center gap-2"><input type="checkbox" id="blog-published"> Publish now</label><span id="blog-form-message" class="text-sm text-gray-500"></span></div>
+                    </form><div id="blog-admin-list" class="space-y-3"><p class="text-center py-6 text-gray-500">Loading articles...</p></div>
+                </div>
+
                 <!-- ==================== CONTACTS TAB ==================== -->
                 <div id="panel-contacts" class="p-6 hidden">
                     <div class="flex justify-between items-center mb-4">
@@ -323,6 +347,10 @@
                             <button onclick="loadContacts()" class="text-brand-blue text-sm hover:underline"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
                         </div>
                     </div>
+                    <section class="mb-8 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                        <div class="flex items-center justify-between gap-3 mb-3"><div><h3 class="font-bold text-brand-dark">Account deletion requests</h3><p class="text-xs text-gray-600">Process the request under the retention policy before marking it reviewed.</p></div><button onclick="loadAccountDeletionRequests()" class="text-brand-blue text-xs font-semibold hover:underline">Refresh</button></div>
+                        <div id="account-deletion-requests"><p class="text-xs text-gray-500">Loading requests…</p></div>
+                    </section>
                     <div id="contacts-table">
                         <div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>
                     </div>
@@ -392,6 +420,7 @@
                         <h2 class="text-lg font-bold text-brand-dark">Analytics</h2>
                         <button onclick="loadAnalytics()" class="text-brand-blue text-sm hover:underline"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
                     </div>
+                    <p class="text-xs text-gray-400 mb-3">Revenue and product-sales charts use paid orders from the latest 100-order page; the status chart includes all orders on that page.</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div class="bg-white border rounded-xl p-4">
                             <h3 class="text-sm font-semibold text-gray-500 mb-3">Revenue (Last 30 Days)</h3>
@@ -433,7 +462,7 @@
                 <div id="panel-settings" class="p-6 hidden">
 
                     <!-- ── Promo / Sale Settings ── -->
-                    <div class="mb-10">
+                    <div id="settings-promo" class="mb-10">
                         <h2 class="text-lg font-bold text-brand-dark mb-1"><i class="fas fa-percent mr-2 text-orange-500"></i>Promo / Sale Settings</h2>
                         <p class="text-sm text-gray-500 mb-5">Control the sitewide promo banner, discount percentage, and schedule. Changes apply instantly to the live site.</p>
 
@@ -517,7 +546,7 @@
                     <hr class="my-8 border-gray-200">
 
                     <!-- ── Announcement Bar ── -->
-                    <div class="mb-10">
+                    <div id="settings-announcement" class="mb-10">
                         <h2 class="text-lg font-bold text-brand-dark mb-1"><i class="fas fa-bullhorn mr-2 text-blue-500"></i>Announcement Bar</h2>
                         <p class="text-sm text-gray-500 mb-5">Control the announcement banner shown below the promo bar on the main site.</p>
                         <div class="space-y-4">
@@ -554,7 +583,7 @@
                     <hr class="my-8 border-gray-200">
 
                     <!-- ── Hero Carousel Management ── -->
-                    <div class="mb-10">
+                    <div id="settings-hero" class="mb-10">
                         <h2 class="text-lg font-bold text-brand-dark mb-1"><i class="fas fa-images mr-2 text-purple-500"></i>Hero Carousel</h2>
                         <p class="text-sm text-gray-500 mb-5">Manage the hero slides on the homepage. Reorder, enable/disable, or edit slide content.</p>
                         <div id="hero-slides-list" class="space-y-3 mb-4">
@@ -567,7 +596,7 @@
                     <hr class="my-8 border-gray-200">
 
                     <!-- ── Bundle Management ── -->
-                    <div class="mb-10">
+                    <div id="settings-bundles" class="mb-10">
                         <h2 class="text-lg font-bold text-brand-dark mb-1"><i class="fas fa-cubes mr-2 text-teal-500"></i>Bundle Deals</h2>
                         <p class="text-sm text-gray-500 mb-5">Manage product bundles shown on the main site. Each bundle combines 3 products at 9% off.</p>
                         <div id="bundles-list" class="space-y-4 mb-4"></div>
@@ -613,6 +642,7 @@
                     <hr class="my-8 border-gray-200">
 
                     <!-- ── Crypto Wallets (existing) ── -->
+                    <div id="settings-wallets">
                     <h2 class="text-lg font-bold text-brand-dark mb-6"><i class="fas fa-wallet mr-2"></i>Crypto Wallet Addresses</h2>
                     <p class="text-sm text-gray-500 mb-4">Manage cryptocurrency wallet addresses shown to customers during checkout.</p>
                     <div id="wallet-list" class="space-y-3 mb-4"></div>
@@ -643,6 +673,7 @@
                             <input type="text" id="new-wallet-address" placeholder="Paste your wallet address" class="w-full px-3 py-2 border rounded-lg text-sm font-mono">
                         </div>
                         <button onclick="addCryptoWallet()" class="bg-brand-blue text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-blue-700 transition"><i class="fas fa-plus mr-1"></i>Add Wallet</button>
+                    </div>
                     </div>
                 </div>
 
@@ -786,12 +817,6 @@
     // ════════════════════════════════════════════
     //  ADMIN AUTH
     // ════════════════════════════════════════════
-    var ADMIN_EMAILS = ['admin@swiftdevices.com', 'jeffreid6525@gmail.com', 'swiftdevices@technologist.com'];
-    function isAdmin(email) {
-        if (ADMIN_EMAILS.length === 0) return true;
-        return ADMIN_EMAILS.includes(email.toLowerCase());
-    }
-
     function adminLogin() {
         var email = document.getElementById('admin-email').value;
         var password = document.getElementById('admin-password').value;
@@ -817,46 +842,65 @@
         var loading = document.getElementById('auth-loading');
         var form = document.getElementById('auth-form');
         var denied = document.getElementById('auth-denied');
-        if (user) {
-            user.getIdTokenResult().then(function(tokenResult) {
-                var hasAdminClaim = tokenResult.claims.admin === true;
-                if (hasAdminClaim || isAdmin(user.email)) {
-                    gate.classList.add('hidden');
-                    dashboard.classList.remove('hidden');
-                    document.getElementById('admin-name').textContent = user.displayName || user.email;
-                    loadAllData();
-                } else {
-                    loading.classList.add('hidden');
-                    form.classList.add('hidden');
-                    denied.classList.remove('hidden');
-                }
-            }).catch(function() {
-                if (isAdmin(user.email)) {
-                    gate.classList.add('hidden');
-                    dashboard.classList.remove('hidden');
-                    document.getElementById('admin-name').textContent = user.displayName || user.email;
-                    loadAllData();
-                } else {
-                    loading.classList.add('hidden');
-                    form.classList.add('hidden');
-                    denied.classList.remove('hidden');
-                }
-            });
-        } else {
+        if (!user) {
             gate.classList.remove('hidden');
             dashboard.classList.add('hidden');
             loading.classList.add('hidden');
             form.classList.remove('hidden');
             denied.classList.add('hidden');
+            return;
         }
+        user.getIdTokenResult(true).then(function(tokenResult) {
+            var allowedRoles = ['orders', 'catalog', 'finance', 'support'];
+            if (tokenResult.claims.admin === true || allowedRoles.indexOf(tokenResult.claims.adminRole) !== -1) {
+                currentAdminRole = tokenResult.claims.admin === true ? 'owner' : tokenResult.claims.adminRole;
+                gate.classList.add('hidden');
+                dashboard.classList.remove('hidden');
+                document.getElementById('admin-name').textContent = (user.displayName || user.email) + ' · ' + currentAdminRole;
+                applyAdminRole();
+                loadAllData();
+                return;
+            }
+            loading.classList.add('hidden');
+            form.classList.add('hidden');
+            denied.classList.remove('hidden');
+        }).catch(function() {
+            loading.classList.add('hidden');
+            form.classList.add('hidden');
+            denied.classList.remove('hidden');
+        });
     });
 
-    // ════════════════════════════════════════════
+        // ════════════════════════════════════════════
     //  TAB SWITCHING
     // ════════════════════════════════════════════
-    var ALL_TABS = ['products','orders','customers','tradeins','giftcards','rewards','reviews','contacts','coupons','analytics','auditlog','settings'];
+    var currentAdminRole = 'owner';
+    var ALL_TABS = ['products','orders','customers','tradeins','giftcards','rewards','reviews','blog','contacts','coupons','analytics','auditlog','settings'];
+    var ADMIN_TAB_ROLES = {
+        products: ['owner','catalog'], orders: ['owner','orders','finance','support'], customers: ['owner','finance','support'],
+        tradeins: ['owner','support'], giftcards: ['owner','finance'], rewards: ['owner','finance'], reviews: ['owner','support'],
+        blog: ['owner','catalog'], contacts: ['owner','support'], coupons: ['owner','finance'], analytics: ['owner','orders','finance'],
+        auditlog: ['owner'], settings: ['owner','catalog','finance']
+    };
+    function adminCanSeeTab(tab) { return (ADMIN_TAB_ROLES[tab] || []).indexOf(currentAdminRole) !== -1; }
+    function applyAdminRole() {
+        ALL_TABS.forEach(function(tab) {
+            var button = document.getElementById('atab-' + tab);
+            if (button) button.classList.toggle('hidden', !adminCanSeeTab(tab));
+        });
+        var catalogSettings = currentAdminRole === 'owner' || currentAdminRole === 'catalog';
+        ['settings-promo','settings-announcement','settings-hero','settings-bundles'].forEach(function(id) {
+            var section = document.getElementById(id);
+            if (section) section.classList.toggle('hidden', !catalogSettings);
+        });
+        var walletSettings = document.getElementById('settings-wallets');
+        if (walletSettings) walletSettings.classList.toggle('hidden', currentAdminRole !== 'owner' && currentAdminRole !== 'finance');
+        var firstTab = ALL_TABS.find(adminCanSeeTab);
+        if (firstTab) switchTab(firstTab);
+    }
 
     function switchTab(tab) {
+        if (!adminCanSeeTab(tab)) return;
         ALL_TABS.forEach(function(t) {
             var btn = document.getElementById('atab-' + t);
             var panel = document.getElementById('panel-' + t);
@@ -874,26 +918,29 @@
     //  LOAD ALL DATA
     // ════════════════════════════════════════════
     function loadAllData() {
-        loadProducts();
-        loadOrders();
-        loadCustomers();
-        loadTradeIns();
-        loadGiftCards();
-        loadRewards();
-        loadReviews();
-        loadContacts();
-        loadCoupons();
-        loadAdminWallets();
-        loadPromoSettings();
-        loadAuditLog();
-        loadAnalytics();
-        loadAnnouncementSettings();
-        loadHeroSlides();
-        loadBundles();
+        var role = currentAdminRole;
+        if (role === 'owner') {
+            loadProducts(); loadOrders(); loadCustomers(); loadTradeIns(); loadGiftCards(); loadRewards();
+            loadReviews(); loadBlogPosts(); loadContacts(); loadCoupons(); loadAdminWallets();
+            loadPromoSettings(); loadAuditLog(); loadAnalytics(); loadAnnouncementSettings(); loadHeroSlides(); loadBundles();
+            return;
+        }
+        if (['orders', 'finance', 'support'].indexOf(role) !== -1) loadOrders();
+        if (['finance', 'support'].indexOf(role) !== -1) loadCustomers();
+        if (role === 'orders' || role === 'finance') loadAnalytics();
+        if (role === 'catalog') {
+            loadProducts(); loadBlogPosts(); loadPromoSettings(); loadAnnouncementSettings(); loadHeroSlides(); loadBundles();
+        }
+        if (role === 'finance') {
+            loadGiftCards(); loadRewards(); loadCoupons(); loadAdminWallets();
+        }
+        if (role === 'support') {
+            loadTradeIns(); loadReviews(); loadContacts();
+        }
     }
 
     // ════════════════════════════════════════════
-    //  PRODUCT CATALOG (78 products)
+    //  PRODUCT CATALOG (113 products)
     // ════════════════════════════════════════════
     var baseProducts = [
         {id:1,name:"iPhone 17 Pro Max",brand:"Apple",category:"smartphones",price:1199,oldPrice:1299,badge:"NEW"},
@@ -990,7 +1037,25 @@
         {id:95,name:"iPhone 17 Pro Max Silver",brand:"Apple",category:"smartphones",price:1320,oldPrice:null,badge:"NEW"},
         {id:96,name:"iPhone 17 Pro Max 512GB",brand:"Apple",category:"smartphones",price:1510,oldPrice:null,badge:"NEW"},
         {id:97,name:"iPhone 17 Pro Max (JP) 512GB Orange",brand:"Apple",category:"smartphones",price:1510,oldPrice:null,badge:"JP eSIM"},
-        {id:98,name:"iPhone 17 Pro Max (JP) 512GB Silver",brand:"Apple",category:"smartphones",price:1510,oldPrice:null,badge:"JP eSIM"}
+        {id:98,name:"iPhone 17 Pro Max (JP) 512GB Silver",brand:"Apple",category:"smartphones",price:1510,oldPrice:null,badge:"JP eSIM"},
+        {id:101,name:"iPhone 18 Pro Max",brand:"Apple",category:"smartphones",price:1299,oldPrice:null,badge:"NEW"},
+        {id:102,name:"iPhone 18 Pro",brand:"Apple",category:"smartphones",price:1099,oldPrice:null,badge:"NEW"},
+        {id:103,name:"iPhone Duo",brand:"Apple",category:"smartphones",price:1999,oldPrice:null,badge:"NEW"},
+        {id:104,name:"Apple Watch Series 12 42mm",brand:"Apple",category:"wearables",price:399,oldPrice:null,badge:"NEW"},
+        {id:105,name:"Apple Watch Ultra 4",brand:"Apple",category:"wearables",price:799,oldPrice:null,badge:"NEW"},
+        {id:106,name:"AirPods 5",brand:"Apple",category:"audio",price:129,oldPrice:null,badge:"NEW"},
+        {id:107,name:"Google Pixel 11 256GB",brand:"Google",category:"smartphones",price:899,oldPrice:null,badge:"NEW"},
+        {id:108,name:"Google Pixel 11 Pro 256GB",brand:"Google",category:"smartphones",price:1099,oldPrice:null,badge:"NEW"},
+        {id:109,name:"Google Pixel 11 Pro XL 256GB",brand:"Google",category:"smartphones",price:1299,oldPrice:null,badge:"NEW"},
+        {id:110,name:"Google Pixel Watch 5 41mm",brand:"Google",category:"wearables",price:399,oldPrice:null,badge:"NEW"},
+        {id:111,name:"Samsung Galaxy Z Fold8 Ultra 256GB",brand:"Samsung",category:"smartphones",price:2099,oldPrice:null,badge:"NEW"},
+        {id:112,name:"Samsung Galaxy Z Fold8 256GB",brand:"Samsung",category:"smartphones",price:1899,oldPrice:null,badge:"NEW"},
+        {id:113,name:"Samsung Galaxy Z Flip8 256GB",brand:"Samsung",category:"smartphones",price:1199,oldPrice:null,badge:"NEW"},
+        {id:114,name:"Samsung Galaxy S26 FE 128GB",brand:"Samsung",category:"smartphones",price:699,oldPrice:null,badge:"NEW"},
+        {id:115,name:"Samsung Galaxy Watch9 40mm",brand:"Samsung",category:"wearables",price:429,oldPrice:null,badge:"NEW"},
+        {id:116,name:"Motorola razr 2026 256GB",brand:"Motorola",category:"smartphones",price:799,oldPrice:null,badge:"NEW"},
+        {id:117,name:"Motorola edge 2026 256GB",brand:"Motorola",category:"smartphones",price:599,oldPrice:null,badge:"NEW"},
+        {id:118,name:"moto g stylus 2026 256GB",brand:"Motorola",category:"smartphones",price:499,oldPrice:null,badge:"NEW"}
     ];
 
     var productOverrides = {};
@@ -1019,7 +1084,7 @@
                 price: o.price !== undefined ? o.price : p.price,
                 oldPrice: o.oldPrice !== undefined ? o.oldPrice : p.oldPrice,
                 badge: o.badge !== undefined ? o.badge : p.badge,
-                stock: o.stock !== undefined ? o.stock : 10,
+                stock: o.stock !== undefined ? o.stock : 0,
                 defaultPrice: p.price,
                 defaultOldPrice: p.oldPrice,
                 defaultBadge: p.badge,
@@ -1131,27 +1196,100 @@
     //  ORDERS
     // ════════════════════════════════════════════
     var allOrders = [];
+    var orderPageDocs = [];
+    var orderPageHasNext = [];
+    var orderPageIndex = 0;
+    var orderPageSize = 100;
+    var orderQueryKey = '';
+    var orderLoading = false;
 
-    function loadOrders() {
+    function updateOrderPageStats(docs) {
+        var orders = docs.map(function(doc) { return doc.data(); });
+        var paidRevenue = 0;
+        var pendingPayments = 0;
+        var emails = new Set();
+        orders.forEach(function(order) {
+            if (order.paymentStatus === 'paid') paidRevenue += Number(order.total) || 0;
+            if (order.paymentStatus === 'pending' || order.status === 'awaiting_payment') pendingPayments++;
+            if (order.email) emails.add(order.email);
+        });
+        document.getElementById('stat-orders').textContent = orders.length;
+        document.getElementById('stat-revenue').textContent = '$' + paidRevenue.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+        document.getElementById('stat-pending-payments').textContent = pendingPayments;
+        document.getElementById('stat-customers').textContent = emails.size;
+    }
+
+    function renderOrderPagination() {
+        var container = document.getElementById('orders-pagination');
+        if (!container) return;
+        var docs = orderPageDocs[orderPageIndex] || [];
+        container.innerHTML = '<button type="button" onclick="changeOrderPage(-1)" ' + (orderPageIndex === 0 || orderLoading ? 'disabled' : '') + ' class="border rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-40">Previous</button>'
+            + '<span class="text-xs text-gray-500">Page ' + (orderPageIndex + 1) + ' · ' + docs.length + ' orders</span>'
+            + '<button type="button" onclick="changeOrderPage(1)" ' + (!orderPageHasNext[orderPageIndex] || orderLoading ? 'disabled' : '') + ' class="border rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-40">Next</button>';
+    }
+
+    function refreshCurrentOrderPage() {
+        orderPageDocs[orderPageIndex] = null;
+        orderPageHasNext[orderPageIndex] = false;
+        loadOrders(false);
+    }
+
+    function changeOrderPage(direction) {
+        var target = orderPageIndex + direction;
+        if (target < 0 || (direction > 0 && !orderPageHasNext[orderPageIndex])) return;
+        orderPageIndex = target;
+        loadOrders(false);
+    }
+
+    function loadOrders(reset) {
         var container = document.getElementById('orders-table');
-        container.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>';
-        db.collection('orders').orderBy('createdAt', 'desc').limit(100).get().then(function(snap) {
-            allOrders = [];
-            var total = 0;
-            var emails = new Set();
-            snap.forEach(function(doc) {
-                var o = doc.data();
-                o._id = doc.id;
-                allOrders.push(o);
-                total += o.total || 0;
-                if (o.email) emails.add(o.email);
-            });
-            document.getElementById('stat-orders').textContent = allOrders.length;
-            document.getElementById('stat-revenue').textContent = '$' + total.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
-            document.getElementById('stat-customers').textContent = emails.size;
+        if (!container || orderLoading) return;
+        var fromValue = (document.getElementById('orders-from-date') || {}).value || '';
+        var toValue = (document.getElementById('orders-to-date') || {}).value || '';
+        if (fromValue && toValue && fromValue > toValue) {
+            container.innerHTML = '<p class="text-red-500 text-center py-4">The start date must be on or before the end date.</p>';
+            return;
+        }
+        var queryKey = fromValue + '|' + toValue;
+        if (reset !== false || queryKey !== orderQueryKey) {
+            orderPageDocs = [];
+            orderPageHasNext = [];
+            orderPageIndex = 0;
+            orderQueryKey = queryKey;
+        }
+        if (orderPageDocs[orderPageIndex]) {
+            allOrders = orderPageDocs[orderPageIndex].map(function(doc) { var order = doc.data(); order._id = doc.id; return order; });
+            updateOrderPageStats(orderPageDocs[orderPageIndex]);
             renderOrders();
+            renderOrderPagination();
+            return;
+        }
+        orderLoading = true;
+        container.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>';
+        var query = db.collection('orders');
+        if (fromValue) query = query.where('createdAt', '>=', firebase.firestore.Timestamp.fromDate(new Date(fromValue + 'T00:00:00')));
+        if (toValue) {
+            var endDate = new Date(toValue + 'T00:00:00');
+            endDate.setDate(endDate.getDate() + 1);
+            query = query.where('createdAt', '<', firebase.firestore.Timestamp.fromDate(endDate));
+        }
+        query = query.orderBy('createdAt', 'desc').limit(orderPageSize);
+        if (orderPageIndex > 0) {
+            var previousPage = orderPageDocs[orderPageIndex - 1] || [];
+            if (previousPage.length) query = query.startAfter(previousPage[previousPage.length - 1]);
+        }
+        query.get().then(function(snap) {
+            orderPageDocs[orderPageIndex] = snap.docs;
+            orderPageHasNext[orderPageIndex] = snap.docs.length === orderPageSize;
+            allOrders = snap.docs.map(function(doc) { var order = doc.data(); order._id = doc.id; return order; });
+            orderLoading = false;
+            updateOrderPageStats(snap.docs);
+            renderOrders();
+            renderOrderPagination();
         }).catch(function(e) {
+            orderLoading = false;
             container.innerHTML = '<p class="text-red-500 text-center py-4">Error: ' + escHtml(e.message) + '</p>';
+            renderOrderPagination();
         });
     }
 
@@ -1160,7 +1298,10 @@
         var filterStatus = document.getElementById('order-filter').value;
         var searchTerm = (document.getElementById('order-search').value || '').toLowerCase();
         var filtered = allOrders.filter(function(o) {
-            if (filterStatus && (o.status || 'processing') !== filterStatus) return false;
+            if (filterStatus === 'payment_pending' && o.paymentStatus !== 'pending' && o.status !== 'awaiting_payment') return false;
+            if (filterStatus === 'payment_paid' && o.paymentStatus !== 'paid') return false;
+            if (filterStatus === 'payment_refunded' && o.paymentStatus !== 'refunded') return false;
+            if (filterStatus && filterStatus !== 'payment_pending' && filterStatus !== 'payment_paid' && (o.status || 'processing') !== filterStatus) return false;
             if (searchTerm) {
                 var haystack = ((o.orderId || o._id) + ' ' + (o.name || '') + ' ' + (o.email || '')).toLowerCase();
                 if (haystack.indexOf(searchTerm) === -1) return false;
@@ -1168,7 +1309,8 @@
             return true;
         });
         if (filtered.length === 0) {
-            container.innerHTML = '<p class="text-gray-500 text-center py-4">No orders' + (filterStatus ? ' with status "' + filterStatus + '"' : '') + '.</p>';
+            container.innerHTML = '<p class="text-gray-500 text-center py-4">No orders' + (filterStatus ? ' with status "' + filterStatus + '"' : '') + ' on this page.</p>';
+            renderOrderPagination();
             return;
         }
         var html = '<table class="w-full text-sm"><thead><tr class="border-b">'
@@ -1185,8 +1327,8 @@
             var status = o.status || 'processing';
             var dateStr = o.createdAt ? new Date(o.createdAt.toDate()).toLocaleDateString() : 'N/A';
             var payMethod = o.paymentMethod || 'card';
-            var statusOpts = ['confirmed','processing','shipped','delivered','awaiting_crypto_payment','cancelled'];
-            var selectHtml = '<select onchange="updateOrderStatus(\'' + o._id + '\', this.value)" class="status-select">';
+            var statusOpts = ['confirmed','processing','shipped','delivered','awaiting_payment','cancelled'];
+            var selectHtml = '<select ' + (currentAdminRole === 'support' ? 'disabled ' : '') + 'onchange="updateOrderStatus(\'' + o._id + '\', this.value)" class="status-select">';
             statusOpts.forEach(function(s) {
                 selectHtml += '<option value="' + s + '"' + (s === status ? ' selected' : '') + '>' + s.replace(/_/g,' ') + '</option>';
             });
@@ -1217,34 +1359,24 @@
         });
         html += '</tbody></table>';
         container.innerHTML = html;
+        renderOrderPagination();
     }
 
     function updateOrderStatus(docId, newStatus) {
+        var update = { orderNumber: docId, status: newStatus };
         if (newStatus === 'shipped') {
             var carrier = prompt('Enter shipping carrier (fedex, ups, usps, dhl):');
             var trackNum = prompt('Enter tracking number:');
-            if (carrier && trackNum) {
-                carrier = carrier.trim().toLowerCase();
-                trackNum = trackNum.trim();
-                db.collection('orders').doc(docId).update({
-                    status: newStatus,
-                    trackingCarrier: carrier,
-                    trackingNumber: trackNum,
-                    shippedAt: firebase.firestore.FieldValue.serverTimestamp()
-                }).then(function() {
-                    var order = allOrders.find(function(o) { return o._id === docId; });
-                    if (order) { order.status = newStatus; order.trackingCarrier = carrier; order.trackingNumber = trackNum; }
-                    logAudit('order_shipped', 'Order ' + docId + ' shipped via ' + carrier.toUpperCase() + ' — ' + trackNum);
-                    alert('Order marked as shipped! Tracking: ' + carrier.toUpperCase() + ' ' + trackNum);
-                }).catch(function(e) { alert('Error: ' + e.message); });
-                return;
-            }
+            if (!carrier || !trackNum) return;
+            update.trackingCarrier = carrier.trim().toLowerCase();
+            update.trackingNumber = trackNum.trim();
         }
-        db.collection('orders').doc(docId).update({ status: newStatus }).then(function() {
+        firebase.app().functions('us-central1').httpsCallable('adminUpdateOrder')(update).then(function() {
             var order = allOrders.find(function(o) { return o._id === docId; });
-            if (order) order.status = newStatus;
-            logAudit('order_status', 'Order ' + docId + ' → ' + newStatus);
-        }).catch(function(e) { alert('Error updating status: ' + e.message); });
+            if (order) { order.status = newStatus; if (update.trackingCarrier) { order.trackingCarrier = update.trackingCarrier; order.trackingNumber = update.trackingNumber; } }
+            logAudit(newStatus === 'shipped' ? 'order_shipped' : 'order_status', 'Order ' + docId + ' → ' + newStatus);
+            renderOrders();
+        }).catch(function(e) { alert('Error updating order: ' + e.message); });
     }
 
     function viewOrderDetail(docId) {
@@ -1262,8 +1394,14 @@
             + '<div><p class="text-xs text-gray-500">Status</p><p class="font-medium capitalize">' + escHtml((o.status || 'processing').replace(/_/g,' ')) + '</p></div>'
             + '<div><p class="text-xs text-gray-500">Total</p><p class="font-bold text-green-600 text-lg">$' + (o.total ? o.total.toFixed(2) : '0.00') + '</p></div>'
             + '</div>';
+        if (o.refundStatus === 'completed') {
+            html += '<div class="bg-purple-50 border border-purple-200 rounded-xl p-4"><p class="font-semibold text-purple-800">Manual refund recorded · $' + Number(o.refundAmount || 0).toFixed(2) + '</p><p class="text-xs text-purple-700 mt-1">Reason: ' + escHtml(o.refundReason || '') + (o.refundReference ? ' · Reference: ' + escHtml(o.refundReference) : '') + '</p><p class="text-xs text-purple-600 mt-1">This records an off-platform refund; it does not move funds.</p></div>';
+        } else if ((currentAdminRole === 'owner' || currentAdminRole === 'finance') && o.paymentStatus === 'paid') {
+            html += '<div class="border border-purple-200 rounded-xl p-4"><p class="text-xs text-gray-600 mb-2">Use only after funds have already been returned outside this site. This action records the full refund; it does not issue one.</p><button onclick="recordManualRefund(\'' + escHtml(docId) + '\')" class="text-sm bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-800"><i class="fas fa-undo mr-1"></i>Record completed full refund</button></div>';
+        }
         // Crypto payment verification section
         if (o.paymentMethod === 'crypto') {
+            var financeCanVerify = currentAdminRole === 'owner' || currentAdminRole === 'finance';
             var coin = o.cryptoCoin || 'BTC';
             var txHash = o.cryptoTxHash || '';
             var verified = o.cryptoVerified === true;
@@ -1282,10 +1420,12 @@
                 if (verified) {
                     html += '<div class="flex items-center gap-2 text-green-700 bg-green-50 rounded-lg p-2"><i class="fas fa-check-circle"></i><span class="text-sm font-semibold">Payment Verified</span></div>';
                 } else {
-                    html += '<div class="flex gap-2">'
+                    if (financeCanVerify) {
+                        html += '<div class="flex gap-2">'
                         + '<button onclick="verifyCryptoPayment(\'' + escHtml(docId) + '\', \'' + escHtml(coin) + '\', \'' + escHtml(txHash) + '\')" class="text-sm bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700"><i class="fas fa-check-circle mr-1"></i>Mark Payment Verified &amp; Confirm Order</button>'
-                        + '<button onclick="rejectCryptoPayment(\'' + escHtml(docId) + '\')" class="text-sm bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700"><i class="fas fa-times-circle mr-1"></i>Reject</button>'
-                        + '</div>';
+                            + '<button onclick="rejectCryptoPayment(\'' + escHtml(docId) + '\')" class="text-sm bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700"><i class="fas fa-times-circle mr-1"></i>Reject</button>'
+                            + '</div>';
+                    } else html += '<p class="text-xs text-gray-500">Payment verification is restricted to finance staff.</p>';
                 }
             } else {
                 html += '<div class="flex items-center gap-2 text-yellow-700 bg-yellow-100 rounded-lg p-2"><i class="fas fa-clock"></i><span class="text-sm font-semibold">Awaiting TX hash from customer — payment not yet submitted</span></div>';
@@ -1294,6 +1434,7 @@
         }
         // Bank Transfer receipt section
         if (o.paymentMethod === 'bank' || o.bankTransfer) {
+            var financeCanVerify = currentAdminRole === 'owner' || currentAdminRole === 'finance';
             html += '<div class="bg-green-50 border border-green-200 rounded-xl p-4">'
                 + '<h4 class="font-bold text-sm text-green-800 mb-3"><i class="fas fa-university mr-1"></i>Bank Transfer Details</h4>';
             if (o.bankReceiptUrl) {
@@ -1309,19 +1450,20 @@
                         + '</div>';
                 }
                 if (o.status === 'awaiting_payment') {
-                    html += '<div class="flex gap-2">'
-                        + '<button onclick="confirmBankPayment(\'' + escHtml(docId) + '\')" class="text-sm bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700"><i class="fas fa-check-circle mr-1"></i>Confirm Payment &amp; Process Order</button>'
-                        + '<button onclick="rejectBankPayment(\'' + escHtml(docId) + '\')" class="text-sm bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700"><i class="fas fa-times-circle mr-1"></i>Reject</button>'
-                        + '</div>';
+                    if (financeCanVerify) {
+                        html += '<div class="flex gap-2">'
+                            + '<button onclick="confirmBankPayment(\'' + escHtml(docId) + '\')" class="text-sm bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700"><i class="fas fa-check-circle mr-1"></i>Confirm Payment &amp; Process Order</button>'
+                            + '<button onclick="rejectBankPayment(\'' + escHtml(docId) + '\')" class="text-sm bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700"><i class="fas fa-times-circle mr-1"></i>Reject</button>'
+                            + '</div>';
+                    } else html += '<p class="text-xs text-gray-500">Payment verification is restricted to finance staff.</p>';
                 } else {
                     html += '<div class="flex items-center gap-2 text-green-700 bg-green-100 rounded-lg p-2"><i class="fas fa-check-circle"></i><span class="text-sm font-semibold">Payment Confirmed</span></div>';
                 }
             } else {
                 if (o.status === 'awaiting_payment') {
                     html += '<div class="flex items-center gap-2 text-yellow-700 bg-yellow-100 rounded-lg p-2"><i class="fas fa-clock"></i><span class="text-sm font-semibold">Awaiting bank transfer — no receipt uploaded yet</span></div>';
-                    html += '<div class="flex gap-2 mt-2">'
-                        + '<button onclick="confirmBankPayment(\'' + escHtml(docId) + '\')" class="text-sm bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700"><i class="fas fa-check-circle mr-1"></i>Confirm Payment Manually</button>'
-                        + '</div>';
+                    if (financeCanVerify) html += '<div class="flex gap-2 mt-2"><button onclick="confirmBankPayment(\'' + escHtml(docId) + '\')" class="text-sm bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700"><i class="fas fa-check-circle mr-1"></i>Confirm Payment Manually</button></div>';
+                    else html += '<p class="text-xs text-gray-500 mt-2">Payment verification is restricted to finance staff.</p>';
                 } else {
                     html += '<div class="flex items-center gap-2 text-green-700 bg-green-100 rounded-lg p-2"><i class="fas fa-check-circle"></i><span class="text-sm font-semibold">Payment Confirmed</span></div>';
                 }
@@ -1484,6 +1626,7 @@
                 + '<th class="text-left py-2 px-3 font-semibold text-gray-500">From</th>'
                 + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Status</th>'
                 + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Date</th>'
+                + '<th class="text-left py-2 px-3 font-semibold text-gray-500">Action</th>'
                 + '</tr></thead><tbody>';
             snap.forEach(function(doc) {
                 var g = doc.data();
@@ -1497,6 +1640,7 @@
                     + '<td class="py-3 px-3 text-sm">' + escHtml(g.senderName || 'N/A') + '</td>'
                     + '<td class="py-3 px-3"><span class="text-xs bg-' + statusColor + '-100 text-' + statusColor + '-700 px-2 py-0.5 rounded-full capitalize">' + escHtml(g.status || 'active') + '</span></td>'
                     + '<td class="py-3 px-3 text-xs text-gray-500">' + dateStr + '</td>'
+                    + '<td class="py-3 px-3">' + (g.status === 'pending_payment' ? '<button onclick="activateGiftCard(this.dataset.code)" data-code="' + escHtml(doc.id) + '" class="text-xs bg-green-600 text-white px-3 py-1.5 rounded-lg font-semibold">Activate after payment</button>' : '—') + '</td>'
                     + '</tr>';
             });
             html += '</tbody></table>';
@@ -1531,6 +1675,7 @@
                     + '<td class="py-3 px-3">'
                     + '<div class="flex items-center gap-2">'
                     + '<input type="number" id="adj-' + doc.id + '" value="0" class="w-20 text-sm border rounded-lg px-2 py-1">'
+                    + '<input type="text" id="adj-reason-' + doc.id + '" maxlength="200" placeholder="Reason" class="w-32 text-xs border rounded-lg px-2 py-1">'
                     + '<button onclick="adjustRewards(\'' + doc.id + '\')" class="text-xs bg-brand-blue text-white px-3 py-1 rounded-full hover:bg-blue-700">Apply</button>'
                     + '</div></td>'
                     + '</tr>';
@@ -1544,17 +1689,13 @@
 
     function adjustRewards(userId) {
         var input = document.getElementById('adj-' + userId);
-        if (!input) return;
+        var reasonInput = document.getElementById('adj-reason-' + userId);
+        if (!input || !reasonInput) return;
         var adj = parseInt(input.value, 10);
+        var description = reasonInput.value.trim();
         if (isNaN(adj) || adj === 0) { alert('Enter a non-zero adjustment value.'); return; }
-        db.collection('rewardsPoints').doc(userId).get().then(function(doc) {
-            var current = 0;
-            if (doc.exists) {
-                current = doc.data().points || doc.data().totalPoints || 0;
-            }
-            var newPts = Math.max(0, current + adj);
-            return db.collection('rewardsPoints').doc(userId).set({ points: newPts, totalPoints: newPts }, { merge: true });
-        }).then(function() {
+        if (!description) { alert('Enter a reason for the points adjustment.'); reasonInput.focus(); return; }
+        firebase.app().functions('us-central1').httpsCallable('adjustRewardPoints')({ uid: userId, delta: adj, description: description }).then(function() {
             loadRewards();
         }).catch(function(e) { alert('Error: ' + e.message); });
     }
@@ -1957,11 +2098,49 @@
     }
 
     // ════════════════════════════════════════════
+    // BLOG CMS: only authorized admins reach this dashboard; public pages read published posts.
+    var blogCache = {};
+    function loadBlogPosts() {
+        var list = document.getElementById('blog-admin-list');
+        if (!list) return;
+        list.innerHTML = '<p class="text-center py-6 text-gray-500">Loading articles...</p>';
+        db.collection('blogPosts').get().then(function(snapshot) {
+            blogCache = {};
+            var posts = [];
+            snapshot.forEach(function(doc) { var post = doc.data(); post.id = doc.id; blogCache[doc.id] = post; posts.push(post); });
+            posts.sort(function(a,b) { return blogDate(b.updatedAt || b.createdAt) - blogDate(a.updatedAt || a.createdAt); });
+            if (!posts.length) { list.innerHTML = '<p class="text-center py-6 text-gray-500">No CMS articles yet. The existing support-page articles remain visible until you publish one.</p>'; return; }
+            list.innerHTML = posts.map(function(p) { return '<article class="bg-white border rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div><h3 class="font-bold">' + escHtml(p.title || 'Untitled') + '</h3><p class="text-sm text-gray-500">' + escHtml(p.category || 'Article') + ' · ' + (p.published ? 'Published' : 'Draft') + (p.updatedAt ? ' · Updated ' + new Date(blogDate(p.updatedAt)).toLocaleDateString() : '') + '</p><p class="text-sm text-gray-600 mt-1">' + escHtml(p.excerpt || '') + '</p></div><div class="flex gap-3 shrink-0"><button onclick="editBlogPost(\'' + p.id + '\')" class="text-brand-blue text-sm font-semibold">Edit</button><button onclick="deleteBlogPost(\'' + p.id + '\')" class="text-red-600 text-sm font-semibold">Delete</button></div></article>'; }).join('');
+        }).catch(function(err) { list.innerHTML = '<p class="text-center py-6 text-red-600">Could not load articles. Check Firestore access and rules.</p>'; console.error(err); });
+    }
+    function blogDate(value) { if (!value) return 0; return value.toDate ? value.toDate().getTime() : new Date(value).getTime(); }
+    function resetBlogForm() { document.getElementById('blog-form').reset(); document.getElementById('blog-edit-id').value = ''; document.getElementById('blog-form-message').textContent = ''; }
+    function editBlogPost(id) {
+        var p = blogCache[id]; if (!p) return;
+        document.getElementById('blog-edit-id').value = id; document.getElementById('blog-title').value = p.title || ''; document.getElementById('blog-category').value = p.category || '';
+        document.getElementById('blog-image').value = p.image || ''; document.getElementById('blog-excerpt').value = p.excerpt || ''; document.getElementById('blog-body').value = p.body || '';
+        document.getElementById('blog-published').checked = !!p.published; document.getElementById('blog-form').scrollIntoView({behavior:'smooth', block:'start'});
+    }
+    function saveBlogPost(event) {
+        event.preventDefault(); var msg = document.getElementById('blog-form-message'); msg.textContent = 'Saving...';
+        var id = document.getElementById('blog-edit-id').value, published = document.getElementById('blog-published').checked;
+        var imageUrl = document.getElementById('blog-image').value.trim();
+        try { var imageHost = new URL(imageUrl).hostname; if (new URL(imageUrl).protocol !== 'https:' || !(imageHost === 'www.att.com' || imageHost.endsWith('.att.com') || imageHost.endsWith('.firebasestorage.app'))) throw new Error('Use an HTTPS image from AT&T or Firebase Storage.'); } catch (imageError) { msg.textContent = imageError.message || 'Enter a valid HTTPS image URL.'; return; }
+        var previous = id ? blogCache[id] : null;
+        var data = { title: document.getElementById('blog-title').value.trim(), category: document.getElementById('blog-category').value.trim(), image: imageUrl, excerpt: document.getElementById('blog-excerpt').value.trim(), body: document.getElementById('blog-body').value.trim(), published: published, updatedAt: firebase.firestore.FieldValue.serverTimestamp(), updatedBy: auth.currentUser ? auth.currentUser.email : '' };
+        if (!previous) data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        if (published && (!previous || !previous.published)) data.publishedAt = firebase.firestore.FieldValue.serverTimestamp();
+        var ref = id ? db.collection('blogPosts').doc(id).set(data, {merge:true}) : db.collection('blogPosts').add(data);
+        ref.then(function() { msg.textContent = 'Saved.'; logAudit('blog_saved', (published ? 'Published ' : 'Saved draft ') + data.title); resetBlogForm(); loadBlogPosts(); }).catch(function(err) { msg.textContent = 'Save failed: ' + err.message; });
+    }
+    function deleteBlogPost(id) { if (!confirm('Delete this article permanently?')) return; db.collection('blogPosts').doc(id).delete().then(function() { logAudit('blog_deleted', 'Deleted blog article ' + id); loadBlogPosts(); }).catch(function(err) { alert('Could not delete article: ' + err.message); }); }
+
     //  CONTACTS (with reply/mark-read)
     // ════════════════════════════════════════════
     var allContacts = [];
 
     function loadContacts() {
+        loadAccountDeletionRequests();
         var container = document.getElementById('contacts-table');
         container.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>';
         db.collection('contactMessages').orderBy('timestamp', 'desc').limit(50).get().then(function(snap) {
@@ -1975,6 +2154,31 @@
         }).catch(function(e) {
             container.innerHTML = '<p class="text-red-500 text-center py-4">Error: ' + escHtml(e.message) + '</p>';
         });
+    }
+
+    function loadAccountDeletionRequests() {
+        var container = document.getElementById('account-deletion-requests');
+        if (!container) return;
+        container.innerHTML = '<p class="text-xs text-gray-500">Loading requests…</p>';
+        db.collection('accountDeletionRequests').orderBy('requestedAt', 'desc').limit(50).get().then(function(snap) {
+            var pending = snap.docs.filter(function(doc) { return doc.data().status === 'pending'; });
+            if (!pending.length) { container.innerHTML = '<p class="text-xs text-gray-500">No pending requests.</p>'; return; }
+            container.innerHTML = pending.map(function(doc) {
+                var request = doc.data();
+                var date = request.requestedAt && request.requestedAt.toDate ? request.requestedAt.toDate().toLocaleString() : 'Date unavailable';
+                return '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-amber-200 py-3"><div><p class="text-sm font-semibold">' + escHtml(request.email || 'No email on file') + '</p><p class="text-xs text-gray-500">UID ' + escHtml(doc.id) + ' · Requested ' + escHtml(date) + '</p></div><button onclick="markDeletionRequestReviewed(\'' + escHtml(doc.id) + '\')" class="self-start sm:self-auto rounded-lg bg-white border border-amber-300 px-3 py-2 text-xs font-semibold text-amber-800">Mark reviewed</button></div>';
+            }).join('');
+        }).catch(function(error) { container.innerHTML = '<p class="text-xs text-red-600">Could not load requests: ' + escHtml(error.message) + '</p>'; });
+    }
+
+    function markDeletionRequestReviewed(uid) {
+        if (!confirm('Only mark this reviewed after handling the request and any required data-retention steps.')) return;
+        db.collection('accountDeletionRequests').doc(uid).update({
+            status: 'reviewed', reviewedBy: auth.currentUser ? auth.currentUser.email : '', reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function() {
+            logAudit('account_deletion_reviewed', 'Reviewed deletion request for UID ' + uid);
+            loadAccountDeletionRequests();
+        }).catch(function(error) { alert('Could not update request: ' + error.message); });
     }
 
     function renderContacts() {
@@ -2066,7 +2270,7 @@
     function issueGiftCard() {
         var amountSelect = document.getElementById('new-gc-amount').value;
         var amount = amountSelect === 'custom' ? parseFloat(document.getElementById('new-gc-custom-amount').value) : parseFloat(amountSelect);
-        if (isNaN(amount) || amount < 5) { alert('Enter a valid amount (min $5).'); return; }
+        if (isNaN(amount) || amount < 10) { alert('Enter a valid amount (min $10).'); return; }
         var email = document.getElementById('new-gc-email').value.trim();
         var name = document.getElementById('new-gc-name').value.trim();
         var reason = document.getElementById('new-gc-reason').value.trim();
@@ -2205,7 +2409,8 @@
             date: new Date().toLocaleString()
         };
         order.notes.push(note);
-        db.collection('orders').doc(docId).update({
+        firebase.app().functions('us-central1').httpsCallable('adminUpdateOrder')({
+            orderNumber: docId,
             notes: order.notes
         }).then(function() {
             viewOrderDetail(docId);
@@ -2395,7 +2600,7 @@
             dailyRev[key] = 0;
         }
         allOrders.forEach(function(o) {
-            if (!o.createdAt) return;
+            if (o.paymentStatus !== 'paid' || !o.createdAt) return;
             var od = o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
             var key = (od.getMonth() + 1) + '/' + od.getDate();
             if (dailyRev[key] !== undefined) dailyRev[key] += o.total || 0;
@@ -2503,6 +2708,7 @@
 
         var catRev = {};
         allOrders.forEach(function(o) {
+            if (o.paymentStatus !== 'paid') return;
             (o.items || []).forEach(function(item) {
                 var bp = baseProducts.find(function(p) { return p.id === item.id; });
                 var cat = bp ? bp.category : 'other';
@@ -2538,6 +2744,7 @@
         if (!container) return;
         var productSales = {};
         allOrders.forEach(function(o) {
+            if (o.paymentStatus !== 'paid') return;
             (o.items || []).forEach(function(item) {
                 var pid = item.id;
                 if (!productSales[pid]) productSales[pid] = { name: item.name || 'Product #' + pid, qty: 0, revenue: 0 };
@@ -2639,7 +2846,7 @@
     // ════════════════════════════════════════════
     function exportOrdersCSV() {
         if (allOrders.length === 0) { alert('No orders to export.'); return; }
-        var rows = [['Order ID', 'Customer', 'Email', 'Total', 'Payment', 'Status', 'Date']];
+        var rows = [['Order ID', 'Customer', 'Email', 'Total', 'Payment Method', 'Payment Status', 'Status', 'Date']];
         allOrders.forEach(function(o) {
             var dateStr = o.createdAt ? (o.createdAt.toDate ? new Date(o.createdAt.toDate()).toISOString() : o.createdAt) : '';
             rows.push([
@@ -2648,6 +2855,7 @@
                 o.email || '',
                 (o.total || 0).toFixed(2),
                 o.paymentMethod || 'card',
+                o.paymentStatus || 'unknown',
                 o.status || 'processing',
                 dateStr
             ]);
@@ -2680,16 +2888,34 @@
         }
     }
 
+    function recordManualRefund(docId) {
+        if (currentAdminRole !== 'owner' && currentAdminRole !== 'finance') { alert('Finance role required.'); return; }
+        var order = allOrders.find(function(item) { return item._id === docId; });
+        if (!order || order.paymentStatus !== 'paid') { alert('Only a paid order can be refunded.'); return; }
+        var reason = prompt('Reason for the refund (required):');
+        if (!reason || !reason.trim()) return;
+        var reference = prompt('Refund processor or bank reference (optional):') || '';
+        var amount = Number(order.total || 0);
+        if (!confirm('Confirm that you have already refunded $' + amount.toFixed(2) + ' outside this website. This records a full refund but does not move funds.')) return;
+        firebase.app().functions('us-central1').httpsCallable('recordManualRefund')({ orderNumber: docId, reason: reason.trim(), reference: reference.trim() }).then(function(result) {
+            order.paymentStatus = 'refunded';
+            order.refundStatus = 'completed';
+            order.refundAmount = result.data.refundAmount;
+            order.refundReason = reason.trim();
+            order.refundReference = reference.trim();
+            logAudit('manual_refund_recorded', 'Recorded full manual refund for order ' + docId + ' amount $' + Number(result.data.refundAmount).toFixed(2));
+            renderOrders();
+            viewOrderDetail(docId);
+            refreshCurrentOrderPage();
+            alert('Refund record saved. No funds were moved by this website.');
+        }).catch(function(error) { alert('Could not record refund: ' + error.message); });
+    }
+
     function verifyCryptoPayment(docId, coin, txHash) {
-        if (!confirm('Have you verified this transaction on the blockchain explorer?\\n\\nCoin: ' + coin + '\\nTX: ' + txHash.substring(0, 20) + '...\\n\\nThis will mark payment as verified and confirm the order.')) return;
-        db.collection('orders').doc(docId).update({
-            cryptoVerified: true,
-            cryptoVerifiedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            cryptoVerifiedBy: auth.currentUser ? auth.currentUser.email : 'admin',
-            status: 'confirmed'
-        }).then(function() {
+        if (!confirm('Have you verified this transaction on the blockchain explorer?\n\nCoin: ' + coin + '\nTX: ' + txHash.substring(0, 20) + '...\n\nThis will mark payment as verified and confirm the order.')) return;
+        firebase.app().functions('us-central1').httpsCallable('verifyManualPayment')({ orderNumber: docId, method: 'crypto' }).then(function() {
             var order = allOrders.find(function(o) { return o._id === docId; });
-            if (order) { order.cryptoVerified = true; order.status = 'confirmed'; }
+            if (order) { order.cryptoVerified = true; order.paymentStatus = 'paid'; order.status = 'confirmed'; }
             logAudit('crypto_verified', 'Order ' + docId + ' crypto payment verified. TX: ' + txHash);
             document.getElementById('order-modal').classList.add('hidden');
             renderOrders();
@@ -2700,13 +2926,9 @@
     function rejectCryptoPayment(docId) {
         var reason = prompt('Reason for rejecting this crypto payment:');
         if (!reason) return;
-        db.collection('orders').doc(docId).update({
-            cryptoVerified: false,
-            cryptoRejectedReason: reason,
-            status: 'cancelled'
-        }).then(function() {
+        firebase.app().functions('us-central1').httpsCallable('adminUpdateOrder')({ orderNumber: docId, status: 'cancelled', reason: reason }).then(function() {
             var order = allOrders.find(function(o) { return o._id === docId; });
-            if (order) { order.status = 'cancelled'; }
+            if (order) { order.status = 'cancelled'; order.paymentStatus = 'rejected'; }
             logAudit('crypto_rejected', 'Order ' + docId + ' crypto payment rejected. Reason: ' + reason);
             document.getElementById('order-modal').classList.add('hidden');
             renderOrders();
@@ -2715,15 +2937,10 @@
     }
 
     function confirmBankPayment(docId) {
-        if (!confirm('Have you verified this bank transfer receipt?\\n\\nThis will confirm the payment and process the order.')) return;
-        db.collection('orders').doc(docId).update({
-            bankPaymentConfirmed: true,
-            bankConfirmedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            bankConfirmedBy: auth.currentUser ? auth.currentUser.email : 'admin',
-            status: 'confirmed'
-        }).then(function() {
+        if (!confirm('Have you verified this bank transfer receipt?\n\nThis will confirm the payment and process the order.')) return;
+        firebase.app().functions('us-central1').httpsCallable('verifyManualPayment')({ orderNumber: docId, method: 'bank' }).then(function() {
             var order = allOrders.find(function(o) { return o._id === docId; });
-            if (order) { order.bankPaymentConfirmed = true; order.status = 'confirmed'; }
+            if (order) { order.bankPaymentConfirmed = true; order.paymentStatus = 'paid'; order.status = 'confirmed'; }
             logAudit('bank_payment_confirmed', 'Order ' + docId + ' bank payment confirmed.');
             document.getElementById('order-modal').classList.add('hidden');
             renderOrders();
@@ -2734,13 +2951,9 @@
     function rejectBankPayment(docId) {
         var reason = prompt('Reason for rejecting this bank transfer:');
         if (!reason) return;
-        db.collection('orders').doc(docId).update({
-            bankPaymentRejected: true,
-            bankRejectedReason: reason,
-            status: 'cancelled'
-        }).then(function() {
+        firebase.app().functions('us-central1').httpsCallable('adminUpdateOrder')({ orderNumber: docId, status: 'cancelled', reason: reason }).then(function() {
             var order = allOrders.find(function(o) { return o._id === docId; });
-            if (order) { order.status = 'cancelled'; }
+            if (order) { order.status = 'cancelled'; order.paymentStatus = 'rejected'; }
             logAudit('bank_payment_rejected', 'Order ' + docId + ' bank payment rejected. Reason: ' + reason);
             document.getElementById('order-modal').classList.add('hidden');
             renderOrders();
@@ -2760,6 +2973,7 @@
     }
 
     function saveTracking(docId) {
+        if (currentAdminRole === 'support') { alert('Tracking updates require the orders or finance role.'); return; }
         var carrier = document.getElementById('tracking-carrier-' + docId).value;
         var trackNum = document.getElementById('tracking-number-' + docId).value.trim();
         if (!carrier || !trackNum) { alert('Please select a carrier and enter a tracking number.'); return; }
@@ -2767,7 +2981,7 @@
             trackingCarrier: carrier,
             trackingNumber: trackNum
         };
-        db.collection('orders').doc(docId).update(updateData).then(function() {
+        firebase.app().functions('us-central1').httpsCallable('adminUpdateOrder')(Object.assign({ orderNumber: docId }, updateData)).then(function() {
             var order = allOrders.find(function(o) { return o._id === docId; });
             if (order) { order.trackingCarrier = carrier; order.trackingNumber = trackNum; }
             logAudit('tracking_updated', 'Order ' + docId + ' tracking: ' + carrier.toUpperCase() + ' ' + trackNum);
