@@ -4629,9 +4629,11 @@
                 var modalBody = document.querySelector('#account-modal .p-6');
                 if (modalBody && !document.getElementById('user-profile-panel')) {
                     var displayName = user.displayName || 'SwiftDevices User';
-                    var initials = displayName.split(' ').map(function(n){return n[0]}).join('').toUpperCase().slice(0,2);
+                    var safeDisplayName = escapeHTML(displayName);
+                    var safeEmail = escapeHTML(user.email || '');
+                    var initials = escapeHTML(displayName.split(' ').map(function(n){return n[0]}).join('').toUpperCase().slice(0,2));
                     if (modalHeader) {
-                        modalHeader.innerHTML = '<div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4"><span class="text-3xl font-bold">' + initials + '</span></div><h2 class="text-2xl font-bold">' + displayName + '</h2><p class="text-white/80 text-sm mt-1">' + user.email + '</p><button onclick="closeAccountModal()" class="absolute top-4 right-4 text-white/80 hover:text-white w-8 h-8 flex items-center justify-center" aria-label="Close"><i class="fas fa-times"></i></button>';
+                        modalHeader.innerHTML = '<div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4"><span class="text-3xl font-bold">' + initials + '</span></div><h2 class="text-2xl font-bold">' + safeDisplayName + '</h2><p class="text-white/80 text-sm mt-1">' + safeEmail + '</p><button onclick="closeAccountModal()" class="absolute top-4 right-4 text-white/80 hover:text-white w-8 h-8 flex items-center justify-center" aria-label="Close"><i class="fas fa-times"></i></button>';
                     }
                     modalBody.innerHTML = '<div id="user-profile-panel" class="space-y-3">'
                         + '<div id="rewards-tier-card" class="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-4 mb-1">'
@@ -4648,13 +4650,14 @@
                         + '</div>'
                         + '<div id="dash-orders" class="dash-section"><div class="text-center py-4"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i><p class="text-sm text-gray-500 mt-2">Loading orders...</p></div></div>'
                         + '<div id="dash-addresses" class="dash-section hidden"><div id="saved-addresses-list"></div><button onclick="showAddressForm()" class="w-full border-2 border-dashed border-gray-300 rounded-xl p-3 text-sm text-gray-500 hover:border-brand-blue hover:text-brand-blue transition mt-2"><i class="fas fa-plus mr-1"></i>Add New Address</button><div id="address-form-wrap" class="hidden mt-3"><form onsubmit="saveAddress(event)" class="space-y-2 bg-gray-50 rounded-xl p-4"><input id="addr-label" placeholder="Label (e.g. Home, Work)" class="w-full px-3 py-2 border rounded-lg text-sm" required><input id="addr-street" placeholder="Street Address" class="w-full px-3 py-2 border rounded-lg text-sm" required><div class="grid grid-cols-2 gap-2"><input id="addr-city" placeholder="City" class="w-full px-3 py-2 border rounded-lg text-sm" required><input id="addr-state" placeholder="State" class="w-full px-3 py-2 border rounded-lg text-sm" required></div><div class="grid grid-cols-2 gap-2"><input id="addr-zip" placeholder="ZIP Code" class="w-full px-3 py-2 border rounded-lg text-sm" required><input id="addr-country" placeholder="Country" value="United States" class="w-full px-3 py-2 border rounded-lg text-sm" required></div><div class="flex gap-2"><button type="submit" class="bg-brand-blue text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-blue-700">Save</button><button type="button" onclick="document.getElementById(\'address-form-wrap\').classList.add(\'hidden\')" class="text-gray-500 text-sm">Cancel</button></div></form></div></div>'
-                        + '<div id="dash-settings" class="dash-section hidden"><div class="space-y-3"><div class="bg-gray-50 rounded-xl p-4"><p class="font-semibold text-sm mb-1">Display Name</p><div class="flex gap-2"><input id="settings-name" value="' + displayName + '" class="flex-1 px-3 py-2 border rounded-lg text-sm"><button onclick="updateDisplayName()" class="bg-brand-blue text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-blue-700">Update</button></div></div><div class="bg-gray-50 rounded-xl p-4"><p class="font-semibold text-sm mb-1">Email</p><p class="text-sm text-gray-600">' + user.email + '</p></div><div class="bg-gray-50 rounded-xl p-4"><p class="font-semibold text-sm mb-1">Password</p><button onclick="resetPasswordFromDash()" class="text-brand-blue text-sm font-semibold hover:underline">Send Password Reset Email</button></div></div></div>'
+                        + '<div id="dash-settings" class="dash-section hidden"><div class="space-y-3"><div class="bg-gray-50 rounded-xl p-4"><p class="font-semibold text-sm mb-1">Display Name</p><div class="flex gap-2"><input id="settings-name" value="' + safeDisplayName + '" class="flex-1 px-3 py-2 border rounded-lg text-sm"><button onclick="updateDisplayName()" class="bg-brand-blue text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-blue-700">Update</button></div></div><div class="bg-gray-50 rounded-xl p-4"><p class="font-semibold text-sm mb-1">Email</p><p class="text-sm text-gray-600">' + safeEmail + '</p></div><div class="bg-gray-50 rounded-xl p-4"><p class="font-semibold text-sm mb-1">Password</p><button onclick="resetPasswordFromDash()" class="text-brand-blue text-sm font-semibold hover:underline">Send Password Reset Email</button></div></div></div>'
                         + '<button onclick="signOut()" class="w-full mt-2 bg-red-50 text-red-600 py-3 rounded-full font-bold hover:bg-red-100 transition"><i class="fas fa-sign-out-alt mr-2"></i>Sign Out</button>'
                         + '</div>';
                     loadUserOrders(user.uid);
                     loadUserAddresses(user.uid);
                 }
             } else {
+                userOrderCache = Object.create(null);
                 if (icon) { icon.className = 'fas fa-user text-gray-600 text-lg'; }
                 if (accountBtn) { accountBtn.title = 'Account'; }
             }
@@ -4674,9 +4677,62 @@
             });
         }
 
+        var userOrderCache = Object.create(null);
+
+        function printUserOrderBill(orderId) {
+            var order = userOrderCache[orderId];
+            if (!order) { showNotification('Order details are unavailable. Refresh your account and try again.', 'error'); return; }
+            var paid = order.paymentStatus === 'paid';
+            var shipping = order.shipping || {};
+            function money(value) {
+                var amount = Number(value);
+                amount = Number.isFinite(amount) ? amount : 0;
+                return (amount < 0 ? '-$' : '$') + Math.abs(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+            function dateText(value) {
+                if (!value) return '';
+                var date = value.toDate ? value.toDate() : new Date(value);
+                return Number.isFinite(date.getTime()) ? date.toLocaleString('en-US') : '';
+            }
+            function row(label, value) {
+                return '<tr><td>' + escapeHTML(label) + '</td><td class="amount">' + money(value) + '</td></tr>';
+            }
+            var itemRows = (Array.isArray(order.items) ? order.items : []).map(function(item) {
+                var qty = Math.max(0, Number(item.qty) || 0);
+                var unitPrice = Number(item.price) || 0;
+                return '<tr><td>' + escapeHTML(item.name || 'Item') + '<small>Qty ' + qty + ' × ' + money(unitPrice) + '</small></td><td class="amount">' + money(qty * unitPrice) + '</td></tr>';
+            }).join('');
+            var summaryRows = '';
+            if (Number(order.listSubtotal) > 0) summaryRows += row('List subtotal', order.listSubtotal);
+            if (Number(order.promoDiscount) > 0) summaryRows += row('Promotional savings', -Number(order.promoDiscount));
+            if (Number(order.discount) > 0) summaryRows += row('Coupon discount', -Number(order.discount));
+            if (Number(order.pointsDiscount) > 0) summaryRows += row('Rewards discount', -Number(order.pointsDiscount));
+            var taxRate = Number(order.taxRate);
+            var taxLabel = Number.isFinite(taxRate) ? (taxRate * 100).toFixed(2).replace(/\.?0+$/, '') : 'Not specified';
+            summaryRows += row('Tax (' + taxLabel + (taxLabel === 'Not specified' ? '' : '%') + ')', order.tax);
+            summaryRows += row('Shipping', order.shippingCost);
+            var statusText = paid ? 'PAID — PAYMENT VERIFIED' : 'PAYMENT PENDING — THIS IS NOT A PAID RECEIPT';
+            var receiptWindow = window.open('', '_blank');
+            if (!receiptWindow) { showNotification('Allow pop-ups to print or save your order bill.', 'error'); return; }
+            receiptWindow.opener = null;
+            receiptWindow.document.open();
+            receiptWindow.document.write('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SwiftDevices order ' + escapeHTML(orderId) + '</title><style>body{font:14px Arial,sans-serif;color:#172033;max-width:760px;margin:40px auto;padding:0 24px}h1{margin:0 0 6px}.muted{color:#64748b}.status{padding:12px;margin:24px 0;background:' + (paid ? '#ecfdf5' : '#fff7ed') + ';color:' + (paid ? '#047857' : '#c2410c') + ';font-weight:bold;border-radius:8px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:24px 0}table{width:100%;border-collapse:collapse;margin:18px 0}th,td{text-align:left;padding:10px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top}.amount{text-align:right;white-space:nowrap}small{display:block;color:#64748b;margin-top:4px}.total{font-size:18px;font-weight:bold}footer{margin-top:36px;border-top:1px solid #e2e8f0;padding-top:14px;color:#64748b}@media print{body{margin:0 auto;padding:0 10px}}</style></head><body>'
+                + '<h1>SwiftDevices</h1><div class="muted">Order ' + escapeHTML(order.orderNumber || orderId) + '</div>'
+                + '<div class="status">' + statusText + '</div>'
+                + '<div class="grid"><section><strong>Customer</strong><p>' + escapeHTML([shipping.firstName, shipping.lastName].filter(Boolean).join(' ') || 'Customer') + '<br>' + escapeHTML(order.email || shipping.email || '') + '</p></section>'
+                + '<section><strong>Ship to</strong><p>' + escapeHTML([shipping.address, shipping.city, shipping.state, shipping.zip, shipping.country || 'US'].filter(Boolean).join(', ')) + '</p></section></div>'
+                + '<p class="muted">Order date: ' + escapeHTML(dateText(order.createdAt) || 'Unavailable') + (paid && order.paidAt ? '<br>Payment verified: ' + escapeHTML(dateText(order.paidAt)) : '') + '<br>Payment method: ' + escapeHTML(order.paymentMethod || 'Not specified') + '</p>'
+                + '<table><thead><tr><th>Item</th><th class="amount">Amount</th></tr></thead><tbody>' + itemRows + '</tbody></table>'
+                + '<table><tbody>' + summaryRows + '<tr class="total"><td>Total</td><td class="amount">' + money(order.total) + '</td></tr></tbody></table>'
+                + '<footer>For questions about this order, contact swiftdevices@technologist.com or 1-800-SWIFT-01. This order statement is not proof of payment unless marked paid above.</footer></body></html>');
+            receiptWindow.document.close();
+            setTimeout(function() { receiptWindow.focus(); receiptWindow.print(); }, 250);
+        }
+
         function loadUserOrders(uid) {
             var container = document.getElementById('dash-orders');
             if (!container) return;
+            userOrderCache = Object.create(null);
             db.collection('orders').where('uid', '==', uid).orderBy('createdAt', 'desc').limit(20).get().then(function(snap) {
                 if (snap.empty) {
                     container.innerHTML = '<div class="text-center py-6"><i class="fas fa-shopping-bag text-gray-300 text-3xl mb-2"></i><p class="text-sm text-gray-500">No orders yet</p><p class="text-xs text-gray-400 mt-1">Your order history will appear here</p></div>';
@@ -4685,13 +4741,17 @@
                 var html = '<div class="space-y-3 max-h-64 overflow-y-auto pr-1">';
                 snap.forEach(function(doc) {
                     var o = doc.data();
+                    userOrderCache[doc.id] = o;
                     var statusColor = o.status === 'confirmed' ? 'green' : (o.status === 'awaiting_payment') ? 'yellow' : 'blue';
                     var statusLabel = (o.status || 'processing').replace(/_/g, ' ');
-                    var dateStr = o.createdAt ? new Date(o.createdAt.toDate()).toLocaleDateString() : '';
+                    var dateValue = o.createdAt && o.createdAt.toDate ? o.createdAt.toDate() : null;
+                    var dateStr = dateValue && Number.isFinite(dateValue.getTime()) ? dateValue.toLocaleDateString() : '';
+                    var orderId = o.orderNumber || doc.id;
                     html += '<div class="bg-gray-50 rounded-xl p-3">'
-                        + '<div class="flex justify-between items-center mb-1"><span class="font-bold text-sm text-brand-dark">' + (o.orderId || doc.id) + '</span><span class="text-xs bg-' + statusColor + '-100 text-' + statusColor + '-700 px-2 py-0.5 rounded-full capitalize">' + statusLabel + '</span></div>'
-                        + '<div class="flex justify-between text-xs text-gray-500"><span>' + dateStr + '</span><span class="font-semibold text-brand-blue">$' + (o.total ? o.total.toFixed(2) : '0.00') + '</span></div>'
-                        + '<div class="text-xs text-gray-400 mt-1">' + (o.items ? o.items.length + ' item' + (o.items.length > 1 ? 's' : '') : '') + '</div>'
+                        + '<div class="flex justify-between items-center mb-1"><span class="font-bold text-sm text-brand-dark">' + escapeHTML(orderId) + '</span><span class="text-xs bg-' + statusColor + '-100 text-' + statusColor + '-700 px-2 py-0.5 rounded-full capitalize">' + escapeHTML(statusLabel) + '</span></div>'
+                        + '<div class="flex justify-between text-xs text-gray-500"><span>' + escapeHTML(dateStr) + '</span><span class="font-semibold text-brand-blue">$' + (Number(o.total) || 0).toFixed(2) + '</span></div>'
+                        + '<div class="text-xs text-gray-400 mt-1 mb-2">' + (Array.isArray(o.items) ? o.items.length : 0) + ' item' + ((o.items || []).length === 1 ? '' : 's') + '</div>'
+                        + '<button type="button" onclick="printUserOrderBill(\'' + escapeHTML(doc.id) + '\')" class="text-xs font-semibold text-brand-blue hover:underline"><i class="fas fa-file-invoice-dollar mr-1"></i>Print / Save bill</button>'
                         + '</div>';
                 });
                 html += '</div>';
@@ -4711,7 +4771,7 @@
                 }
                 var addrs = doc.data().addresses;
                 container.innerHTML = addrs.map(function(a, i) {
-                    return '<div class="bg-gray-50 rounded-xl p-3 flex justify-between items-start mb-2"><div><p class="font-semibold text-sm">' + (a.label || 'Address') + '</p><p class="text-xs text-gray-500">' + a.street + ', ' + a.city + ', ' + a.state + ' ' + a.zip + '</p></div><button onclick="deleteAddress(' + i + ')" class="text-red-400 hover:text-red-600 text-xs"><i class="fas fa-trash"></i></button></div>';
+                    return '<div class="bg-gray-50 rounded-xl p-3 flex justify-between items-start mb-2"><div><p class="font-semibold text-sm">' + escapeHTML(a.label || 'Address') + '</p><p class="text-xs text-gray-500">' + escapeHTML([a.street, a.city, a.state, a.zip].filter(Boolean).join(', ')) + '</p></div><button onclick="deleteAddress(' + i + ')" class="text-red-400 hover:text-red-600 text-xs"><i class="fas fa-trash"></i></button></div>';
                 }).join('');
             }).catch(function() {
                 container.innerHTML = '<p class="text-sm text-gray-400 text-center py-2">Could not load addresses</p>';

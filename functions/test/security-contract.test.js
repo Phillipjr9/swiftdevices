@@ -55,6 +55,18 @@ test('raw review and question documents are admin-only; public display data is p
   assert.doesNotMatch(storefront, /collection\(['"]productQA['"]\)\.(where|orderBy)/);
 });
 
+test('account bills are built from the signed-in user’s orders and distinguish paid receipts from pending statements', () => {
+  const storefront = read('public/index.html');
+  assert.match(storefront, /collection\(['"]orders['"]\)\.where\('uid',\s*'==',\s*uid\)/);
+  assert.match(storefront, /function printUserOrderBill\(orderId\)/);
+  assert.match(storefront, /order\.paymentStatus === 'paid'/);
+  assert.match(storefront, /PAYMENT PENDING — THIS IS NOT A PAID RECEIPT/);
+  assert.match(storefront, /escapeHTML\(item\.name \|\| 'Item'\)/);
+  assert.match(storefront, /var safeDisplayName = escapeHTML\(displayName\)/);
+  assert.match(storefront, /escapeHTML\(\[a\.street, a\.city, a\.state, a\.zip\]/);
+  assert.match(storefront, /Print \/ Save bill/);
+});
+
 test('public review and Q&A projections omit email and account identifiers', () => {
   const review = toPublicReview({ productId: 116, name: 'Buyer', email: 'private@example.com', userId: 'uid-secret', rating: 5, comment: 'Great', date: '2026-10-01' });
   assert.equal(review.name, 'Buyer');
