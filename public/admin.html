@@ -198,6 +198,7 @@
                                 <option value="awaiting_payment">Awaiting Payment</option>
                                 <option value="payment_pending">Payment Pending</option>
                                 <option value="payment_paid">Payment Paid</option>
+                                <option value="payment_refunded">Refunded</option>
                                 <option value="cancelled">Cancelled</option>
                             </select>
                             <button onclick="loadOrders(true)" class="text-brand-blue text-sm hover:underline"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
@@ -419,6 +420,7 @@
                         <h2 class="text-lg font-bold text-brand-dark">Analytics</h2>
                         <button onclick="loadAnalytics()" class="text-brand-blue text-sm hover:underline"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
                     </div>
+                    <p class="text-xs text-gray-400 mb-3">Revenue and product-sales charts use paid orders from the latest 100-order page; the status chart includes all orders on that page.</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div class="bg-white border rounded-xl p-4">
                             <h3 class="text-sm font-semibold text-gray-500 mb-3">Revenue (Last 30 Days)</h3>
@@ -1226,6 +1228,12 @@
             + '<button type="button" onclick="changeOrderPage(1)" ' + (!orderPageHasNext[orderPageIndex] || orderLoading ? 'disabled' : '') + ' class="border rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-40">Next</button>';
     }
 
+    function refreshCurrentOrderPage() {
+        orderPageDocs[orderPageIndex] = null;
+        orderPageHasNext[orderPageIndex] = false;
+        loadOrders(false);
+    }
+
     function changeOrderPage(direction) {
         var target = orderPageIndex + direction;
         if (target < 0 || (direction > 0 && !orderPageHasNext[orderPageIndex])) return;
@@ -1292,6 +1300,7 @@
         var filtered = allOrders.filter(function(o) {
             if (filterStatus === 'payment_pending' && o.paymentStatus !== 'pending' && o.status !== 'awaiting_payment') return false;
             if (filterStatus === 'payment_paid' && o.paymentStatus !== 'paid') return false;
+            if (filterStatus === 'payment_refunded' && o.paymentStatus !== 'refunded') return false;
             if (filterStatus && filterStatus !== 'payment_pending' && filterStatus !== 'payment_paid' && (o.status || 'processing') !== filterStatus) return false;
             if (searchTerm) {
                 var haystack = ((o.orderId || o._id) + ' ' + (o.name || '') + ' ' + (o.email || '')).toLowerCase();
@@ -1385,6 +1394,11 @@
             + '<div><p class="text-xs text-gray-500">Status</p><p class="font-medium capitalize">' + escHtml((o.status || 'processing').replace(/_/g,' ')) + '</p></div>'
             + '<div><p class="text-xs text-gray-500">Total</p><p class="font-bold text-green-600 text-lg">$' + (o.total ? o.total.toFixed(2) : '0.00') + '</p></div>'
             + '</div>';
+        if (o.refundStatus === 'completed') {
+            html += '<div class="bg-purple-50 border border-purple-200 rounded-xl p-4"><p class="font-semibold text-purple-800">Manual refund recorded · $' + Number(o.refundAmount || 0).toFixed(2) + '</p><p class="text-xs text-purple-700 mt-1">Reason: ' + escHtml(o.refundReason || '') + (o.refundReference ? ' · Reference: ' + escHtml(o.refundReference) : '') + '</p><p class="text-xs text-purple-600 mt-1">This records an off-platform refund; it does not move funds.</p></div>';
+        } else if ((currentAdminRole === 'owner' || currentAdminRole === 'finance') && o.paymentStatus === 'paid') {
+            html += '<div class="border border-purple-200 rounded-xl p-4"><p class="text-xs text-gray-600 mb-2">Use only after funds have already been returned outside this site. This action records the full refund; it does not issue one.</p><button onclick="recordManualRefund(\'' + escHtml(docId) + '\')" class="text-sm bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-800"><i class="fas fa-undo mr-1"></i>Record completed full refund</button></div>';
+        }
         // Crypto payment verification section
         if (o.paymentMethod === 'crypto') {
             var financeCanVerify = currentAdminRole === 'owner' || currentAdminRole === 'finance';
@@ -2586,7 +2600,7 @@
             dailyRev[key] = 0;
         }
         allOrders.forEach(function(o) {
-            if (!o.createdAt) return;
+            if (o.paymentStatus !== 'paid' || !o.createdAt) return;
             var od = o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
             var key = (od.getMonth() + 1) + '/' + od.getDate();
             if (dailyRev[key] !== undefined) dailyRev[key] += o.total || 0;
@@ -2694,6 +2708,7 @@
 
         var catRev = {};
         allOrders.forEach(function(o) {
+            if (o.paymentStatus !== 'paid') return;
             (o.items || []).forEach(function(item) {
                 var bp = baseProducts.find(function(p) { return p.id === item.id; });
                 var cat = bp ? bp.category : 'other';
@@ -2729,6 +2744,7 @@
         if (!container) return;
         var productSales = {};
         allOrders.forEach(function(o) {
+            if (o.paymentStatus !== 'paid') return;
             (o.items || []).forEach(function(item) {
                 var pid = item.id;
                 if (!productSales[pid]) productSales[pid] = { name: item.name || 'Product #' + pid, qty: 0, revenue: 0 };
@@ -2830,7 +2846,7 @@
     // ════════════════════════════════════════════
     function exportOrdersCSV() {
         if (allOrders.length === 0) { alert('No orders to export.'); return; }
-        var rows = [['Order ID', 'Customer', 'Email', 'Total', 'Payment', 'Status', 'Date']];
+        var rows = [['Order ID', 'Customer', 'Email', 'Total', 'Payment Method', 'Payment Status', 'Status', 'Date']];
         allOrders.forEach(function(o) {
             var dateStr = o.createdAt ? (o.createdAt.toDate ? new Date(o.createdAt.toDate()).toISOString() : o.createdAt) : '';
             rows.push([
@@ -2839,6 +2855,7 @@
                 o.email || '',
                 (o.total || 0).toFixed(2),
                 o.paymentMethod || 'card',
+                o.paymentStatus || 'unknown',
                 o.status || 'processing',
                 dateStr
             ]);
@@ -2869,6 +2886,29 @@
             case 'USDC': return 'https://etherscan.io/tx/' + encodeURIComponent(txHash);
             default: return 'https://www.blockchain.com/search?search=' + encodeURIComponent(txHash);
         }
+    }
+
+    function recordManualRefund(docId) {
+        if (currentAdminRole !== 'owner' && currentAdminRole !== 'finance') { alert('Finance role required.'); return; }
+        var order = allOrders.find(function(item) { return item._id === docId; });
+        if (!order || order.paymentStatus !== 'paid') { alert('Only a paid order can be refunded.'); return; }
+        var reason = prompt('Reason for the refund (required):');
+        if (!reason || !reason.trim()) return;
+        var reference = prompt('Refund processor or bank reference (optional):') || '';
+        var amount = Number(order.total || 0);
+        if (!confirm('Confirm that you have already refunded $' + amount.toFixed(2) + ' outside this website. This records a full refund but does not move funds.')) return;
+        firebase.app().functions('us-central1').httpsCallable('recordManualRefund')({ orderNumber: docId, reason: reason.trim(), reference: reference.trim() }).then(function(result) {
+            order.paymentStatus = 'refunded';
+            order.refundStatus = 'completed';
+            order.refundAmount = result.data.refundAmount;
+            order.refundReason = reason.trim();
+            order.refundReference = reference.trim();
+            logAudit('manual_refund_recorded', 'Recorded full manual refund for order ' + docId + ' amount $' + Number(result.data.refundAmount).toFixed(2));
+            renderOrders();
+            viewOrderDetail(docId);
+            refreshCurrentOrderPage();
+            alert('Refund record saved. No funds were moved by this website.');
+        }).catch(function(error) { alert('Could not record refund: ' + error.message); });
     }
 
     function verifyCryptoPayment(docId, coin, txHash) {

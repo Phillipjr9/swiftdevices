@@ -464,8 +464,8 @@ exports.adminUpdateOrder = onCall({ region: 'us-central1', maxInstances: 10 }, a
     if (['confirmed', 'processing', 'shipped', 'delivered'].includes(requestedStatus) && order.paymentStatus !== 'paid') {
       throw new HttpsError('failed-precondition', 'Verify payment before advancing this order.');
     }
-    if (requestedStatus === 'cancelled' && order.paymentStatus === 'paid') {
-      throw new HttpsError('failed-precondition', 'A paid order cannot be cancelled until a refund has been processed.');
+    if (requestedStatus === 'cancelled' && ['paid', 'refunded'].includes(order.paymentStatus)) {
+      throw new HttpsError('failed-precondition', 'A paid or refunded order cannot be cancelled automatically; handle inventory after the return is received.');
     }
     if (requestedStatus === 'cancelled' && order.paymentStatus === 'pending' && !patch.paymentStatus) patch.paymentStatus = 'cancelled';
     if (requestedStatus === 'cancelled' && !order.inventoryRestored) {
@@ -498,6 +498,33 @@ exports.adminUpdateOrder = onCall({ region: 'us-central1', maxInstances: 10 }, a
     tx.update(orderRef, patch);
   });
   return { status: patch.status || existing.status };
+});
+
+exports.recordManualRefund = onCall({ region: 'us-central1', maxInstances: 10 }, async (request) => {
+  if (!hasAdminRole(request.auth?.token, 'finance')) throw new HttpsError('permission-denied', 'The finance admin role is required.');
+  const orderNumber = cleanText(request.data?.orderNumber, 64);
+  const reason = cleanText(request.data?.reason, 500);
+  const reference = cleanText(request.data?.reference, 120);
+  if (!isValidOrderNumber(orderNumber) || !reason) {
+    throw new HttpsError('invalid-argument', 'Provide a valid order number and a reason for the refund.');
+  }
+  const orderRef = db.collection('orders').doc(orderNumber);
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(orderRef);
+    if (!snap.exists) throw new HttpsError('not-found', 'Order not found.');
+    const order = snap.data();
+    if (order.paymentStatus !== 'paid' || order.refundStatus === 'completed') {
+      throw new HttpsError('failed-precondition', 'Only a paid, not-yet-refunded order can be recorded as refunded.');
+    }
+    const amount = Number(order.total);
+    if (!Number.isFinite(amount) || amount <= 0) throw new HttpsError('failed-precondition', 'The order has no valid paid total to refund.');
+    tx.update(orderRef, {
+      paymentStatus: 'refunded', refundStatus: 'completed', refundAmount: amount,
+      refundReason: reason, refundReference: reference, refundMethod: 'manual',
+      refundedAt: Timestamp.now(), refundedBy: request.auth.uid, updatedAt: Timestamp.now(),
+    });
+    return { paymentStatus: 'refunded', refundStatus: 'completed', refundAmount: amount };
+  });
 });
 
 exports.verifyManualPayment = onCall({ region: 'us-central1', maxInstances: 10 }, async (request) => {

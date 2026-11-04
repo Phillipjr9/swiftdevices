@@ -21,12 +21,26 @@ This repository now routes order creation, payment-status lookup, reward redempt
 ## Remaining external integrations / known limits
 
 - No automated payment provider/webhook, refund processor, carrier fulfillment, dynamic sales-tax service, or transactional email service is configured in this repository. Manual operations are explicit and payment status cannot be self-confirmed by a browser return page.
+- Admin can record a completed full refund after funds are returned outside the site. This marks the order as refunded and removes it from paid-revenue totals; it does not initiate or transfer funds. Partial refunds are not supported by this recorder.
 - Checkout receipts are limited to 200 KB and currently stored in the Firestore order document. A production storage bucket with private access and retention controls is preferable before receipt volume grows.
 - Customer forms and newsletter signups still include direct browser-side Firestore submissions. Their rules validate payload shape, but abuse monitoring/App Check and retention procedures need a project-level decision. Public review and Q&A read callables are IP-rate-limited to 60 requests per 15-minute window per source IP; this is a basic abuse control, not a substitute for App Check or monitoring.
 - Account deletion requests are recorded in the admin-only `accountDeletionRequests` collection and surfaced in the Admin → Contacts tab. An authorized operator must review each request, determine legally required order/tax retention, complete deletion through the approved process, and only then mark it reviewed. The callable does not automatically delete Auth or Firestore records.
 - Reward activity is append-only in `rewardsLedger`; balances are changed only by trusted functions/admin-callable adjustments. Review ledger/balance consistency during support investigations.
 - The fixed 8% tax and zero shipping amount are interim values, not legal or carrier calculations. Confirm actual jurisdiction, nexus, exemptions, and delivery costs with the business's tax/fulfillment providers.
 - The scheduled `expirePendingOrders` function uses Cloud Scheduler and may require a billing-enabled Firebase/Google Cloud plan. The `_publicRateLimits.expiresAt` and `checkoutRequests.expiresAt` TTL policies in `firestore.indexes.json` must be applied. Verify TTL is enabled for both collections in the target project.
+
+## Staging release gate
+
+Do not use production customer data or payment details in staging. Before enabling live checkout:
+
+1. Run `npm --prefix functions run test:rules:emulator`; it exercises role-based reads/writes against Firestore Emulator. CI runs this suite automatically.
+2. In a staging Firebase project, smoke-test a customer checkout through order creation, pending-payment display, manual bank/crypto verification, tracking, and a full manual refund record. Verify that no browser action can mark an order paid.
+3. Test one account per role. Orders can manage order status/tracking but not verify payment; Finance can verify payments and record completed refunds; Catalog can only change catalog/site merchandising; Support handles customer cases, trade-ins, reviews, and deletion requests; only Owner can read audit history.
+4. Load verified on-hand quantities through Admin → Products before testing checkout; unknown inventory defaults to zero. Confirm stock reservations and cancellations with test items.
+5. Do not sign off tax/shipping until Stripe Tax registrations/product tax codes and a carrier service/origin/package profile are configured and the returned totals have been reviewed. Do not use the current fixed 8% tax or $0 shipping as U.S. tax/shipping determinations.
+6. Test transactional emails only after an email provider is selected and configured through Firebase Secrets. Check pending, paid, cancelled, and refund messages.
+
+The staging checkout/payment/browser journey has not yet been run in this workspace; it requires the selected provider configuration and a staging Firebase project.
 
 ## Local validation
 
@@ -35,6 +49,7 @@ npm ci --prefix functions
 npm test --prefix functions
 npm run lint --prefix functions
 node scripts/check-inline-scripts.js
+npm --prefix functions run test:rules:emulator
 ```
 
-CI runs the same tests/lint and checks inline script syntax. A Firebase Emulator rules suite and real browser end-to-end checkout tests are still recommended; they require emulator setup and project-specific test configuration.
+CI runs unit/security tests, the Firestore Emulator rules suite, Functions lint, and inline-script syntax checks. A credentialed browser end-to-end checkout test remains a staging sign-off step.

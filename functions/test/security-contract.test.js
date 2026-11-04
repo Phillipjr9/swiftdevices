@@ -46,6 +46,12 @@ test('admin dashboard revenue includes only paid orders and exposes pending-paym
   assert.match(rules, /function canViewOrders\(\).*hasAdminRole\('support'\)/);
   assert.match(rules, /match \/auditLog\/\{logId\} \{\s+allow read: if isOwner\(\);/);
   assert.match(functions, /hasAdminRole\(request\.auth\?\.token, 'finance'\)/);
+  assert.match(functions, /exports\.recordManualRefund = onCall/);
+  assert.match(functions, /paymentStatus: 'refunded', refundStatus: 'completed'/);
+  assert.match(functions, /A paid or refunded order cannot be cancelled automatically/);
+  assert.match(admin, /Record completed full refund/);
+  assert.match(admin, /if \(o\.paymentStatus !== 'paid'\) return;/);
+  assert.match(admin, /function refreshCurrentOrderPage\(\)/);
 });
 
 test('admin page has no public email allowlist and depends on a verified admin claim', () => {
