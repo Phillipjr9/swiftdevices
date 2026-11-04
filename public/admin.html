@@ -106,17 +106,21 @@
 
         <!-- Stats Row -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-6">
                 <div class="stat-card text-white rounded-2xl p-5">
-                    <p class="text-white/70 text-xs uppercase tracking-wide">Total Orders</p>
+                    <p class="text-white/70 text-xs uppercase tracking-wide">Recent Orders (100)</p>
                     <p class="text-3xl font-bold mt-1" id="stat-orders">--</p>
                 </div>
                 <div class="bg-white rounded-2xl p-5 shadow-sm">
-                    <p class="text-gray-500 text-xs uppercase tracking-wide">Revenue</p>
+                    <p class="text-gray-500 text-xs uppercase tracking-wide">Paid Revenue (100)</p>
                     <p class="text-3xl font-bold text-green-600 mt-1" id="stat-revenue">--</p>
                 </div>
                 <div class="bg-white rounded-2xl p-5 shadow-sm">
-                    <p class="text-gray-500 text-xs uppercase tracking-wide">Customers</p>
+                    <p class="text-gray-500 text-xs uppercase tracking-wide">Pending Payments (100)</p>
+                    <p class="text-3xl font-bold text-amber-600 mt-1" id="stat-pending-payments">--</p>
+                </div>
+                <div class="bg-white rounded-2xl p-5 shadow-sm">
+                    <p class="text-gray-500 text-xs uppercase tracking-wide">Customers (100)</p>
                     <p class="text-3xl font-bold text-brand-blue mt-1" id="stat-customers">--</p>
                 </div>
                 <div class="bg-white rounded-2xl p-5 shadow-sm">
@@ -189,6 +193,8 @@
                                 <option value="shipped">Shipped</option>
                                 <option value="delivered">Delivered</option>
                                 <option value="awaiting_payment">Awaiting Payment</option>
+                                <option value="payment_pending">Payment Pending</option>
+                                <option value="payment_paid">Payment Paid</option>
                                 <option value="cancelled">Cancelled</option>
                             </select>
                             <button onclick="loadOrders()" class="text-brand-blue text-sm hover:underline"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
@@ -1158,17 +1164,20 @@
         container.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>';
         db.collection('orders').orderBy('createdAt', 'desc').limit(100).get().then(function(snap) {
             allOrders = [];
-            var total = 0;
+            var paidRevenue = 0;
+            var pendingPayments = 0;
             var emails = new Set();
             snap.forEach(function(doc) {
                 var o = doc.data();
                 o._id = doc.id;
                 allOrders.push(o);
-                total += o.total || 0;
+                if (o.paymentStatus === 'paid') paidRevenue += Number(o.total) || 0;
+                if (o.paymentStatus === 'pending' || o.status === 'awaiting_payment') pendingPayments++;
                 if (o.email) emails.add(o.email);
             });
             document.getElementById('stat-orders').textContent = allOrders.length;
-            document.getElementById('stat-revenue').textContent = '$' + total.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+            document.getElementById('stat-revenue').textContent = '$' + paidRevenue.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+            document.getElementById('stat-pending-payments').textContent = pendingPayments;
             document.getElementById('stat-customers').textContent = emails.size;
             renderOrders();
         }).catch(function(e) {
@@ -1181,7 +1190,9 @@
         var filterStatus = document.getElementById('order-filter').value;
         var searchTerm = (document.getElementById('order-search').value || '').toLowerCase();
         var filtered = allOrders.filter(function(o) {
-            if (filterStatus && (o.status || 'processing') !== filterStatus) return false;
+            if (filterStatus === 'payment_pending' && o.paymentStatus !== 'pending') return false;
+            if (filterStatus === 'payment_paid' && o.paymentStatus !== 'paid') return false;
+            if (filterStatus && filterStatus !== 'payment_pending' && filterStatus !== 'payment_paid' && (o.status || 'processing') !== filterStatus) return false;
             if (searchTerm) {
                 var haystack = ((o.orderId || o._id) + ' ' + (o.name || '') + ' ' + (o.email || '')).toLowerCase();
                 if (haystack.indexOf(searchTerm) === -1) return false;

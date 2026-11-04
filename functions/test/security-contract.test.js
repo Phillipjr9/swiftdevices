@@ -28,6 +28,14 @@ test('checkout calls the trusted order function and the payment-return page cann
   assert.doesNotMatch(paymentReturn, /FieldValue\.serverTimestamp\(\)/);
 });
 
+test('admin dashboard revenue includes only paid orders and exposes pending-payment counts and filters', () => {
+  const admin = read('public/admin.html');
+  assert.match(admin, /if \(o\.paymentStatus === 'paid'\) paidRevenue \+= Number\(o\.total\) \|\| 0/);
+  assert.match(admin, /id="stat-pending-payments"/);
+  assert.match(admin, /value="payment_pending"/);
+  assert.match(admin, /value="payment_paid"/);
+});
+
 test('admin page has no public email allowlist and depends on a verified admin claim', () => {
   const admin = read('public/admin.html');
   assert.match(admin, /tokenResult\.claims\.admin === true/);

@@ -92,7 +92,7 @@ The entries below describe the code/configuration as first observed during the a
 
 - The site has dedicated customer-facing support, contact, trade-in, gift-card, returns, warranty, privacy, terms, payment-success, and 404 pages.
 - Product IDs in the storefront catalog are unique in the inspected source; local cross-page `href`/`src`/`action` references in the top-level public HTML resolved to existing files in a static check.
-- Cloud Functions now cover tracking, checkout, payment status, manual verification, inventory release, gift-card redemption, account deletion requests, and rewards-ledger updates; sanitized public review/Q&A projections are rate-limited. **17 unit/contract tests pass**, Functions lint passes, and 29 inline scripts pass syntax checks.
+- Cloud Functions now cover tracking, checkout, payment status, manual verification, inventory release, gift-card redemption, account deletion requests, and rewards-ledger updates; sanitized public review/Q&A projections are rate-limited. **18 unit/contract tests pass**, Functions lint passes, and 29 inline scripts pass syntax checks.
 - Reviews are currently rendered from stored review records, not the unused catalog rating-count fields.
 - Firebase Hosting security headers/CSP are configured in `firebase.json`; they should be reviewed alongside the runtime's actual headers and the live deployment.
 
@@ -100,7 +100,7 @@ The entries below describe the code/configuration as first observed during the a
 
 - Inspected the public storefront/admin/support and policy/payment pages, `firebase.json`, Firestore indexes, Cloud Functions, tests, and product assets.
 - Checked local top-level public HTML references: **0 missing local targets** in that static scan.
-- Current branch validation: **17 Functions tests passed; Functions lint passed; 29 inline scripts syntax-checked; JSON configuration parsed; CRLF-aware diff checks passed.**
+- Current branch validation: **18 Functions tests passed; Functions lint passed; 29 inline scripts syntax-checked; JSON configuration parsed; CRLF-aware diff checks passed.**
 - This was not a live Firebase rules/auth/App Check audit, production payment test, full mobile/browser journey, accessibility audit, legal/tax review, or vulnerability scan. The deployed Firebase project may have configuration that is not represented in this repository. The repository provenance explicitly says it was reconstructed from deployed static output and does not include the original backend configuration.
 
 ## Remaining release gates
