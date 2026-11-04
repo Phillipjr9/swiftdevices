@@ -8,6 +8,7 @@ const {
   BANK_ONLY_THRESHOLD,
   isValidOrderNumber,
   isPaymentMethodAllowed,
+  calculateEarnedPoints,
   selectCryptoWallet,
   validateOrderInput,
 } = require('../index');
@@ -40,6 +41,13 @@ test('high-value orders require the configured bank-transfer threshold', () => {
     items: [{ id: 116, qty: 2 }], paymentMethod: 'crypto', email: 'buyer@example.com',
     shipping: { firstName: 'Ada', lastName: 'Lovelace', address: '1 Main St', city: 'Hudson', state: 'NY', zip: '12534', country: 'NG' },
   }), false);
+});
+
+test('earned points match the storefront rate of two points per dollar', () => {
+  assert.equal(calculateEarnedPoints(100), 200);
+  assert.equal(calculateEarnedPoints(12.99), 25);
+  assert.equal(calculateEarnedPoints(-5), 0);
+  assert.equal(calculateEarnedPoints('not-a-number'), 0);
 });
 
 test('crypto wallet selection always uses a configured destination', () => {

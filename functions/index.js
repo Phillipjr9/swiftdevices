@@ -98,6 +98,7 @@ const configuredTaxRate = Number(process.env.CHECKOUT_TAX_RATE || 0.08);
 const CHECKOUT_TAX_RATE = Number.isFinite(configuredTaxRate) && configuredTaxRate >= 0 && configuredTaxRate <= 0.2 ? configuredTaxRate : 0.08;
 const BANK_ONLY_THRESHOLD = 20000;
 const POINT_VALUE = 0.01;
+const POINTS_PER_DOLLAR = 2;
 const ORDER_RATE_LIMIT = 6;
 
 function cleanText(value, maxLength) {
@@ -142,6 +143,11 @@ function calculatePromoDiscount(subtotal, config, now = new Date()) {
 
 function isPaymentMethodAllowed(total, method) {
   return Number(total) < BANK_ONLY_THRESHOLD || method === 'bank';
+}
+
+function calculateEarnedPoints(total) {
+  const amount = Number(total);
+  return Number.isFinite(amount) && amount > 0 ? Math.floor(amount * POINTS_PER_DOLLAR) : 0;
 }
 
 function validateOrderInput(data) {
@@ -305,7 +311,14 @@ exports.placeOrder = onCall({ region: 'us-central1', maxInstances: 20 }, async (
     tx.set(requestRef, { orderNumber, checkoutFingerprint, createdAt: Timestamp.now(), expiresAt: Timestamp.fromMillis(nowMs + 7 * 24 * 60 * 60 * 1000) });
     tx.set(rateRef, { count: attemptCount + 1, windowStart: attemptCount ? rateData.windowStart : Timestamp.fromMillis(nowMs), expiresAt: Timestamp.fromMillis(nowMs + RATE_WINDOW_MS * 2) });
     tx.set(overridesRef, { overrides }, { merge: true });
-    if (pointsRedeemed > 0 && pointsRef) tx.set(pointsRef, { points: Number(pointsSnap.data().points || 0) - pointsRedeemed, updatedAt: Timestamp.now() }, { merge: true });
+    if (pointsRedeemed > 0 && pointsRef) {
+      const balanceAfter = Number(pointsSnap.data().points || 0) - pointsRedeemed;
+      tx.set(pointsRef, { points: balanceAfter, updatedAt: Timestamp.now() }, { merge: true });
+      tx.set(db.collection('rewardsLedger').doc(`${orderNumber}_redeem`), {
+        uid, type: 'redeem', points: -pointsRedeemed, balanceAfter, orderNumber,
+        description: `Points redeemed on order ${orderNumber}`, createdAt: Timestamp.now(),
+      });
+    }
     if (couponCode && discount > 0) {
       couponDoc[couponCode] = { ...coupon, used: Number(coupon.used || 0) + 1 };
       tx.set(couponRef, { codes: couponDoc }, { merge: true });
@@ -463,7 +476,13 @@ exports.adminUpdateOrder = onCall({ region: 'us-central1', maxInstances: 10 }, a
       tx.set(overridesRef, { overrides }, { merge: true });
       if (pointsRef && pointsSnap?.exists && Number(order.pointsRedeemed) > 0) {
         const currentPoints = Number(pointsSnap.data().points || 0);
-        tx.set(pointsRef, { points: currentPoints + Number(order.pointsRedeemed), updatedAt: Timestamp.now() }, { merge: true });
+        const restored = Number(order.pointsRedeemed);
+        const balanceAfter = currentPoints + restored;
+        tx.set(pointsRef, { points: balanceAfter, updatedAt: Timestamp.now() }, { merge: true });
+        tx.set(db.collection('rewardsLedger').doc(`${order.orderNumber || orderRef.id}_cancel_restore`), {
+          uid: order.uid, type: 'reversal', points: restored, balanceAfter, orderNumber: order.orderNumber || orderRef.id,
+          description: `Points restored after cancellation`, createdAt: Timestamp.now(),
+        });
       }
       if (couponRef && couponSnap?.exists) {
         const codes = couponSnap.data().codes || {};
@@ -492,12 +511,18 @@ exports.verifyManualPayment = onCall({ region: 'us-central1', maxInstances: 10 }
     if (order.status !== 'awaiting_payment' || order.paymentStatus !== 'pending') {
       throw new HttpsError('failed-precondition', 'Only a pending order can be marked as paid.');
     }
-    const earned = Math.max(0, Math.floor(Number(order.total || 0)));
+    const eligibleSubtotal = Math.max(0, Number(order.subtotal || 0) - Number(order.discount || 0) - Number(order.pointsDiscount || 0));
+    const earned = calculateEarnedPoints(eligibleSubtotal);
     const rewardRef = order.uid ? db.collection('rewardsPoints').doc(order.uid) : null;
     if (rewardRef) {
       const rewardSnap = await tx.get(rewardRef);
       const currentPoints = rewardSnap.exists ? Number(rewardSnap.data().points || 0) : 0;
-      tx.set(rewardRef, { points: currentPoints + earned, updatedAt: Timestamp.now() }, { merge: true });
+      const balanceAfter = currentPoints + earned;
+      tx.set(rewardRef, { points: balanceAfter, updatedAt: Timestamp.now() }, { merge: true });
+      if (earned > 0) tx.set(db.collection('rewardsLedger').doc(`${orderNumber}_earn`), {
+        uid: order.uid, type: 'earn', points: earned, balanceAfter, orderNumber,
+        description: `Points earned on order ${orderNumber}`, createdAt: Timestamp.now(),
+      });
     }
     const verification = { status: 'confirmed', paymentStatus: 'paid', paidAt: Timestamp.now(), verifiedBy: request.auth.uid, verifiedAt: Timestamp.now(), pointsAwarded: earned };
     if (method === 'crypto') verification.cryptoVerified = true;
@@ -544,7 +569,13 @@ exports.expirePendingOrders = onSchedule({
       }
       tx.set(overridesRef, { overrides }, { merge: true });
       if (pointsRef && pointsSnap?.exists && Number(order.pointsRedeemed) > 0) {
-        tx.set(pointsRef, { points: Number(pointsSnap.data().points || 0) + Number(order.pointsRedeemed), updatedAt: Timestamp.now() }, { merge: true });
+        const restored = Number(order.pointsRedeemed);
+        const balanceAfter = Number(pointsSnap.data().points || 0) + restored;
+        tx.set(pointsRef, { points: balanceAfter, updatedAt: Timestamp.now() }, { merge: true });
+        tx.set(db.collection('rewardsLedger').doc(`${orderNumber}_expire_restore`), {
+          uid: order.uid, type: 'reversal', points: restored, balanceAfter, orderNumber,
+          description: 'Points restored after unpaid order expired', createdAt: Timestamp.now(),
+        });
       }
       if (couponRef && couponSnap?.exists) {
         const codes = couponSnap.data().codes || {};
@@ -598,8 +629,53 @@ exports.redeemGiftCard = onCall({ region: 'us-central1', maxInstances: 10 }, asy
     const points = Math.floor(Number(card.balance) * 100);
     const current = rewardsSnap.exists ? Number(rewardsSnap.data().points || 0) : 0;
     tx.update(ref, { status: 'redeemed', balance: 0, redeemedBy: request.auth.uid, redeemedAt: Timestamp.now() });
-    tx.set(rewardsRef, { points: current + points, updatedAt: Timestamp.now() }, { merge: true });
+    const balanceAfter = current + points;
+    tx.set(rewardsRef, { points: balanceAfter, updatedAt: Timestamp.now() }, { merge: true });
+    tx.set(db.collection('rewardsLedger').doc(`giftcard_${code}`), {
+      uid: request.auth.uid, type: 'gift_card', points, balanceAfter,
+      description: 'Points added from redeemed gift card', createdAt: Timestamp.now(),
+    });
     return { balance: Number(card.balance), points };
+  });
+});
+
+
+exports.adjustRewardPoints = onCall({ region: 'us-central1', maxInstances: 10 }, async (request) => {
+  if (request.auth?.token?.admin !== true) throw new HttpsError('permission-denied', 'Administrator access is required.');
+  const uid = cleanText(request.data?.uid, 128);
+  const delta = Number(request.data?.delta);
+  const description = cleanText(request.data?.description, 200);
+  if (!uid || !Number.isInteger(delta) || delta === 0 || Math.abs(delta) > 100000 || !description) {
+    throw new HttpsError('invalid-argument', 'Provide a user, a non-zero points adjustment up to 100,000, and a reason.');
+  }
+  const rewardRef = db.collection('rewardsPoints').doc(uid);
+  const ledgerRef = db.collection('rewardsLedger').doc(`admin_${randomBytes(16).toString('hex')}`);
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(rewardRef);
+    const current = snap.exists ? Number(snap.data().points || 0) : 0;
+    const balanceAfter = current + delta;
+    if (balanceAfter < 0) throw new HttpsError('failed-precondition', 'The adjustment cannot make a points balance negative.');
+    tx.set(rewardRef, { points: balanceAfter, totalPoints: balanceAfter, updatedAt: Timestamp.now() }, { merge: true });
+    tx.set(ledgerRef, {
+      uid, type: 'adjustment', points: delta, balanceAfter, description,
+      actorUid: request.auth.uid, createdAt: Timestamp.now(),
+    });
+    return { points: balanceAfter };
+  });
+});
+
+exports.requestAccountDeletion = onCall({ region: 'us-central1', maxInstances: 10 }, async (request) => {
+  if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Sign in to request account deletion.');
+  const uid = request.auth.uid;
+  const ref = db.collection('accountDeletionRequests').doc(uid);
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (snap.exists && snap.data().status === 'pending') return { submitted: true, alreadyPending: true };
+    tx.set(ref, {
+      uid, email: cleanText(request.auth.token.email, 254), status: 'pending',
+      requestedAt: Timestamp.now(), updatedAt: Timestamp.now(),
+    });
+    return { submitted: true, alreadyPending: false };
   });
 });
 
@@ -613,5 +689,6 @@ module.exports.activePromoRate = activePromoRate;
 module.exports.validateOrderInput = validateOrderInput;
 module.exports.BANK_ONLY_THRESHOLD = BANK_ONLY_THRESHOLD;
 module.exports.isPaymentMethodAllowed = isPaymentMethodAllowed;
+module.exports.calculateEarnedPoints = calculateEarnedPoints;
 module.exports.isValidOrderNumber = isValidOrderNumber;
 module.exports.selectCryptoWallet = selectCryptoWallet;

@@ -335,6 +335,10 @@
                             <button onclick="loadContacts()" class="text-brand-blue text-sm hover:underline"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
                         </div>
                     </div>
+                    <section class="mb-8 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                        <div class="flex items-center justify-between gap-3 mb-3"><div><h3 class="font-bold text-brand-dark">Account deletion requests</h3><p class="text-xs text-gray-600">Process the request under the retention policy before marking it reviewed.</p></div><button onclick="loadAccountDeletionRequests()" class="text-brand-blue text-xs font-semibold hover:underline">Refresh</button></div>
+                        <div id="account-deletion-requests"><p class="text-xs text-gray-500">Loading requests…</p></div>
+                    </section>
                     <div id="contacts-table">
                         <div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>
                     </div>
@@ -1539,6 +1543,7 @@
                     + '<td class="py-3 px-3">'
                     + '<div class="flex items-center gap-2">'
                     + '<input type="number" id="adj-' + doc.id + '" value="0" class="w-20 text-sm border rounded-lg px-2 py-1">'
+                    + '<input type="text" id="adj-reason-' + doc.id + '" maxlength="200" placeholder="Reason" class="w-32 text-xs border rounded-lg px-2 py-1">'
                     + '<button onclick="adjustRewards(\'' + doc.id + '\')" class="text-xs bg-brand-blue text-white px-3 py-1 rounded-full hover:bg-blue-700">Apply</button>'
                     + '</div></td>'
                     + '</tr>';
@@ -1552,17 +1557,13 @@
 
     function adjustRewards(userId) {
         var input = document.getElementById('adj-' + userId);
-        if (!input) return;
+        var reasonInput = document.getElementById('adj-reason-' + userId);
+        if (!input || !reasonInput) return;
         var adj = parseInt(input.value, 10);
+        var description = reasonInput.value.trim();
         if (isNaN(adj) || adj === 0) { alert('Enter a non-zero adjustment value.'); return; }
-        db.collection('rewardsPoints').doc(userId).get().then(function(doc) {
-            var current = 0;
-            if (doc.exists) {
-                current = doc.data().points || doc.data().totalPoints || 0;
-            }
-            var newPts = Math.max(0, current + adj);
-            return db.collection('rewardsPoints').doc(userId).set({ points: newPts, totalPoints: newPts }, { merge: true });
-        }).then(function() {
+        if (!description) { alert('Enter a reason for the points adjustment.'); reasonInput.focus(); return; }
+        firebase.app().functions('us-central1').httpsCallable('adjustRewardPoints')({ uid: userId, delta: adj, description: description }).then(function() {
             loadRewards();
         }).catch(function(e) { alert('Error: ' + e.message); });
     }
@@ -2007,6 +2008,7 @@
     var allContacts = [];
 
     function loadContacts() {
+        loadAccountDeletionRequests();
         var container = document.getElementById('contacts-table');
         container.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>';
         db.collection('contactMessages').orderBy('timestamp', 'desc').limit(50).get().then(function(snap) {
@@ -2020,6 +2022,31 @@
         }).catch(function(e) {
             container.innerHTML = '<p class="text-red-500 text-center py-4">Error: ' + escHtml(e.message) + '</p>';
         });
+    }
+
+    function loadAccountDeletionRequests() {
+        var container = document.getElementById('account-deletion-requests');
+        if (!container) return;
+        container.innerHTML = '<p class="text-xs text-gray-500">Loading requests…</p>';
+        db.collection('accountDeletionRequests').orderBy('requestedAt', 'desc').limit(50).get().then(function(snap) {
+            var pending = snap.docs.filter(function(doc) { return doc.data().status === 'pending'; });
+            if (!pending.length) { container.innerHTML = '<p class="text-xs text-gray-500">No pending requests.</p>'; return; }
+            container.innerHTML = pending.map(function(doc) {
+                var request = doc.data();
+                var date = request.requestedAt && request.requestedAt.toDate ? request.requestedAt.toDate().toLocaleString() : 'Date unavailable';
+                return '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-amber-200 py-3"><div><p class="text-sm font-semibold">' + escHtml(request.email || 'No email on file') + '</p><p class="text-xs text-gray-500">UID ' + escHtml(doc.id) + ' · Requested ' + escHtml(date) + '</p></div><button onclick="markDeletionRequestReviewed(\'' + escHtml(doc.id) + '\')" class="self-start sm:self-auto rounded-lg bg-white border border-amber-300 px-3 py-2 text-xs font-semibold text-amber-800">Mark reviewed</button></div>';
+            }).join('');
+        }).catch(function(error) { container.innerHTML = '<p class="text-xs text-red-600">Could not load requests: ' + escHtml(error.message) + '</p>'; });
+    }
+
+    function markDeletionRequestReviewed(uid) {
+        if (!confirm('Only mark this reviewed after handling the request and any required data-retention steps.')) return;
+        db.collection('accountDeletionRequests').doc(uid).update({
+            status: 'reviewed', reviewedBy: auth.currentUser ? auth.currentUser.email : '', reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function() {
+            logAudit('account_deletion_reviewed', 'Reviewed deletion request for UID ' + uid);
+            loadAccountDeletionRequests();
+        }).catch(function(error) { alert('Could not update request: ' + error.message); });
     }
 
     function renderContacts() {

@@ -65,6 +65,27 @@ test('account bills are built from the signed-in user’s orders and distinguish
   assert.match(storefront, /var safeDisplayName = escapeHTML\(displayName\)/);
   assert.match(storefront, /escapeHTML\(\[a\.street, a\.city, a\.state, a\.zip\]/);
   assert.match(storefront, /Print \/ Save bill/);
+  assert.match(storefront, /function accountCarrierUrl\(carrier, trackingNumber\)/);
+  assert.match(storefront, /startAfter\(userOrderCursor\)/);
+  assert.match(storefront, /function applySavedCheckoutAddress\(index\)/);
+});
+
+test('account rewards are ledgered by trusted functions and deletion requests are admin-only', () => {
+  const rules = read('firestore.rules');
+  const functions = read('functions/index.js');
+  const storefront = read('public/index.html');
+  const admin = read('public/admin.html');
+  assert.match(rules, /match \/rewardsLedger\/\{entryId\}/);
+  assert.match(rules, /match \/accountDeletionRequests\/\{uid\}/);
+  assert.match(functions, /exports\.adjustRewardPoints = onCall/);
+  assert.match(functions, /exports\.requestAccountDeletion = onCall/);
+  assert.match(functions, /collection\('rewardsLedger'\)/);
+  assert.match(storefront, /function exportMyAccountData\(\)/);
+  assert.match(storefront, /httpsCallable\('requestAccountDeletion'\)/);
+  assert.match(storefront, /sendAccountVerification/);
+  assert.match(admin, /httpsCallable\('adjustRewardPoints'\)/);
+  assert.match(admin, /function loadAccountDeletionRequests\(\)/);
+  assert.match(rules, /request\.resource\.data\.status == 'reviewed'/);
 });
 
 test('public review and Q&A projections omit email and account identifiers', () => {

@@ -1492,6 +1492,10 @@
                 <!-- Step 1: Shipping -->
                 <div id="checkout-step-1">
                     <form id="checkout-form" onsubmit="goToPaymentStep(event)">
+                        <div id="checkout-saved-address-wrap" class="hidden mb-4">
+                            <label for="checkout-saved-address" class="block text-sm font-medium mb-2">Use a saved address</label>
+                            <select id="checkout-saved-address" onchange="applySavedCheckoutAddress(this.value)" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-brand-blue"><option value="">Choose an address…</option></select>
+                        </div>
                         <div class="grid md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium mb-2" for="checkout-fname">First Name</label>
@@ -3158,6 +3162,46 @@
         }
 
         // Checkout Functions
+        var checkoutSavedAddresses = [];
+
+        function loadCheckoutSavedAddresses() {
+            var wrap = document.getElementById('checkout-saved-address-wrap');
+            var select = document.getElementById('checkout-saved-address');
+            var user = auth.currentUser;
+            if (!wrap || !select || !user) { if (wrap) wrap.classList.add('hidden'); return; }
+            db.collection('userAddresses').doc(user.uid).get().then(function(doc) {
+                checkoutSavedAddresses = doc.exists && Array.isArray(doc.data().addresses) ? doc.data().addresses.filter(function(address) {
+                    if (!address || typeof address !== 'object') return false;
+                    var country = String(address.country || 'United States').trim().toLowerCase();
+                    return ['us', 'usa', 'united states', 'united states of america'].includes(country);
+                }) : [];
+                if (!checkoutSavedAddresses.length) { wrap.classList.add('hidden'); return; }
+                select.innerHTML = '<option value="">Choose an address…</option>' + checkoutSavedAddresses.map(function(address, index) {
+                    return '<option value="' + index + '">' + escapeHTML(address.label || ('Address ' + (index + 1))) + ' — ' + escapeHTML([address.city, address.state, address.zip].filter(Boolean).join(', ')) + '</option>';
+                }).join('');
+                wrap.classList.remove('hidden');
+            }).catch(function() { wrap.classList.add('hidden'); });
+        }
+
+        function applySavedCheckoutAddress(index) {
+            var address = checkoutSavedAddresses[Number(index)];
+            if (!address) return;
+            var user = auth.currentUser;
+            var nameParts = String(user && user.displayName || '').trim().split(/\s+/).filter(Boolean);
+            var fields = {
+                'checkout-fname': nameParts.shift() || '',
+                'checkout-lname': nameParts.join(' '),
+                'checkout-email': user && user.email || '',
+                'checkout-address': address.street || '',
+                'checkout-city': address.city || '',
+                'checkout-state': address.state || '',
+                'checkout-zip': address.zip || ''
+            };
+            Object.keys(fields).forEach(function(id) { var input = document.getElementById(id); if (input) input.value = fields[id]; });
+            addressVerified = false;
+            updateAddressBadge();
+        }
+
         function checkout() {
             if (cart.length === 0) {
                 showNotification('Please add items to your cart first', 'error');
@@ -3166,6 +3210,7 @@
             toggleCart();
             const modal = document.getElementById('checkout-modal');
             if (modal) modal.classList.remove('hidden');
+            loadCheckoutSavedAddresses();
             
             const summary = document.getElementById('checkout-summary');
             const subtotal = getCheckoutSubtotal();
@@ -3231,6 +3276,33 @@
             }).catch(function() { userRewardsPoints = 0; updatePointsUI(); });
         }
 
+        function toggleRewardsLedger() {
+            var panel = document.getElementById('rewards-ledger-panel');
+            if (panel) panel.classList.toggle('hidden');
+        }
+
+        function loadRewardsLedger(uid) {
+            var container = document.getElementById('rewards-ledger-list');
+            if (!container || !uid) return;
+            db.collection('rewardsLedger').where('uid', '==', uid).orderBy('createdAt', 'desc').limit(20).get().then(function(snapshot) {
+                if (snapshot.empty) { container.textContent = 'No rewards activity yet.'; return; }
+                container.innerHTML = '';
+                snapshot.forEach(function(doc) {
+                    var entry = doc.data();
+                    var row = document.createElement('div'); row.className = 'flex justify-between gap-3 border-b border-gray-200 py-2 last:border-0';
+                    var detail = document.createElement('div');
+                    var description = document.createElement('p'); description.className = 'font-medium text-gray-700'; description.textContent = entry.description || String(entry.type || 'Points activity').replace(/_/g, ' ');
+                    var when = document.createElement('p'); when.className = 'text-gray-400';
+                    var date = entry.createdAt && entry.createdAt.toDate ? entry.createdAt.toDate() : null;
+                    when.textContent = date && Number.isFinite(date.getTime()) ? date.toLocaleDateString() : '';
+                    detail.append(description, when);
+                    var points = document.createElement('span'); points.className = 'font-bold whitespace-nowrap ' + (Number(entry.points) >= 0 ? 'text-green-700' : 'text-red-600');
+                    points.textContent = (Number(entry.points) > 0 ? '+' : '') + String(Number(entry.points) || 0) + ' pts';
+                    row.append(detail, points); container.appendChild(row);
+                });
+            }).catch(function() { container.textContent = 'Rewards activity is temporarily unavailable.'; });
+        }
+
         function updatePointsUI() {
             var badge = document.getElementById('nav-points-badge');
             if (badge) badge.textContent = userRewardsPoints.toLocaleString();
@@ -3241,7 +3313,8 @@
             var earnEl = document.getElementById('checkout-points-earn');
             if (earnEl) {
                 var subtotal = getCheckoutSubtotal();
-                earnEl.textContent = Math.floor(subtotal * POINTS_PER_DOLLAR);
+                var eligibleSubtotal = Math.max(0, subtotal - getDiscount(subtotal) - getPointsDiscount());
+                earnEl.textContent = Math.floor(eligibleSubtotal * POINTS_PER_DOLLAR);
             }
         }
 
@@ -4643,6 +4716,8 @@
                         + '</div>'
                         + '<div class="mt-2"><div class="w-full bg-amber-200 rounded-full h-1.5"><div id="dash-tier-progress" class="bg-amber-500 h-1.5 rounded-full" style="width:0%"></div></div><p class="text-xs text-gray-400 mt-1" id="dash-tier-next"></p></div>'
                         + '</div>'
+                        + '<button type="button" onclick="toggleRewardsLedger()" class="w-full text-left text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 mb-3"><i class="fas fa-clock-rotate-left mr-1"></i>View rewards activity</button>'
+                        + '<div id="rewards-ledger-panel" class="hidden bg-gray-50 rounded-xl p-3 mb-3"><p class="text-[11px] text-gray-400 mb-2">Itemized activity is available for transactions recorded after rewards history was enabled.</p><div id="rewards-ledger-list" class="text-xs text-gray-500">Loading rewards activity…</div></div>'
                         + '<div class="flex bg-gray-100 rounded-full p-1 mb-3">'
                         + '<button onclick="switchDashTab(\'orders\')" id="dash-tab-orders" class="flex-1 py-2 rounded-full text-xs font-semibold transition-all bg-brand-blue text-white">Orders</button>'
                         + '<button onclick="switchDashTab(\'addresses\')" id="dash-tab-addresses" class="flex-1 py-2 rounded-full text-xs font-semibold transition-all text-gray-600">Addresses</button>'
@@ -4650,11 +4725,15 @@
                         + '</div>'
                         + '<div id="dash-orders" class="dash-section"><div class="text-center py-4"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i><p class="text-sm text-gray-500 mt-2">Loading orders...</p></div></div>'
                         + '<div id="dash-addresses" class="dash-section hidden"><div id="saved-addresses-list"></div><button onclick="showAddressForm()" class="w-full border-2 border-dashed border-gray-300 rounded-xl p-3 text-sm text-gray-500 hover:border-brand-blue hover:text-brand-blue transition mt-2"><i class="fas fa-plus mr-1"></i>Add New Address</button><div id="address-form-wrap" class="hidden mt-3"><form onsubmit="saveAddress(event)" class="space-y-2 bg-gray-50 rounded-xl p-4"><input id="addr-label" placeholder="Label (e.g. Home, Work)" class="w-full px-3 py-2 border rounded-lg text-sm" required><input id="addr-street" placeholder="Street Address" class="w-full px-3 py-2 border rounded-lg text-sm" required><div class="grid grid-cols-2 gap-2"><input id="addr-city" placeholder="City" class="w-full px-3 py-2 border rounded-lg text-sm" required><input id="addr-state" placeholder="State" class="w-full px-3 py-2 border rounded-lg text-sm" required></div><div class="grid grid-cols-2 gap-2"><input id="addr-zip" placeholder="ZIP Code" class="w-full px-3 py-2 border rounded-lg text-sm" required><input id="addr-country" placeholder="Country" value="United States" class="w-full px-3 py-2 border rounded-lg text-sm" required></div><div class="flex gap-2"><button type="submit" class="bg-brand-blue text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-blue-700">Save</button><button type="button" onclick="document.getElementById(\'address-form-wrap\').classList.add(\'hidden\')" class="text-gray-500 text-sm">Cancel</button></div></form></div></div>'
-                        + '<div id="dash-settings" class="dash-section hidden"><div class="space-y-3"><div class="bg-gray-50 rounded-xl p-4"><p class="font-semibold text-sm mb-1">Display Name</p><div class="flex gap-2"><input id="settings-name" value="' + safeDisplayName + '" class="flex-1 px-3 py-2 border rounded-lg text-sm"><button onclick="updateDisplayName()" class="bg-brand-blue text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-blue-700">Update</button></div></div><div class="bg-gray-50 rounded-xl p-4"><p class="font-semibold text-sm mb-1">Email</p><p class="text-sm text-gray-600">' + safeEmail + '</p></div><div class="bg-gray-50 rounded-xl p-4"><p class="font-semibold text-sm mb-1">Password</p><button onclick="resetPasswordFromDash()" class="text-brand-blue text-sm font-semibold hover:underline">Send Password Reset Email</button></div></div></div>'
+                        + '<div id="dash-settings" class="dash-section hidden"><div class="space-y-3"><div class="bg-gray-50 rounded-xl p-4"><p class="font-semibold text-sm mb-1">Display Name</p><div class="flex gap-2"><input id="settings-name" value="' + safeDisplayName + '" class="flex-1 px-3 py-2 border rounded-lg text-sm"><button onclick="updateDisplayName()" class="bg-brand-blue text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-blue-700">Update</button></div></div><div class="bg-gray-50 rounded-xl p-4"><p class="font-semibold text-sm mb-1">Email</p><p class="text-sm text-gray-600">' + safeEmail + '</p></div><div class="bg-gray-50 rounded-xl p-4"><p class="font-semibold text-sm mb-1">Password</p><button onclick="resetPasswordFromDash()" class="text-brand-blue text-sm font-semibold hover:underline">Send Password Reset Email</button></div>'
+                        + (user.emailVerified ? '<div class="bg-green-50 rounded-xl p-4"><p class="font-semibold text-sm mb-1">Email verification</p><p class="text-sm text-green-700"><i class="fas fa-circle-check mr-1"></i>Verified</p></div>' : '<div class="bg-amber-50 rounded-xl p-4"><p class="font-semibold text-sm mb-1">Email verification</p><p class="text-xs text-gray-600 mb-2">Verify your email to help secure your account.</p><button onclick="sendAccountVerification()" class="text-brand-blue text-sm font-semibold hover:underline">Send verification email</button></div>')
+                        + '<div class="bg-gray-50 rounded-xl p-4"><p class="font-semibold text-sm mb-2">Your data</p><button onclick="exportMyAccountData()" class="text-brand-blue text-sm font-semibold hover:underline"><i class="fas fa-download mr-1"></i>Download my account data</button></div>'
+                        + '<div class="bg-red-50 rounded-xl p-4"><p class="font-semibold text-sm mb-1">Account deletion</p><p class="text-xs text-gray-600 mb-2">Submit a deletion request for support to review. Some order records may be retained where required.</p><button onclick="requestMyAccountDeletion()" class="text-red-600 text-sm font-semibold hover:underline">Request account deletion</button></div></div></div>'
                         + '<button onclick="signOut()" class="w-full mt-2 bg-red-50 text-red-600 py-3 rounded-full font-bold hover:bg-red-100 transition"><i class="fas fa-sign-out-alt mr-2"></i>Sign Out</button>'
                         + '</div>';
                     loadUserOrders(user.uid);
                     loadUserAddresses(user.uid);
+                    loadRewardsLedger(user.uid);
                 }
             } else {
                 userOrderCache = Object.create(null);
@@ -4729,35 +4808,99 @@
             setTimeout(function() { receiptWindow.focus(); receiptWindow.print(); }, 250);
         }
 
-        function loadUserOrders(uid) {
+        var userOrderRows = [];
+        var userOrderCursor = null;
+        var userOrderHasMore = false;
+        var userOrderLoading = false;
+        var userOrderUid = null;
+        var USER_ORDER_PAGE_SIZE = 20;
+
+        function accountCarrierUrl(carrier, trackingNumber) {
+            var number = encodeURIComponent(String(trackingNumber || '').trim());
+            var key = String(carrier || '').toLowerCase();
+            if (key.indexOf('ups') >= 0) return 'https://www.ups.com/track?tracknum=' + number;
+            if (key.indexOf('fedex') >= 0) return 'https://www.fedex.com/fedextrack/?trknbr=' + number;
+            if (key.indexOf('usps') >= 0) return 'https://tools.usps.com/go/TrackConfirmAction?tLabels=' + number;
+            if (key.indexOf('dhl') >= 0) return 'https://www.dhl.com/us-en/home/tracking.html?tracking-id=' + number;
+            return '';
+        }
+
+        function renderUserOrders() {
             var container = document.getElementById('dash-orders');
             if (!container) return;
-            userOrderCache = Object.create(null);
-            db.collection('orders').where('uid', '==', uid).orderBy('createdAt', 'desc').limit(20).get().then(function(snap) {
-                if (snap.empty) {
-                    container.innerHTML = '<div class="text-center py-6"><i class="fas fa-shopping-bag text-gray-300 text-3xl mb-2"></i><p class="text-sm text-gray-500">No orders yet</p><p class="text-xs text-gray-400 mt-1">Your order history will appear here</p></div>';
-                    return;
-                }
-                var html = '<div class="space-y-3 max-h-64 overflow-y-auto pr-1">';
-                snap.forEach(function(doc) {
-                    var o = doc.data();
-                    userOrderCache[doc.id] = o;
-                    var statusColor = o.status === 'confirmed' ? 'green' : (o.status === 'awaiting_payment') ? 'yellow' : 'blue';
-                    var statusLabel = (o.status || 'processing').replace(/_/g, ' ');
+            var searchInput = document.getElementById('dash-order-search');
+            var restoreSearchFocus = document.activeElement === searchInput;
+            var selectionStart = restoreSearchFocus ? searchInput.selectionStart : null;
+            var search = String(searchInput ? searchInput.value : '').trim().toLowerCase();
+            var filtered = userOrderRows.filter(function(entry) {
+                var order = entry.data;
+                var haystack = [order.orderNumber, entry.id, order.status, order.paymentStatus, order.trackingNumber]
+                    .filter(Boolean).join(' ').toLowerCase();
+                return !search || haystack.indexOf(search) >= 0;
+            });
+            var html = '<label class="block text-xs font-medium text-gray-600 mb-2" for="dash-order-search">Search orders</label><input id="dash-order-search" oninput="renderUserOrders()" value="' + escapeHTML(search) + '" placeholder="Order number, status, or tracking" class="w-full px-3 py-2 border rounded-lg text-sm mb-3">';
+            if (!filtered.length) {
+                html += '<div class="text-center py-6"><i class="fas fa-shopping-bag text-gray-300 text-3xl mb-2"></i><p class="text-sm text-gray-500">' + (userOrderRows.length ? 'No orders match that search.' : 'No orders yet') + '</p></div>';
+            } else {
+                html += '<div class="space-y-3 max-h-80 overflow-y-auto pr-1">';
+                filtered.forEach(function(entry) {
+                    var o = entry.data;
+                    var statusColor = o.status === 'confirmed' || o.status === 'delivered' ? 'green' : (o.status === 'awaiting_payment' ? 'yellow' : 'blue');
+                    var statusLabel = String(o.status || 'processing').replace(/_/g, ' ');
                     var dateValue = o.createdAt && o.createdAt.toDate ? o.createdAt.toDate() : null;
                     var dateStr = dateValue && Number.isFinite(dateValue.getTime()) ? dateValue.toLocaleDateString() : '';
-                    var orderId = o.orderNumber || doc.id;
-                    html += '<div class="bg-gray-50 rounded-xl p-3">'
-                        + '<div class="flex justify-between items-center mb-1"><span class="font-bold text-sm text-brand-dark">' + escapeHTML(orderId) + '</span><span class="text-xs bg-' + statusColor + '-100 text-' + statusColor + '-700 px-2 py-0.5 rounded-full capitalize">' + escapeHTML(statusLabel) + '</span></div>'
+                    var number = o.orderNumber || entry.id;
+                    var trackingUrl = o.trackingNumber ? accountCarrierUrl(o.trackingCarrier, o.trackingNumber) : '';
+                    var tracking = trackingUrl
+                        ? '<a class="inline-flex items-center gap-1 text-xs text-brand-blue font-semibold mt-2" href="' + escapeHTML(trackingUrl) + '" target="_blank" rel="noopener noreferrer">Track ' + escapeHTML(o.trackingCarrier || 'shipment') + ' · ' + escapeHTML(o.trackingNumber) + '<i class="fas fa-external-link-alt"></i></a>'
+                        : (o.trackingNumber ? '<p class="text-xs text-gray-500 mt-2">Tracking: ' + escapeHTML(o.trackingNumber) + ' (' + escapeHTML(o.trackingCarrier || 'carrier') + ')</p>' : '');
+                    var paymentLabel = o.paymentStatus === 'paid' ? 'Payment verified' : 'Payment ' + String(o.paymentStatus || 'pending').replace(/_/g, ' ');
+                    html += '<article class="bg-gray-50 rounded-xl p-3">'
+                        + '<div class="flex justify-between items-center mb-1"><span class="font-bold text-sm text-brand-dark">' + escapeHTML(number) + '</span><span class="text-xs bg-' + statusColor + '-100 text-' + statusColor + '-700 px-2 py-0.5 rounded-full capitalize">' + escapeHTML(statusLabel) + '</span></div>'
                         + '<div class="flex justify-between text-xs text-gray-500"><span>' + escapeHTML(dateStr) + '</span><span class="font-semibold text-brand-blue">$' + (Number(o.total) || 0).toFixed(2) + '</span></div>'
-                        + '<div class="text-xs text-gray-400 mt-1 mb-2">' + (Array.isArray(o.items) ? o.items.length : 0) + ' item' + ((o.items || []).length === 1 ? '' : 's') + '</div>'
-                        + '<button type="button" onclick="printUserOrderBill(\'' + escapeHTML(doc.id) + '\')" class="text-xs font-semibold text-brand-blue hover:underline"><i class="fas fa-file-invoice-dollar mr-1"></i>Print / Save bill</button>'
-                        + '</div>';
+                        + '<p class="text-xs text-gray-500 mt-1">' + escapeHTML(paymentLabel) + ' · ' + (Array.isArray(o.items) ? o.items.length : 0) + ' item' + ((o.items || []).length === 1 ? '' : 's') + '</p>'
+                        + tracking
+                        + '<button type="button" onclick="printUserOrderBill(\'' + escapeHTML(entry.id) + '\')" class="block text-xs font-semibold text-brand-blue hover:underline mt-2"><i class="fas fa-file-invoice-dollar mr-1"></i>Print / Save bill</button>'
+                        + '</article>';
                 });
                 html += '</div>';
-                container.innerHTML = html;
+            }
+            if (userOrderHasMore) html += '<button type="button" onclick="loadUserOrders(userOrderUid, true)" class="w-full mt-3 border border-gray-300 rounded-lg py-2 text-sm font-semibold text-brand-blue hover:bg-blue-50" ' + (userOrderLoading ? 'disabled' : '') + '>' + (userOrderLoading ? 'Loading…' : 'Load older orders') + '</button>';
+            container.innerHTML = html;
+            if (restoreSearchFocus) {
+                var nextSearch = document.getElementById('dash-order-search');
+                if (nextSearch) { nextSearch.focus(); nextSearch.setSelectionRange(selectionStart, selectionStart); }
+            }
+        }
+
+        function loadUserOrders(uid, append) {
+            var container = document.getElementById('dash-orders');
+            if (!container || userOrderLoading) return;
+            if (!append || userOrderUid !== uid) {
+                userOrderRows = [];
+                userOrderCursor = null;
+                userOrderHasMore = true;
+                userOrderCache = Object.create(null);
+                userOrderUid = uid;
+            }
+            if (!userOrderHasMore) { renderUserOrders(); return; }
+            userOrderLoading = true;
+            if (!append) container.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-brand-blue"></i><p class="text-sm text-gray-500 mt-2">Loading orders…</p></div>';
+            var query = db.collection('orders').where('uid', '==', uid).orderBy('createdAt', 'desc').limit(USER_ORDER_PAGE_SIZE);
+            if (append && userOrderCursor) query = query.startAfter(userOrderCursor);
+            query.get().then(function(snap) {
+                snap.docs.forEach(function(doc) {
+                    var order = doc.data();
+                    userOrderRows.push({ id: doc.id, data: order });
+                    userOrderCache[doc.id] = order;
+                });
+                userOrderCursor = snap.docs.length ? snap.docs[snap.docs.length - 1] : userOrderCursor;
+                userOrderHasMore = snap.docs.length === USER_ORDER_PAGE_SIZE;
+                userOrderLoading = false;
+                renderUserOrders();
             }).catch(function() {
-                container.innerHTML = '<div class="text-center py-4"><p class="text-sm text-gray-500">Could not load orders</p></div>';
+                userOrderLoading = false;
+                container.innerHTML = '<div class="text-center py-4"><p class="text-sm text-gray-500">Could not load orders. Please try again.</p><button type="button" onclick="loadUserOrders(userOrderUid, true)" class="text-brand-blue text-sm font-semibold mt-2">Retry</button></div>';
             });
         }
 
@@ -4819,6 +4962,89 @@
             user.updateProfile({ displayName: newName }).then(function() {
                 showNotification('Name updated!', 'success');
             }).catch(function(e) { showNotification(e.message, 'error'); });
+        }
+
+        function sendAccountVerification() {
+            var user = auth.currentUser;
+            if (!user) return;
+            if (user.emailVerified) { showNotification('Your email is already verified.', 'info'); return; }
+            user.sendEmailVerification().then(function() {
+                showNotification('Verification email sent to ' + user.email + '.', 'success');
+            }).catch(function(error) { showNotification('Could not send verification email: ' + error.message, 'error'); });
+        }
+
+        async function exportMyAccountData() {
+            var user = auth.currentUser;
+            if (!user) return;
+            showNotification('Preparing your account export…', 'info');
+            try {
+                var uid = user.uid;
+                var results = await Promise.all([
+                    db.collection('userAddresses').doc(uid).get(),
+                    db.collection('rewardsPoints').doc(uid).get()
+                ]);
+                var ledgerRows = [];
+                var ledgerCursor = null;
+                var ledgerMore = true;
+                while (ledgerMore && ledgerRows.length < 10000) {
+                    var ledgerQuery = db.collection('rewardsLedger').where('uid', '==', uid).orderBy('createdAt', 'desc').limit(100);
+                    if (ledgerCursor) ledgerQuery = ledgerQuery.startAfter(ledgerCursor);
+                    var ledgerPage = await ledgerQuery.get();
+                    ledgerPage.docs.forEach(function(doc) { ledgerRows.push(doc.data()); });
+                    ledgerCursor = ledgerPage.docs.length ? ledgerPage.docs[ledgerPage.docs.length - 1] : ledgerCursor;
+                    ledgerMore = ledgerPage.docs.length === 100;
+                }
+                var orderRows = [];
+                var cursor = null;
+                var more = true;
+                while (more && orderRows.length < 5000) {
+                    var query = db.collection('orders').where('uid', '==', uid).orderBy('createdAt', 'desc').limit(100);
+                    if (cursor) query = query.startAfter(cursor);
+                    var page = await query.get();
+                    page.docs.forEach(function(doc) {
+                        var o = doc.data();
+                        orderRows.push({
+                            orderNumber: o.orderNumber || doc.id, status: o.status || null, paymentStatus: o.paymentStatus || null,
+                            createdAt: o.createdAt && o.createdAt.toDate ? o.createdAt.toDate().toISOString() : null,
+                            paidAt: o.paidAt && o.paidAt.toDate ? o.paidAt.toDate().toISOString() : null,
+                            email: o.email || null, shipping: o.shipping || null, paymentMethod: o.paymentMethod || null,
+                            items: Array.isArray(o.items) ? o.items.map(function(item) { return { id: item.id, name: item.name, brand: item.brand, qty: item.qty, price: item.price, listPrice: item.listPrice }; }) : [],
+                            amounts: { subtotal: o.subtotal, promoDiscount: o.promoDiscount, couponDiscount: o.couponDiscount, pointsDiscount: o.pointsDiscount, tax: o.tax, taxRate: o.taxRate, shippingCost: o.shippingCost, total: o.total },
+                            trackingCarrier: o.trackingCarrier || null, trackingNumber: o.trackingNumber || null
+                        });
+                    });
+                    cursor = page.docs.length ? page.docs[page.docs.length - 1] : cursor;
+                    more = page.docs.length === 100;
+                }
+                var addressData = results[0].exists ? results[0].data().addresses || [] : [];
+                var ledger = ledgerRows.map(function(entry) {
+                    return { type: entry.type, points: entry.points, balanceAfter: entry.balanceAfter, description: entry.description, orderNumber: entry.orderNumber || null, createdAt: entry.createdAt && entry.createdAt.toDate ? entry.createdAt.toDate().toISOString() : null };
+                });
+                var payload = {
+                    exportedAt: new Date().toISOString(),
+                    account: { uid: uid, email: user.email || null, displayName: user.displayName || null, emailVerified: !!user.emailVerified },
+                    savedAddresses: addressData,
+                    rewardsPoints: results[1].exists ? Number(results[1].data().points || 0) : 0,
+                    rewardsActivity: ledger,
+                    rewardsActivityTruncated: ledgerRows.length >= 10000,
+                    orders: orderRows,
+                    ordersTruncated: orderRows.length >= 5000
+                };
+                var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+                var url = URL.createObjectURL(blob);
+                var link = document.createElement('a');
+                link.href = url; link.download = 'swiftdevices-account-' + new Date().toISOString().slice(0, 10) + '.json';
+                document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+                showNotification('Your account data export has been downloaded.', 'success');
+            } catch (error) { showNotification('Could not export account data: ' + error.message, 'error'); }
+        }
+
+        function requestMyAccountDeletion() {
+            var user = auth.currentUser;
+            if (!user || !confirm('Submit an account deletion request? Your account will stay active until support reviews the request.')) return;
+            firebase.app().functions('us-central1').httpsCallable('requestAccountDeletion')({}).then(function(response) {
+                showNotification(response.data.alreadyPending ? 'Your deletion request is already awaiting review.' : 'Your deletion request was submitted for review.', 'success');
+            }).catch(function(error) { showNotification('Could not submit deletion request: ' + error.message, 'error'); });
         }
 
         function resetPasswordFromDash() {

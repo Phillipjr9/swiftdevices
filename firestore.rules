@@ -75,6 +75,23 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    match /rewardsLedger/{entryId} {
+      allow get: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow list: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow create, update, delete: if false;
+    }
+
+    match /accountDeletionRequests/{uid} {
+      allow read: if isAdmin();
+      allow update: if isAdmin()
+        && resource.data.status == 'pending'
+        && request.resource.data.status == 'reviewed'
+        && request.resource.data.reviewedBy == request.auth.token.email
+        && request.resource.data.reviewedAt == request.time
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedBy','reviewedAt']);
+      allow create, delete: if false;
+    }
+
     match /contactMessages/{messageId} {
       allow create: if request.resource.data.keys().hasOnly(['firstName','lastName','email','subject','message','timestamp'])
         && request.resource.data.firstName is string && request.resource.data.firstName.size() <= 80
