@@ -5,6 +5,7 @@ const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { initializeApp } = require('firebase-admin/app');
 const { getFirestore, Timestamp } = require('firebase-admin/firestore');
 const { createHash, randomBytes } = require('node:crypto');
+const { hasAdminRole } = require('./admin-roles');
 
 initializeApp();
 const db = getFirestore();
@@ -419,8 +420,11 @@ exports.submitCryptoTransaction = onCall({ region: 'us-central1', maxInstances: 
 });
 
 exports.adminUpdateOrder = onCall({ region: 'us-central1', maxInstances: 10 }, async (request) => {
-  if (request.auth?.token?.admin !== true) throw new HttpsError('permission-denied', 'Administrator access is required.');
   const data = request.data || {};
+  const token = request.auth?.token;
+  if (data.reason !== undefined ? !hasAdminRole(token, 'finance') : !(hasAdminRole(token, 'orders') || hasAdminRole(token, 'finance'))) {
+    throw new HttpsError('permission-denied', 'The orders or finance admin role is required.');
+  }
   const orderNumber = cleanText(data.orderNumber, 64);
   if (!/^SW-(?:\d{6}|[A-Za-z0-9_-]{20})$/.test(orderNumber)) throw new HttpsError('invalid-argument', 'Invalid order number.');
   const orderRef = db.collection('orders').doc(orderNumber);
@@ -497,7 +501,7 @@ exports.adminUpdateOrder = onCall({ region: 'us-central1', maxInstances: 10 }, a
 });
 
 exports.verifyManualPayment = onCall({ region: 'us-central1', maxInstances: 10 }, async (request) => {
-  if (request.auth?.token?.admin !== true) throw new HttpsError('permission-denied', 'Administrator access is required.');
+  if (!hasAdminRole(request.auth?.token, 'finance')) throw new HttpsError('permission-denied', 'The finance admin role is required.');
   const orderNumber = cleanText(request.data?.orderNumber, 64);
   const method = cleanText(request.data?.method, 12);
   if (!isValidOrderNumber(orderNumber) || !['crypto', 'bank'].includes(method)) throw new HttpsError('invalid-argument', 'Invalid order payment request.');
@@ -641,7 +645,7 @@ exports.redeemGiftCard = onCall({ region: 'us-central1', maxInstances: 10 }, asy
 
 
 exports.adjustRewardPoints = onCall({ region: 'us-central1', maxInstances: 10 }, async (request) => {
-  if (request.auth?.token?.admin !== true) throw new HttpsError('permission-denied', 'Administrator access is required.');
+  if (!hasAdminRole(request.auth?.token, 'finance')) throw new HttpsError('permission-denied', 'The finance admin role is required.');
   const uid = cleanText(request.data?.uid, 128);
   const delta = Number(request.data?.delta);
   const description = cleanText(request.data?.description, 200);

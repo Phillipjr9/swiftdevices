@@ -37,6 +37,15 @@ test('admin dashboard revenue includes only paid orders and exposes pending-paym
   assert.match(admin, /id="orders-from-date"/);
   assert.match(admin, /function changeOrderPage\(direction\)/);
   assert.match(admin, /query\.startAfter\(previousPage\[previousPage\.length - 1\]\)/);
+  assert.match(admin, /currentAdminRole = tokenResult\.claims\.admin === true \? 'owner' : tokenResult\.claims\.adminRole/);
+  assert.match(admin, /financeCanVerify = currentAdminRole === 'owner' \|\| currentAdminRole === 'finance'/);
+  const rules = read('firestore.rules');
+  const functions = read('functions/index.js');
+  assert.match(rules, /request\.auth\.token\.adminRole in \['orders', 'catalog', 'finance', 'support'\]/);
+  assert.match(rules, /allow update: if false;/);
+  assert.match(rules, /function canViewOrders\(\).*hasAdminRole\('support'\)/);
+  assert.match(rules, /match \/auditLog\/\{logId\} \{\s+allow read: if isOwner\(\);/);
+  assert.match(functions, /hasAdminRole\(request\.auth\?\.token, 'finance'\)/);
 });
 
 test('admin page has no public email allowlist and depends on a verified admin claim', () => {
@@ -55,8 +64,8 @@ test('raw review and question documents are admin-only; public display data is p
   const rules = read('firestore.rules');
   const functions = read('functions/index.js');
   const storefront = read('public/index.html');
-  assert.match(rules, /match \/reviews\/\{reviewId\} \{\s+allow read: if isAdmin\(\);/);
-  assert.match(rules, /match \/productQA\/\{questionId\} \{\s+allow read: if isAdmin\(\);/);
+  assert.match(rules, /match \/reviews\/\{reviewId\} \{\s+allow read: if canSupport\(\);/);
+  assert.match(rules, /match \/productQA\/\{questionId\} \{\s+allow read: if canSupport\(\);/);
   assert.match(functions, /exports\.listPublicReviews = onCall/);
   assert.match(functions, /exports\.listProductQuestions = onCall/);
   assert.match(functions, /enforcePublicReadRateLimit\(request, 'public_reviews'\)/);

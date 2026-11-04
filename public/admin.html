@@ -460,7 +460,7 @@
                 <div id="panel-settings" class="p-6 hidden">
 
                     <!-- ── Promo / Sale Settings ── -->
-                    <div class="mb-10">
+                    <div id="settings-promo" class="mb-10">
                         <h2 class="text-lg font-bold text-brand-dark mb-1"><i class="fas fa-percent mr-2 text-orange-500"></i>Promo / Sale Settings</h2>
                         <p class="text-sm text-gray-500 mb-5">Control the sitewide promo banner, discount percentage, and schedule. Changes apply instantly to the live site.</p>
 
@@ -544,7 +544,7 @@
                     <hr class="my-8 border-gray-200">
 
                     <!-- ── Announcement Bar ── -->
-                    <div class="mb-10">
+                    <div id="settings-announcement" class="mb-10">
                         <h2 class="text-lg font-bold text-brand-dark mb-1"><i class="fas fa-bullhorn mr-2 text-blue-500"></i>Announcement Bar</h2>
                         <p class="text-sm text-gray-500 mb-5">Control the announcement banner shown below the promo bar on the main site.</p>
                         <div class="space-y-4">
@@ -581,7 +581,7 @@
                     <hr class="my-8 border-gray-200">
 
                     <!-- ── Hero Carousel Management ── -->
-                    <div class="mb-10">
+                    <div id="settings-hero" class="mb-10">
                         <h2 class="text-lg font-bold text-brand-dark mb-1"><i class="fas fa-images mr-2 text-purple-500"></i>Hero Carousel</h2>
                         <p class="text-sm text-gray-500 mb-5">Manage the hero slides on the homepage. Reorder, enable/disable, or edit slide content.</p>
                         <div id="hero-slides-list" class="space-y-3 mb-4">
@@ -594,7 +594,7 @@
                     <hr class="my-8 border-gray-200">
 
                     <!-- ── Bundle Management ── -->
-                    <div class="mb-10">
+                    <div id="settings-bundles" class="mb-10">
                         <h2 class="text-lg font-bold text-brand-dark mb-1"><i class="fas fa-cubes mr-2 text-teal-500"></i>Bundle Deals</h2>
                         <p class="text-sm text-gray-500 mb-5">Manage product bundles shown on the main site. Each bundle combines 3 products at 9% off.</p>
                         <div id="bundles-list" class="space-y-4 mb-4"></div>
@@ -640,6 +640,7 @@
                     <hr class="my-8 border-gray-200">
 
                     <!-- ── Crypto Wallets (existing) ── -->
+                    <div id="settings-wallets">
                     <h2 class="text-lg font-bold text-brand-dark mb-6"><i class="fas fa-wallet mr-2"></i>Crypto Wallet Addresses</h2>
                     <p class="text-sm text-gray-500 mb-4">Manage cryptocurrency wallet addresses shown to customers during checkout.</p>
                     <div id="wallet-list" class="space-y-3 mb-4"></div>
@@ -670,6 +671,7 @@
                             <input type="text" id="new-wallet-address" placeholder="Paste your wallet address" class="w-full px-3 py-2 border rounded-lg text-sm font-mono">
                         </div>
                         <button onclick="addCryptoWallet()" class="bg-brand-blue text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-blue-700 transition"><i class="fas fa-plus mr-1"></i>Add Wallet</button>
+                    </div>
                     </div>
                 </div>
 
@@ -847,10 +849,13 @@
             return;
         }
         user.getIdTokenResult(true).then(function(tokenResult) {
-            if (tokenResult.claims.admin === true) {
+            var allowedRoles = ['orders', 'catalog', 'finance', 'support'];
+            if (tokenResult.claims.admin === true || allowedRoles.indexOf(tokenResult.claims.adminRole) !== -1) {
+                currentAdminRole = tokenResult.claims.admin === true ? 'owner' : tokenResult.claims.adminRole;
                 gate.classList.add('hidden');
                 dashboard.classList.remove('hidden');
-                document.getElementById('admin-name').textContent = user.displayName || user.email;
+                document.getElementById('admin-name').textContent = (user.displayName || user.email) + ' · ' + currentAdminRole;
+                applyAdminRole();
                 loadAllData();
                 return;
             }
@@ -867,9 +872,33 @@
         // ════════════════════════════════════════════
     //  TAB SWITCHING
     // ════════════════════════════════════════════
+    var currentAdminRole = 'owner';
     var ALL_TABS = ['products','orders','customers','tradeins','giftcards','rewards','reviews','blog','contacts','coupons','analytics','auditlog','settings'];
+    var ADMIN_TAB_ROLES = {
+        products: ['owner','catalog'], orders: ['owner','orders','finance','support'], customers: ['owner','finance','support'],
+        tradeins: ['owner','support'], giftcards: ['owner','finance'], rewards: ['owner','finance'], reviews: ['owner','support'],
+        blog: ['owner','catalog'], contacts: ['owner','support'], coupons: ['owner','finance'], analytics: ['owner','orders','finance'],
+        auditlog: ['owner'], settings: ['owner','catalog','finance']
+    };
+    function adminCanSeeTab(tab) { return (ADMIN_TAB_ROLES[tab] || []).indexOf(currentAdminRole) !== -1; }
+    function applyAdminRole() {
+        ALL_TABS.forEach(function(tab) {
+            var button = document.getElementById('atab-' + tab);
+            if (button) button.classList.toggle('hidden', !adminCanSeeTab(tab));
+        });
+        var catalogSettings = currentAdminRole === 'owner' || currentAdminRole === 'catalog';
+        ['settings-promo','settings-announcement','settings-hero','settings-bundles'].forEach(function(id) {
+            var section = document.getElementById(id);
+            if (section) section.classList.toggle('hidden', !catalogSettings);
+        });
+        var walletSettings = document.getElementById('settings-wallets');
+        if (walletSettings) walletSettings.classList.toggle('hidden', currentAdminRole !== 'owner' && currentAdminRole !== 'finance');
+        var firstTab = ALL_TABS.find(adminCanSeeTab);
+        if (firstTab) switchTab(firstTab);
+    }
 
     function switchTab(tab) {
+        if (!adminCanSeeTab(tab)) return;
         ALL_TABS.forEach(function(t) {
             var btn = document.getElementById('atab-' + t);
             var panel = document.getElementById('panel-' + t);
@@ -887,23 +916,25 @@
     //  LOAD ALL DATA
     // ════════════════════════════════════════════
     function loadAllData() {
-        loadProducts();
-        loadOrders();
-        loadCustomers();
-        loadTradeIns();
-        loadGiftCards();
-        loadRewards();
-        loadReviews();
-        loadBlogPosts();
-        loadContacts();
-        loadCoupons();
-        loadAdminWallets();
-        loadPromoSettings();
-        loadAuditLog();
-        loadAnalytics();
-        loadAnnouncementSettings();
-        loadHeroSlides();
-        loadBundles();
+        var role = currentAdminRole;
+        if (role === 'owner') {
+            loadProducts(); loadOrders(); loadCustomers(); loadTradeIns(); loadGiftCards(); loadRewards();
+            loadReviews(); loadBlogPosts(); loadContacts(); loadCoupons(); loadAdminWallets();
+            loadPromoSettings(); loadAuditLog(); loadAnalytics(); loadAnnouncementSettings(); loadHeroSlides(); loadBundles();
+            return;
+        }
+        if (['orders', 'finance', 'support'].indexOf(role) !== -1) loadOrders();
+        if (['finance', 'support'].indexOf(role) !== -1) loadCustomers();
+        if (role === 'orders' || role === 'finance') loadAnalytics();
+        if (role === 'catalog') {
+            loadProducts(); loadBlogPosts(); loadPromoSettings(); loadAnnouncementSettings(); loadHeroSlides(); loadBundles();
+        }
+        if (role === 'finance') {
+            loadGiftCards(); loadRewards(); loadCoupons(); loadAdminWallets();
+        }
+        if (role === 'support') {
+            loadTradeIns(); loadReviews(); loadContacts();
+        }
     }
 
     // ════════════════════════════════════════════
@@ -1288,7 +1319,7 @@
             var dateStr = o.createdAt ? new Date(o.createdAt.toDate()).toLocaleDateString() : 'N/A';
             var payMethod = o.paymentMethod || 'card';
             var statusOpts = ['confirmed','processing','shipped','delivered','awaiting_payment','cancelled'];
-            var selectHtml = '<select onchange="updateOrderStatus(\'' + o._id + '\', this.value)" class="status-select">';
+            var selectHtml = '<select ' + (currentAdminRole === 'support' ? 'disabled ' : '') + 'onchange="updateOrderStatus(\'' + o._id + '\', this.value)" class="status-select">';
             statusOpts.forEach(function(s) {
                 selectHtml += '<option value="' + s + '"' + (s === status ? ' selected' : '') + '>' + s.replace(/_/g,' ') + '</option>';
             });
@@ -1356,6 +1387,7 @@
             + '</div>';
         // Crypto payment verification section
         if (o.paymentMethod === 'crypto') {
+            var financeCanVerify = currentAdminRole === 'owner' || currentAdminRole === 'finance';
             var coin = o.cryptoCoin || 'BTC';
             var txHash = o.cryptoTxHash || '';
             var verified = o.cryptoVerified === true;
@@ -1374,10 +1406,12 @@
                 if (verified) {
                     html += '<div class="flex items-center gap-2 text-green-700 bg-green-50 rounded-lg p-2"><i class="fas fa-check-circle"></i><span class="text-sm font-semibold">Payment Verified</span></div>';
                 } else {
-                    html += '<div class="flex gap-2">'
+                    if (financeCanVerify) {
+                        html += '<div class="flex gap-2">'
                         + '<button onclick="verifyCryptoPayment(\'' + escHtml(docId) + '\', \'' + escHtml(coin) + '\', \'' + escHtml(txHash) + '\')" class="text-sm bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700"><i class="fas fa-check-circle mr-1"></i>Mark Payment Verified &amp; Confirm Order</button>'
-                        + '<button onclick="rejectCryptoPayment(\'' + escHtml(docId) + '\')" class="text-sm bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700"><i class="fas fa-times-circle mr-1"></i>Reject</button>'
-                        + '</div>';
+                            + '<button onclick="rejectCryptoPayment(\'' + escHtml(docId) + '\')" class="text-sm bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700"><i class="fas fa-times-circle mr-1"></i>Reject</button>'
+                            + '</div>';
+                    } else html += '<p class="text-xs text-gray-500">Payment verification is restricted to finance staff.</p>';
                 }
             } else {
                 html += '<div class="flex items-center gap-2 text-yellow-700 bg-yellow-100 rounded-lg p-2"><i class="fas fa-clock"></i><span class="text-sm font-semibold">Awaiting TX hash from customer — payment not yet submitted</span></div>';
@@ -1386,6 +1420,7 @@
         }
         // Bank Transfer receipt section
         if (o.paymentMethod === 'bank' || o.bankTransfer) {
+            var financeCanVerify = currentAdminRole === 'owner' || currentAdminRole === 'finance';
             html += '<div class="bg-green-50 border border-green-200 rounded-xl p-4">'
                 + '<h4 class="font-bold text-sm text-green-800 mb-3"><i class="fas fa-university mr-1"></i>Bank Transfer Details</h4>';
             if (o.bankReceiptUrl) {
@@ -1401,19 +1436,20 @@
                         + '</div>';
                 }
                 if (o.status === 'awaiting_payment') {
-                    html += '<div class="flex gap-2">'
-                        + '<button onclick="confirmBankPayment(\'' + escHtml(docId) + '\')" class="text-sm bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700"><i class="fas fa-check-circle mr-1"></i>Confirm Payment &amp; Process Order</button>'
-                        + '<button onclick="rejectBankPayment(\'' + escHtml(docId) + '\')" class="text-sm bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700"><i class="fas fa-times-circle mr-1"></i>Reject</button>'
-                        + '</div>';
+                    if (financeCanVerify) {
+                        html += '<div class="flex gap-2">'
+                            + '<button onclick="confirmBankPayment(\'' + escHtml(docId) + '\')" class="text-sm bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700"><i class="fas fa-check-circle mr-1"></i>Confirm Payment &amp; Process Order</button>'
+                            + '<button onclick="rejectBankPayment(\'' + escHtml(docId) + '\')" class="text-sm bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700"><i class="fas fa-times-circle mr-1"></i>Reject</button>'
+                            + '</div>';
+                    } else html += '<p class="text-xs text-gray-500">Payment verification is restricted to finance staff.</p>';
                 } else {
                     html += '<div class="flex items-center gap-2 text-green-700 bg-green-100 rounded-lg p-2"><i class="fas fa-check-circle"></i><span class="text-sm font-semibold">Payment Confirmed</span></div>';
                 }
             } else {
                 if (o.status === 'awaiting_payment') {
                     html += '<div class="flex items-center gap-2 text-yellow-700 bg-yellow-100 rounded-lg p-2"><i class="fas fa-clock"></i><span class="text-sm font-semibold">Awaiting bank transfer — no receipt uploaded yet</span></div>';
-                    html += '<div class="flex gap-2 mt-2">'
-                        + '<button onclick="confirmBankPayment(\'' + escHtml(docId) + '\')" class="text-sm bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700"><i class="fas fa-check-circle mr-1"></i>Confirm Payment Manually</button>'
-                        + '</div>';
+                    if (financeCanVerify) html += '<div class="flex gap-2 mt-2"><button onclick="confirmBankPayment(\'' + escHtml(docId) + '\')" class="text-sm bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700"><i class="fas fa-check-circle mr-1"></i>Confirm Payment Manually</button></div>';
+                    else html += '<p class="text-xs text-gray-500 mt-2">Payment verification is restricted to finance staff.</p>';
                 } else {
                     html += '<div class="flex items-center gap-2 text-green-700 bg-green-100 rounded-lg p-2"><i class="fas fa-check-circle"></i><span class="text-sm font-semibold">Payment Confirmed</span></div>';
                 }
@@ -2897,6 +2933,7 @@
     }
 
     function saveTracking(docId) {
+        if (currentAdminRole === 'support') { alert('Tracking updates require the orders or finance role.'); return; }
         var carrier = document.getElementById('tracking-carrier-' + docId).value;
         var trackNum = document.getElementById('tracking-number-' + docId).value.trim();
         if (!carrier || !trackNum) { alert('Please select a carrier and enter a tracking number.'); return; }
