@@ -108,19 +108,19 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-6">
                 <div class="stat-card text-white rounded-2xl p-5">
-                    <p class="text-white/70 text-xs uppercase tracking-wide">Recent Orders (100)</p>
+                    <p class="text-white/70 text-xs uppercase tracking-wide">Orders (page)</p>
                     <p class="text-3xl font-bold mt-1" id="stat-orders">--</p>
                 </div>
                 <div class="bg-white rounded-2xl p-5 shadow-sm">
-                    <p class="text-gray-500 text-xs uppercase tracking-wide">Paid Revenue (100)</p>
+                    <p class="text-gray-500 text-xs uppercase tracking-wide">Paid Revenue (page)</p>
                     <p class="text-3xl font-bold text-green-600 mt-1" id="stat-revenue">--</p>
                 </div>
                 <div class="bg-white rounded-2xl p-5 shadow-sm">
-                    <p class="text-gray-500 text-xs uppercase tracking-wide">Pending Payments (100)</p>
+                    <p class="text-gray-500 text-xs uppercase tracking-wide">Pending Payments (page)</p>
                     <p class="text-3xl font-bold text-amber-600 mt-1" id="stat-pending-payments">--</p>
                 </div>
                 <div class="bg-white rounded-2xl p-5 shadow-sm">
-                    <p class="text-gray-500 text-xs uppercase tracking-wide">Customers (100)</p>
+                    <p class="text-gray-500 text-xs uppercase tracking-wide">Customers (page)</p>
                     <p class="text-3xl font-bold text-brand-blue mt-1" id="stat-customers">--</p>
                 </div>
                 <div class="bg-white rounded-2xl p-5 shadow-sm">
@@ -181,11 +181,14 @@
 
                 <!-- ==================== ORDERS TAB ==================== -->
                 <div id="panel-orders" class="p-6 hidden">
-                    <div class="flex justify-between items-center mb-4">
+                    <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between mb-4">
                         <h2 class="text-lg font-bold text-brand-dark">Orders</h2>
-                        <div class="flex gap-2">
-                            <input type="text" id="order-search" oninput="renderOrders()" placeholder="Search orders..." class="text-sm border rounded-lg px-3 py-2 w-40">
-                            <button onclick="exportOrdersCSV()" class="text-sm bg-green-600 text-white px-3 py-2 rounded-lg font-semibold hover:bg-green-700"><i class="fas fa-file-csv mr-1"></i>Export CSV</button>
+                        <div class="flex flex-wrap gap-2">
+                            <input type="date" id="orders-from-date" aria-label="Orders from date" class="text-sm border rounded-lg px-3 py-2">
+                            <input type="date" id="orders-to-date" aria-label="Orders to date" class="text-sm border rounded-lg px-3 py-2">
+                            <button onclick="loadOrders(true)" class="text-sm bg-brand-blue text-white px-3 py-2 rounded-lg font-semibold hover:bg-blue-700">Apply dates</button>
+                            <input type="text" id="order-search" oninput="renderOrders()" placeholder="Search this page..." class="text-sm border rounded-lg px-3 py-2 w-40">
+                            <button onclick="exportOrdersCSV()" class="text-sm bg-green-600 text-white px-3 py-2 rounded-lg font-semibold hover:bg-green-700"><i class="fas fa-file-csv mr-1"></i>Export this page</button>
                             <select id="order-filter" onchange="renderOrders()" class="text-sm border rounded-lg px-3 py-2">
                                 <option value="">All Statuses</option>
                                 <option value="confirmed">Confirmed</option>
@@ -197,12 +200,14 @@
                                 <option value="payment_paid">Payment Paid</option>
                                 <option value="cancelled">Cancelled</option>
                             </select>
-                            <button onclick="loadOrders()" class="text-brand-blue text-sm hover:underline"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
+                            <button onclick="loadOrders(true)" class="text-brand-blue text-sm hover:underline"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
                         </div>
                     </div>
+                    <p class="text-xs text-gray-400 mb-2">Date range applies to the full order query. Search, status filters, summary cards, and CSV export apply to the current 100-order page.</p>
                     <div id="orders-table" class="overflow-x-auto">
                         <div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>
                     </div>
+                    <div id="orders-pagination" class="flex items-center justify-between gap-3 mt-4"></div>
                 </div>
 
                 <!-- ==================== CUSTOMERS TAB ==================== -->
@@ -1158,30 +1163,94 @@
     //  ORDERS
     // ════════════════════════════════════════════
     var allOrders = [];
+    var orderPageDocs = [];
+    var orderPageHasNext = [];
+    var orderPageIndex = 0;
+    var orderPageSize = 100;
+    var orderQueryKey = '';
+    var orderLoading = false;
 
-    function loadOrders() {
+    function updateOrderPageStats(docs) {
+        var orders = docs.map(function(doc) { return doc.data(); });
+        var paidRevenue = 0;
+        var pendingPayments = 0;
+        var emails = new Set();
+        orders.forEach(function(order) {
+            if (order.paymentStatus === 'paid') paidRevenue += Number(order.total) || 0;
+            if (order.paymentStatus === 'pending' || order.status === 'awaiting_payment') pendingPayments++;
+            if (order.email) emails.add(order.email);
+        });
+        document.getElementById('stat-orders').textContent = orders.length;
+        document.getElementById('stat-revenue').textContent = '$' + paidRevenue.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+        document.getElementById('stat-pending-payments').textContent = pendingPayments;
+        document.getElementById('stat-customers').textContent = emails.size;
+    }
+
+    function renderOrderPagination() {
+        var container = document.getElementById('orders-pagination');
+        if (!container) return;
+        var docs = orderPageDocs[orderPageIndex] || [];
+        container.innerHTML = '<button type="button" onclick="changeOrderPage(-1)" ' + (orderPageIndex === 0 || orderLoading ? 'disabled' : '') + ' class="border rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-40">Previous</button>'
+            + '<span class="text-xs text-gray-500">Page ' + (orderPageIndex + 1) + ' · ' + docs.length + ' orders</span>'
+            + '<button type="button" onclick="changeOrderPage(1)" ' + (!orderPageHasNext[orderPageIndex] || orderLoading ? 'disabled' : '') + ' class="border rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-40">Next</button>';
+    }
+
+    function changeOrderPage(direction) {
+        var target = orderPageIndex + direction;
+        if (target < 0 || (direction > 0 && !orderPageHasNext[orderPageIndex])) return;
+        orderPageIndex = target;
+        loadOrders(false);
+    }
+
+    function loadOrders(reset) {
         var container = document.getElementById('orders-table');
-        container.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>';
-        db.collection('orders').orderBy('createdAt', 'desc').limit(100).get().then(function(snap) {
-            allOrders = [];
-            var paidRevenue = 0;
-            var pendingPayments = 0;
-            var emails = new Set();
-            snap.forEach(function(doc) {
-                var o = doc.data();
-                o._id = doc.id;
-                allOrders.push(o);
-                if (o.paymentStatus === 'paid') paidRevenue += Number(o.total) || 0;
-                if (o.paymentStatus === 'pending' || o.status === 'awaiting_payment') pendingPayments++;
-                if (o.email) emails.add(o.email);
-            });
-            document.getElementById('stat-orders').textContent = allOrders.length;
-            document.getElementById('stat-revenue').textContent = '$' + paidRevenue.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
-            document.getElementById('stat-pending-payments').textContent = pendingPayments;
-            document.getElementById('stat-customers').textContent = emails.size;
+        if (!container || orderLoading) return;
+        var fromValue = (document.getElementById('orders-from-date') || {}).value || '';
+        var toValue = (document.getElementById('orders-to-date') || {}).value || '';
+        if (fromValue && toValue && fromValue > toValue) {
+            container.innerHTML = '<p class="text-red-500 text-center py-4">The start date must be on or before the end date.</p>';
+            return;
+        }
+        var queryKey = fromValue + '|' + toValue;
+        if (reset !== false || queryKey !== orderQueryKey) {
+            orderPageDocs = [];
+            orderPageHasNext = [];
+            orderPageIndex = 0;
+            orderQueryKey = queryKey;
+        }
+        if (orderPageDocs[orderPageIndex]) {
+            allOrders = orderPageDocs[orderPageIndex].map(function(doc) { var order = doc.data(); order._id = doc.id; return order; });
+            updateOrderPageStats(orderPageDocs[orderPageIndex]);
             renderOrders();
+            renderOrderPagination();
+            return;
+        }
+        orderLoading = true;
+        container.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-brand-blue text-xl"></i></div>';
+        var query = db.collection('orders');
+        if (fromValue) query = query.where('createdAt', '>=', firebase.firestore.Timestamp.fromDate(new Date(fromValue + 'T00:00:00')));
+        if (toValue) {
+            var endDate = new Date(toValue + 'T00:00:00');
+            endDate.setDate(endDate.getDate() + 1);
+            query = query.where('createdAt', '<', firebase.firestore.Timestamp.fromDate(endDate));
+        }
+        query = query.orderBy('createdAt', 'desc').limit(orderPageSize);
+        if (orderPageIndex > 0) {
+            var previousPage = orderPageDocs[orderPageIndex - 1] || [];
+            if (previousPage.length) query = query.startAfter(previousPage[previousPage.length - 1]);
+        }
+        query.get().then(function(snap) {
+            orderPageDocs[orderPageIndex] = snap.docs;
+            orderPageHasNext[orderPageIndex] = snap.docs.length === orderPageSize;
+            allOrders = snap.docs.map(function(doc) { var order = doc.data(); order._id = doc.id; return order; });
+            orderLoading = false;
+            updateOrderPageStats(snap.docs);
+            renderOrders();
+            renderOrderPagination();
         }).catch(function(e) {
+            orderLoading = false;
             container.innerHTML = '<p class="text-red-500 text-center py-4">Error: ' + escHtml(e.message) + '</p>';
+            renderOrderPagination();
         });
     }
 
@@ -1190,7 +1259,7 @@
         var filterStatus = document.getElementById('order-filter').value;
         var searchTerm = (document.getElementById('order-search').value || '').toLowerCase();
         var filtered = allOrders.filter(function(o) {
-            if (filterStatus === 'payment_pending' && o.paymentStatus !== 'pending') return false;
+            if (filterStatus === 'payment_pending' && o.paymentStatus !== 'pending' && o.status !== 'awaiting_payment') return false;
             if (filterStatus === 'payment_paid' && o.paymentStatus !== 'paid') return false;
             if (filterStatus && filterStatus !== 'payment_pending' && filterStatus !== 'payment_paid' && (o.status || 'processing') !== filterStatus) return false;
             if (searchTerm) {
@@ -1200,7 +1269,8 @@
             return true;
         });
         if (filtered.length === 0) {
-            container.innerHTML = '<p class="text-gray-500 text-center py-4">No orders' + (filterStatus ? ' with status "' + filterStatus + '"' : '') + '.</p>';
+            container.innerHTML = '<p class="text-gray-500 text-center py-4">No orders' + (filterStatus ? ' with status "' + filterStatus + '"' : '') + ' on this page.</p>';
+            renderOrderPagination();
             return;
         }
         var html = '<table class="w-full text-sm"><thead><tr class="border-b">'
@@ -1249,6 +1319,7 @@
         });
         html += '</tbody></table>';
         container.innerHTML = html;
+        renderOrderPagination();
     }
 
     function updateOrderStatus(docId, newStatus) {

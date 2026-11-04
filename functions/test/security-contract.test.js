@@ -30,10 +30,13 @@ test('checkout calls the trusted order function and the payment-return page cann
 
 test('admin dashboard revenue includes only paid orders and exposes pending-payment counts and filters', () => {
   const admin = read('public/admin.html');
-  assert.match(admin, /if \(o\.paymentStatus === 'paid'\) paidRevenue \+= Number\(o\.total\) \|\| 0/);
+  assert.match(admin, /if \(order\.paymentStatus === 'paid'\) paidRevenue \+= Number\(order\.total\) \|\| 0/);
   assert.match(admin, /id="stat-pending-payments"/);
   assert.match(admin, /value="payment_pending"/);
   assert.match(admin, /value="payment_paid"/);
+  assert.match(admin, /id="orders-from-date"/);
+  assert.match(admin, /function changeOrderPage\(direction\)/);
+  assert.match(admin, /query\.startAfter\(previousPage\[previousPage\.length - 1\]\)/);
 });
 
 test('admin page has no public email allowlist and depends on a verified admin claim', () => {
