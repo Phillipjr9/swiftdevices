@@ -47,7 +47,9 @@ test('admin dashboard revenue includes only paid orders and exposes pending-paym
   assert.match(rules, /match \/auditLog\/\{logId\} \{\s+allow read: if isOwner\(\);/);
   assert.match(functions, /hasAdminRole\(request\.auth\?\.token, 'finance'\)/);
   assert.match(functions, /exports\.recordManualRefund = onCall/);
-  assert.match(functions, /if \(!CHECKOUT_READY\) throw new HttpsError\('failed-precondition'/);
+  assert.doesNotMatch(functions, /CHECKOUT_READY|CHECKOUT_TAX_RATE/);
+  assert.match(functions, /normalizeCheckoutPricing\(checkoutPricingSnap/);
+  assert.match(rules, /'checkoutPricing'/);
   assert.match(functions, /paymentStatus: 'refunded', refundStatus: 'completed'/);
   assert.match(functions, /A paid or refunded order cannot be cancelled automatically/);
   assert.match(admin, /Record completed full refund/);

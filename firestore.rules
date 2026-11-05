@@ -24,7 +24,7 @@ service cloud.firestore {
 
     match /siteSettings/{settingId} {
       allow get: if isOwner()
-        || settingId in ['productOverrides', 'promoConfig', 'announcement', 'heroCarousel', 'bundles', 'cryptoWallets']
+        || settingId in ['productOverrides', 'promoConfig', 'announcement', 'heroCarousel', 'bundles', 'cryptoWallets', 'checkoutPricing']
         || (canCatalog() && settingId in ['productOverrides', 'promoConfig', 'announcement', 'heroCarousel', 'bundles'])
         || (canFinance() && settingId in ['cryptoWallets', 'coupons']);
       allow list: if isOwner();

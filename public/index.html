@@ -1397,18 +1397,19 @@
                         <span id="cart-subtotal">$0</span>
                     </div>
                     <div class="flex justify-between text-sm">
-                        <span>Tax (8%):</span>
+                        <span id="cart-tax-label">Tax:</span>
                         <span id="cart-tax">$0</span>
                     </div>
                     <div class="flex justify-between text-sm">
                         <span>Shipping:</span>
-                        <span class="text-green-600">Free</span>
+                        <span id="cart-shipping">—</span>
                     </div>
                     <div class="flex justify-between text-lg font-bold border-t border-gray-300 pt-2">
                         <span>Total:</span>
                         <span id="cart-total" class="text-brand-blue">$0</span>
                     </div>
                 </div>
+                <p class="text-xs text-gray-500 mb-3">Tax and shipping are flat amounts set by the store; tax does not vary by destination.</p>
                 <button onclick="checkout()" class="w-full bg-brand-blue text-white py-3 rounded-full font-bold hover:bg-blue-700 transition shadow-lg">
                     Proceed to Checkout
                 </button>
@@ -1574,12 +1575,12 @@
                                     <span id="checkout-points-discount">$0</span>
                                 </div>
                                 <div class="flex justify-between text-sm text-gray-600">
-                                    <span>Tax (8%):</span>
+                                    <span id="checkout-tax-label">Tax:</span>
                                     <span id="checkout-tax">$0</span>
                                 </div>
                                 <div class="flex justify-between text-sm text-gray-600">
                                     <span>Shipping:</span>
-                                    <span class="text-green-600">Free</span>
+                                    <span id="checkout-shipping">—</span>
                                 </div>
                                 <div class="border-t border-gray-300 pt-2 flex justify-between font-bold text-lg">
                                     <span>Total:</span>
@@ -1588,6 +1589,7 @@
                             </div>
                         </div>
 
+                        <p class="text-xs text-gray-500 mt-2">Tax is a flat manually configured rate, not destination-specific; shipping is a flat store charge, not carrier-rated.</p>
                         <button type="submit" class="w-full mt-6 bg-brand-blue text-white py-3 rounded-full font-bold hover:bg-blue-700 transition shadow-lg">
                             Continue to Payment <i class="fas fa-arrow-right ml-2"></i>
                         </button>
@@ -1705,12 +1707,12 @@
                             <span id="checkout-points-val-step2">$0</span>
                         </div>
                         <div class="flex justify-between text-sm text-gray-600">
-                            <span>Tax (8%):</span>
+                            <span id="checkout-tax-label-step2">Tax:</span>
                             <span id="checkout-tax-step2">$0</span>
                         </div>
                         <div class="flex justify-between text-sm text-gray-600">
                             <span>Shipping:</span>
-                            <span class="text-green-600">Free</span>
+                            <span id="checkout-shipping-step2">—</span>
                         </div>
                         <div class="border-t border-gray-300 pt-2 flex justify-between font-bold text-lg">
                             <span>Total:</span>
@@ -1718,6 +1720,7 @@
                         </div>
                     </div>
 
+                    <p class="text-xs text-gray-500 mt-2">Tax and shipping are flat manual store settings, not destination-specific tax or carrier-calculated shipping.</p>
                     <div class="flex gap-3 mt-6">
                         <button onclick="goBackToShipping()" class="flex-1 border border-gray-300 text-gray-700 py-3 rounded-full font-bold hover:bg-gray-50 transition">
                             <i class="fas fa-arrow-left mr-2"></i>Back
@@ -1767,12 +1770,12 @@
                                     <span id="checkout-points-val-step3">$0</span>
                                 </div>
                                 <div class="flex justify-between text-sm text-gray-600">
-                                    <span>Tax (8%):</span>
+                                    <span id="checkout-tax-label-step3">Tax:</span>
                                     <span id="checkout-tax-step3">$0</span>
                                 </div>
                                 <div class="flex justify-between text-sm text-gray-600">
                                     <span>Shipping:</span>
-                                    <span class="text-green-600">Free</span>
+                                    <span id="checkout-shipping-step3">—</span>
                                 </div>
                                 <div class="border-t border-gray-300 pt-2 flex justify-between font-bold text-lg">
                                     <span>Total:</span>
@@ -1781,6 +1784,7 @@
                             </div>
                         </div>
 
+                        <p class="text-xs text-gray-500">Tax and shipping are flat manual store settings, not destination-specific tax or carrier-calculated shipping.</p>
                         <div class="flex gap-3">
                             <button onclick="goBackToPayment()" class="flex-1 border border-gray-300 text-gray-700 py-3 rounded-full font-bold hover:bg-gray-50 transition">
                                 <i class="fas fa-arrow-left mr-2"></i>Back
@@ -2240,6 +2244,26 @@
 
         // State Management
         let cart = [];
+        let checkoutPricing = { enabled: false, taxRate: 0, shippingCost: 0 };
+        function loadCheckoutPricing() {
+            return db.collection('siteSettings').doc('checkoutPricing').get().then(function(doc) {
+                var data = doc.exists ? doc.data() : {};
+                var rate = Number(data.taxRate);
+                var shipping = Number(data.shippingCost);
+                checkoutPricing = data.enabled === true && Number.isFinite(rate) && rate >= 0 && rate <= 0.2 && Number.isFinite(shipping) && shipping >= 0 && shipping <= 10000
+                    ? { enabled: true, taxRate: rate, shippingCost: shipping }
+                    : { enabled: false, taxRate: 0, shippingCost: 0 };
+                updateCartUI();
+                if (typeof refreshCheckoutTotals === 'function') refreshCheckoutTotals();
+                return checkoutPricing;
+            }).catch(function() {
+                checkoutPricing = { enabled: false, taxRate: 0, shippingCost: 0 };
+                updateCartUI();
+                return checkoutPricing;
+            });
+        }
+        function checkoutTaxLabel() { return checkoutPricing.enabled ? 'Tax (' + (checkoutPricing.taxRate * 100).toFixed(2).replace(/\.?0+$/, '') + '%):' : 'Tax (set by store before checkout):'; }
+        function checkoutMoney(value) { return '$' + Number(value || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
         let wishlist = [];
         let compareList = [];
         let activeFilters = { categories: [], brands: [], maxPrice: 3000, minRating: 0 };
@@ -2248,6 +2272,7 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            loadCheckoutPricing();
             renderProducts();
             renderDeals();
             renderNewArrivals();
@@ -2507,20 +2532,25 @@
                 var ep = isPromoActive() ? getPromoPrice(item.price) : item.price;
                 return sum + (ep * item.quantity);
             }, 0);
-            const taxVal = Math.round(subtotalVal * TAX_RATE * 100) / 100;
-            const totalVal = Math.round((subtotalVal + taxVal) * 100) / 100;
+            const taxVal = checkoutPricing.enabled ? Math.round(subtotalVal * checkoutPricing.taxRate * 100) / 100 : 0;
+            const shippingVal = checkoutPricing.enabled ? checkoutPricing.shippingCost : 0;
+            const totalVal = Math.round((subtotalVal + taxVal + shippingVal) * 100) / 100;
             
             const badge = document.getElementById('cart-badge');
             const headerCount = document.getElementById('cart-count-header');
             const subtotal = document.getElementById('cart-subtotal');
             const taxEl = document.getElementById('cart-tax');
             const totalEl = document.getElementById('cart-total');
+            const shippingEl = document.getElementById('cart-shipping');
+            const taxLabelEl = document.getElementById('cart-tax-label');
             
             if (badge) badge.textContent = count;
             if (headerCount) headerCount.textContent = count;
             if (subtotal) subtotal.textContent = `$${subtotalVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            if (taxEl) taxEl.textContent = `$${taxVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            if (totalEl) totalEl.textContent = `$${totalVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            if (taxLabelEl) taxLabelEl.textContent = checkoutTaxLabel();
+            if (taxEl) taxEl.textContent = checkoutPricing.enabled ? checkoutMoney(taxVal) : '—';
+            if (shippingEl) shippingEl.textContent = checkoutPricing.enabled ? checkoutMoney(shippingVal) : '—';
+            if (totalEl) totalEl.textContent = checkoutPricing.enabled ? checkoutMoney(totalVal) : '—';
             
             const cartItems = document.getElementById('cart-items');
             if (cartItems) {
@@ -2670,7 +2700,6 @@
                                 ${product.oldPrice ? `<span class="text-lg text-gray-400 line-through ml-2">$${product.oldPrice.toFixed(2)}</span><span class="ml-2 text-sm font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-full">Save $${(product.oldPrice - product.price).toFixed(2)}</span>` : ''}
                                 ${isPromoActive() && !product.oldPrice ? `<span class="text-lg text-gray-400 line-through ml-2">$${product.price.toFixed(2)}</span><span class="ml-2 text-sm font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-full">${Math.round(PROMO_DISCOUNT * 100)}% OFF</span>` : ''}
                             </div>
-                            <p class="text-gray-600 text-sm leading-relaxed">Experience premium quality with the ${product.name}. Featuring cutting-edge technology and top-tier specs designed for the best user experience.</p>
                             ${product.officialUrl ? `<a href="${product.officialUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-sm text-brand-blue font-semibold hover:underline"><i class="fas fa-external-link-alt"></i>Check manufacturer details</a>` : ''}
 
                             <div class="grid grid-cols-2 gap-3">
@@ -2700,7 +2729,7 @@
                                 <span class="${product.stock === 0 ? 'text-red-500 font-semibold' : product.stock <= 3 ? 'text-orange-500 font-semibold' : 'text-green-600 font-semibold'}">
                                     ${product.stock === 0 ? '<i class="fas fa-times-circle mr-1"></i>Out of Stock' : product.stock <= 3 ? '<i class="fas fa-exclamation-triangle mr-1"></i>Only ' + product.stock + ' left' : '<i class="fas fa-check-circle mr-1"></i>In Stock (' + product.stock + ')'}
                                 </span>
-                                <span><i class="fas fa-truck mr-1 text-brand-blue"></i>Free Shipping</span>
+                                <span><i class="fas fa-truck mr-1 text-brand-blue"></i>Shipping charge shown at checkout</span>
                                 <span><i class="fas fa-shield-alt mr-1 text-green-500"></i>${product.warranty}</span>
                             </div>
 
@@ -2728,26 +2757,14 @@
 
                     <!-- Tab: Overview -->
                     <div class="detail-tab-content active px-8 py-6" id="tab-overview">
-                        <div class="grid md:grid-cols-3 gap-6">
-                            <div class="text-center p-4 bg-blue-50 rounded-2xl">
-                                <i class="fas fa-microchip text-3xl text-brand-blue mb-3"></i>
-                                <h4 class="font-bold text-brand-dark mb-1">Powerful Performance</h4>
-                                <p class="text-xs text-gray-500">Next-generation processor for lightning-fast speed and efficiency.</p>
-                            </div>
-                            <div class="text-center p-4 bg-purple-50 rounded-2xl">
-                                <i class="fas fa-camera text-3xl text-purple-600 mb-3"></i>
-                                <h4 class="font-bold text-brand-dark mb-1">Pro-Grade Camera</h4>
-                                <p class="text-xs text-gray-500">Capture stunning photos and videos in any lighting condition.</p>
-                            </div>
-                            <div class="text-center p-4 bg-green-50 rounded-2xl">
-                                <i class="fas fa-battery-full text-3xl text-green-600 mb-3"></i>
-                                <h4 class="font-bold text-brand-dark mb-1">All-Day Battery</h4>
-                                <p class="text-xs text-gray-500">Stay powered throughout your busiest days with fast charging.</p>
-                            </div>
-                        </div>
-                        <div class="mt-6 prose prose-sm text-gray-600 max-w-none">
-                            <p>The ${product.name} by ${product.brand} delivers an exceptional experience with premium build quality and innovative features. Whether you are a power user, creative professional, or everyday consumer, this device adapts to your needs seamlessly.</p>
-                            <p class="mt-3">With a focus on user experience, the ${product.name} combines sleek design with robust performance metrics, making it a standout choice in the ${product.category} category.</p>
+                        <h3 class="font-bold text-brand-dark mb-4">Key specifications</h3>
+                        <div class="grid md:grid-cols-3 gap-4">
+                            ${Object.entries(product.specs || {}).slice(0, 6).map(([key, val]) => `
+                                <div class="bg-gray-50 p-4 rounded-xl">
+                                    <span class="text-xs text-gray-500 uppercase">${escapeHTML(key)}</span>
+                                    <p class="font-semibold text-sm text-brand-dark mt-1">${escapeHTML(val)}</p>
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
 
@@ -3203,10 +3220,14 @@
         }
 
         function checkout() {
-            if (cart.length === 0) {
-                showNotification('Please add items to your cart first', 'error');
-                return;
-            }
+            if (cart.length === 0) { showNotification('Please add items to your cart first', 'error'); return; }
+            loadCheckoutPricing().then(function(pricing) {
+                if (!pricing.enabled) { showNotification('Checkout is temporarily unavailable while the store Owner configures approved tax and shipping.', 'error', 8000); return; }
+                openCheckoutWithPricing();
+            }).catch(function() { showNotification('Checkout pricing could not be verified. Please try again later.', 'error'); });
+        }
+
+        function openCheckoutWithPricing() {
             toggleCart();
             const modal = document.getElementById('checkout-modal');
             if (modal) modal.classList.remove('hidden');
@@ -3217,7 +3238,7 @@
             var discount = getDiscount(subtotal);
             var afterDiscount = subtotal - discount;
             const tax = getCheckoutTax(afterDiscount);
-            const total = Math.round((afterDiscount + tax) * 100) / 100;
+            const total = Math.round((afterDiscount + tax + checkoutPricing.shippingCost) * 100) / 100;
             
             if (summary) {
                 summary.innerHTML = cart.map(item => {
@@ -3234,12 +3255,16 @@
             const discountEl = document.getElementById('checkout-discount');
             const discountRow = document.getElementById('checkout-discount-row');
             const taxEl = document.getElementById('checkout-tax');
+            const taxLabelEl = document.getElementById('checkout-tax-label');
+            const shippingEl = document.getElementById('checkout-shipping');
             const totalEl = document.getElementById('checkout-total');
             if (subtotalEl) subtotalEl.textContent = `$${subtotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
             if (discountEl) { discountEl.textContent = discount > 0 ? `-$${discount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '$0.00'; }
             if (discountRow) discountRow.style.display = discount > 0 ? '' : 'none';
-            if (taxEl) taxEl.textContent = `$${tax.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            if (totalEl) totalEl.textContent = `$${total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            if (taxLabelEl) taxLabelEl.textContent = checkoutTaxLabel();
+            if (taxEl) taxEl.textContent = checkoutMoney(tax);
+            if (shippingEl) shippingEl.textContent = checkoutMoney(checkoutPricing.shippingCost);
+            if (totalEl) totalEl.textContent = checkoutMoney(total);
         }
 
         function closeCheckout() {
@@ -3259,7 +3284,6 @@
         let selectedPaymentMethod = 'crypto';
         let cryptoTimerInterval = null;
 
-        const TAX_RATE = 0.08;
 
         // ===== LOYALTY REWARDS SYSTEM =====
         const POINTS_PER_DOLLAR = 2;
@@ -3438,12 +3462,14 @@
             var pointsDisc = Math.min(getPointsDiscount(), afterDiscount);
             afterDiscount -= pointsDisc;
             var tax = getCheckoutTax(afterDiscount);
-            var total = Math.round((afterDiscount + tax) * 100) / 100;
+            var total = Math.round((afterDiscount + tax + checkoutPricing.shippingCost) * 100) / 100;
             var fmt = function(v) { return v.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); };
             // Step 1
             var cs = document.getElementById('checkout-subtotal');
             var cd = document.getElementById('checkout-discount');
             var ct = document.getElementById('checkout-tax');
+            var ctLabel = document.getElementById('checkout-tax-label');
+            var ship1 = document.getElementById('checkout-shipping');
             var cto = document.getElementById('checkout-total');
             if (cs) cs.textContent = '$' + fmt(subtotal);
             if (cd) { cd.textContent = discount > 0 ? '-$' + fmt(discount) : '$0.00'; cd.parentElement.style.display = discount > 0 ? '' : 'none'; }
@@ -3451,7 +3477,9 @@
             var pv = document.getElementById('checkout-points-discount');
             if (pr) pr.style.display = pointsDisc > 0 ? '' : 'none';
             if (pv) pv.textContent = '-$' + fmt(pointsDisc);
-            if (ct) ct.textContent = '$' + fmt(tax);
+            if (ctLabel) ctLabel.textContent = checkoutTaxLabel();
+            if (ct) ct.textContent = checkoutMoney(tax);
+            if (ship1) ship1.textContent = checkoutMoney(checkoutPricing.shippingCost);
             if (cto) cto.textContent = '$' + fmt(total);
             updatePointsUI();
         }
@@ -3590,7 +3618,7 @@
                 name: (ship.firstName || '') + ' ' + (ship.lastName || ''),
                 email: customerEmail,
                 ccemail: customerEmail,
-                message: 'Order: ' + (orderData.orderNumber || '') + '\nPayment is pending until verified by SwiftDevices. This email confirms order receipt only; it does not confirm payment.\n\nItems:\n' + itemsText + '\n\nSubtotal: $' + (orderData.subtotal || 0).toFixed(2) + '\nDiscount: ' + (orderData.discount ? '-$' + orderData.discount.toFixed(2) : '$0.00') + '\nTax: $' + (orderData.tax || 0).toFixed(2) + '\nTotal: $' + (orderData.total || 0).toFixed(2) + '\n\nPayment: ' + payLabel + '\nShipping: ' + [ship.address, ship.city, ship.state, ship.zip].filter(Boolean).join(', ') + '\n\n---\nSwiftDevices Support: swiftdevices@technologist.com\nhttps://swiftdevices-e2972.web.app'
+                message: 'Order: ' + (orderData.orderNumber || '') + '\nPayment is pending until verified by SwiftDevices. This email confirms order receipt only; it does not confirm payment.\n\nItems:\n' + itemsText + '\n\nSubtotal: $' + (orderData.subtotal || 0).toFixed(2) + '\nDiscount: ' + (orderData.discount ? '-$' + orderData.discount.toFixed(2) : '$0.00') + '\nTax (' + (Number(orderData.taxRate || 0) * 100).toFixed(2).replace(/\.?0+$/, '') + '%): $' + (orderData.tax || 0).toFixed(2) + '\nFlat shipping charge: $' + (orderData.shippingCost || 0).toFixed(2) + '\nTotal: $' + (orderData.total || 0).toFixed(2) + '\n\nPayment: ' + payLabel + '\nShipping: ' + [ship.address, ship.city, ship.state, ship.zip].filter(Boolean).join(', ') + '\n\n---\nSwiftDevices Support: swiftdevices@technologist.com\nhttps://swiftdevices-e2972.web.app'
             }).then(function(res) {
                 if (res.success) console.log('Order confirmation email sent');
                 else console.warn('Email send failed:', res.message);
@@ -3605,13 +3633,13 @@
         }
 
         function getCheckoutTax(subtotal) {
-            return Math.round(subtotal * TAX_RATE * 100) / 100;
+            return checkoutPricing.enabled ? Math.round(subtotal * checkoutPricing.taxRate * 100) / 100 : 0;
         }
 
         function getCheckoutTotal() {
             var subtotal = getCheckoutSubtotal();
             var tax = getCheckoutTax(subtotal);
-            return Math.round((subtotal + tax) * 100) / 100;
+            return Math.round((subtotal + tax + (checkoutPricing.enabled ? checkoutPricing.shippingCost : 0)) * 100) / 100;
         }
 
         function updateStepIndicators(activeStep) {
@@ -3654,7 +3682,7 @@
             var pointsDiscount = Math.min(getPointsDiscount(), Math.max(0, subtotal - discount));
             var afterDiscount = subtotal - discount - pointsDiscount;
             var tax = getCheckoutTax(afterDiscount);
-            var total = Math.round((afterDiscount + tax) * 100) / 100;
+            var total = Math.round((afterDiscount + tax + checkoutPricing.shippingCost) * 100) / 100;
 
             // For orders $20K+, require a verified (autocomplete-selected) address
             if (total >= 20000 && !addressVerified) {
@@ -3666,6 +3694,8 @@
             var d2 = document.getElementById('checkout-discount-val-step2');
             var dr2 = document.getElementById('checkout-discount-step2');
             var tx2 = document.getElementById('checkout-tax-step2');
+            var tx2Label = document.getElementById('checkout-tax-label-step2');
+            var ship2 = document.getElementById('checkout-shipping-step2');
             var pd2 = document.getElementById('checkout-points-step2');
             var pdv2 = document.getElementById('checkout-points-val-step2');
             var t2 = document.getElementById('checkout-total-step2');
@@ -3675,7 +3705,9 @@
             if (dr2) dr2.style.display = discount > 0 ? '' : 'none';
             if (pd2) pd2.style.display = pointsDiscount > 0 ? '' : 'none';
             if (pdv2) pdv2.textContent = '-$' + fmt(pointsDiscount);
-            if (tx2) tx2.textContent = '$' + fmt(tax);
+            if (tx2Label) tx2Label.textContent = checkoutTaxLabel();
+            if (tx2) tx2.textContent = checkoutMoney(tax);
+            if (ship2) ship2.textContent = checkoutMoney(checkoutPricing.shippingCost);
             if (t2) t2.textContent = '$' + fmt(total);
             if (ca) ca.textContent = '$' + fmt(total);
             var ba = document.getElementById('bank-transfer-amount');
@@ -3927,13 +3959,15 @@
             var pointsDiscount = Math.min(getPointsDiscount(), Math.max(0, subtotal - discount));
             var afterDiscount = subtotal - discount - pointsDiscount;
             var tax = getCheckoutTax(afterDiscount);
-            var total = Math.round((afterDiscount + tax) * 100) / 100;
+            var total = Math.round((afterDiscount + tax + checkoutPricing.shippingCost) * 100) / 100;
             var fmt = function(v) { return v.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); };
             var itemsEl = document.getElementById('confirm-items');
             var s3 = document.getElementById('checkout-subtotal-step3');
             var d3 = document.getElementById('checkout-discount-val-step3');
             var dr3 = document.getElementById('checkout-discount-step3');
             var tx3 = document.getElementById('checkout-tax-step3');
+            var tx3Label = document.getElementById('checkout-tax-label-step3');
+            var ship3 = document.getElementById('checkout-shipping-step3');
             var pd3 = document.getElementById('checkout-points-step3');
             var pdv3 = document.getElementById('checkout-points-val-step3');
             var t3 = document.getElementById('checkout-total-step3');
@@ -3947,7 +3981,9 @@
             if (dr3) dr3.style.display = discount > 0 ? '' : 'none';
             if (pd3) pd3.style.display = pointsDiscount > 0 ? '' : 'none';
             if (pdv3) pdv3.textContent = '-$' + fmt(pointsDiscount);
-            if (tx3) tx3.textContent = '$' + fmt(tax);
+            if (tx3Label) tx3Label.textContent = checkoutTaxLabel();
+            if (tx3) tx3.textContent = checkoutMoney(tax);
+            if (ship3) ship3.textContent = checkoutMoney(checkoutPricing.shippingCost);
             if (t3) t3.textContent = '$' + fmt(total);
             showCheckoutStep(3);
         }
@@ -3980,7 +4016,7 @@
             var estimatedDiscount = getDiscount(estimatedSubtotal);
             var estimatedPointsDiscount = Math.min(getPointsDiscount(), Math.max(0, estimatedSubtotal - estimatedDiscount));
             var estimatedTaxable = Math.max(0, estimatedSubtotal - estimatedDiscount - estimatedPointsDiscount);
-            var estimatedTotal = Math.round((estimatedTaxable + getCheckoutTax(estimatedTaxable)) * 100) / 100;
+            var estimatedTotal = Math.round((estimatedTaxable + getCheckoutTax(estimatedTaxable) + checkoutPricing.shippingCost) * 100) / 100;
             var expectedTotal = pendingCheckoutQuote && pendingCheckoutQuote.signature === checkoutSignature
                 ? pendingCheckoutQuote.total : estimatedTotal;
             if (!pendingCheckoutQuote || pendingCheckoutQuote.signature !== checkoutSignature) pendingCheckoutQuote = null;
@@ -4038,7 +4074,8 @@
                     promoDiscount: serverOrder.promoDiscount || 0,
                     coupon: appliedCoupon ? appliedCoupon.code : null,
                     tax: serverOrder.tax,
-                    taxRate: TAX_RATE,
+                    taxRate: serverOrder.taxRate,
+                    shippingCost: serverOrder.shippingCost,
                     total: serverOrder.total,
                     status: serverOrder.status
                 };
@@ -4067,13 +4104,17 @@
                     var quotePoints = document.getElementById('checkout-points-val-step3');
                     var quotePointsRow = document.getElementById('checkout-points-step3');
                     var quoteTax = document.getElementById('checkout-tax-step3');
+                    var quoteTaxLabel = document.getElementById('checkout-tax-label-step3');
+                    var quoteShipping = document.getElementById('checkout-shipping-step3');
                     var quoteTotal = document.getElementById('checkout-total-step3');
                     if (quoteSubtotal) quoteSubtotal.textContent = fmtQuote(quote.subtotal);
                     if (quoteDiscount) quoteDiscount.textContent = '-' + fmtQuote(quote.couponDiscount);
                     if (quoteDiscountRow) quoteDiscountRow.style.display = Number(quote.couponDiscount) > 0 ? '' : 'none';
                     if (quotePoints) quotePoints.textContent = '-' + fmtQuote(quote.pointsDiscount);
                     if (quotePointsRow) quotePointsRow.style.display = Number(quote.pointsDiscount) > 0 ? '' : 'none';
+                    if (quoteTaxLabel) quoteTaxLabel.textContent = 'Tax (' + (Number(quote.taxRate || 0) * 100).toFixed(2).replace(/\.?0+$/, '') + '%):';
                     if (quoteTax) quoteTax.textContent = fmtQuote(quote.tax);
+                    if (quoteShipping) quoteShipping.textContent = fmtQuote(quote.shippingCost);
                     if (quoteTotal) quoteTotal.textContent = fmtQuote(quote.total);
                     var quoteItems = document.getElementById('confirm-items');
                     if (quoteItems && Array.isArray(quote.items)) quoteItems.innerHTML = quote.items.map(function(item) {
@@ -4177,9 +4218,7 @@
             if (menu) menu.classList.toggle('hidden');
         }
 
-        function toggleAccount() {
-            showNotification('Coming Soon! User account feature will be available shortly.', 'info');
-        }
+        function toggleAccount() { toggleAccountModal(); }
 
         function loadUserData() {
             const savedCart = localStorage.getItem('swiftCart');

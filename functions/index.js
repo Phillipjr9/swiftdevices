@@ -6,13 +6,13 @@ const { initializeApp } = require('firebase-admin/app');
 const { getFirestore, Timestamp } = require('firebase-admin/firestore');
 const { createHash, randomBytes } = require('node:crypto');
 const { hasAdminRole } = require('./admin-roles');
+const { calculateCheckoutTotals, normalizeCheckoutPricing } = require('./checkout-pricing');
 
 initializeApp();
 const db = getFirestore();
 const RATE_WINDOW_MS = 15 * 60 * 1000;
 const RATE_LIMIT = 12;
 const PUBLIC_READ_RATE_LIMIT = 60;
-const CHECKOUT_READY = process.env.CHECKOUT_READY === 'true';
 
 async function enforcePublicReadRateLimit(request, scope) {
   const ip = String(request.rawRequest?.ip || 'unknown').slice(0, 80);
@@ -96,8 +96,6 @@ exports.trackOrder = onCall({ region: 'us-central1', maxInstances: 20 }, async (
 
 const CATALOG = require('./catalog.json');
 const CATALOG_BY_ID = new Map(CATALOG.map((product) => [product.id, product]));
-const configuredTaxRate = Number(process.env.CHECKOUT_TAX_RATE || 0.08);
-const CHECKOUT_TAX_RATE = Number.isFinite(configuredTaxRate) && configuredTaxRate >= 0 && configuredTaxRate <= 0.2 ? configuredTaxRate : 0.08;
 const BANK_ONLY_THRESHOLD = 20000;
 const POINT_VALUE = 0.01;
 const POINTS_PER_DOLLAR = 2;
@@ -167,7 +165,6 @@ function validateOrderInput(data) {
 
 /** Server-authoritative order creation, pricing, coupon use, points and inventory reservation. */
 exports.placeOrder = onCall({ region: 'us-central1', maxInstances: 20 }, async (request) => {
-  if (!CHECKOUT_READY) throw new HttpsError('failed-precondition', 'Checkout is temporarily paused while U.S. tax and carrier shipping calculations are configured.');
   const data = request.data || {};
   if (!validateOrderInput(data)) throw new HttpsError('invalid-argument', 'Check your items, contact details, shipping address, and payment method.');
   const email = cleanText(data.email, 254).toLowerCase();
@@ -195,6 +192,7 @@ exports.placeOrder = onCall({ region: 'us-central1', maxInstances: 20 }, async (
   const promoRef = db.collection('siteSettings').doc('promoConfig');
   const pointsRef = uid ? db.collection('rewardsPoints').doc(uid) : null;
   const walletRef = db.collection('siteSettings').doc('cryptoWallets');
+  const checkoutPricingRef = db.collection('siteSettings').doc('checkoutPricing');
   // Use a cryptographically random ID and store the document under the exact
   // public order number so tracking, admin actions, and payment status agree.
   const orderNumber = `SW-${randomBytes(15).toString('base64url')}`;
@@ -202,9 +200,9 @@ exports.placeOrder = onCall({ region: 'us-central1', maxInstances: 20 }, async (
   const nowMs = Date.now();
 
   return db.runTransaction(async (tx) => {
-    const [rateSnap, requestSnap, overridesSnap, couponsSnap, pointsSnap, walletSnap, promoSnap] = await Promise.all([
+    const [rateSnap, requestSnap, overridesSnap, couponsSnap, pointsSnap, walletSnap, promoSnap, checkoutPricingSnap] = await Promise.all([
       tx.get(rateRef), tx.get(requestRef), tx.get(overridesRef), tx.get(couponRef), pointsRef ? tx.get(pointsRef) : Promise.resolve(null),
-      data.paymentMethod === 'crypto' ? tx.get(walletRef) : Promise.resolve(null), tx.get(promoRef),
+      data.paymentMethod === 'crypto' ? tx.get(walletRef) : Promise.resolve(null), tx.get(promoRef), tx.get(checkoutPricingRef),
     ]);
     if (requestSnap.exists) {
       if (requestSnap.data().checkoutFingerprint !== checkoutFingerprint) {
@@ -214,9 +212,11 @@ exports.placeOrder = onCall({ region: 'us-central1', maxInstances: 20 }, async (
       const existingOrder = await tx.get(db.collection('orders').doc(existingNumber));
       if (existingOrder.exists) {
         const existing = existingOrder.data();
-        return { orderNumber: existingNumber, subtotal: existing.subtotal, discount: existing.discount, couponDiscount: existing.couponDiscount || 0, promoDiscount: existing.promoDiscount || 0, pointsDiscount: existing.pointsDiscount || 0, pointsRedeemed: existing.pointsRedeemed || 0, items: existing.items || [], tax: existing.tax, total: existing.total, status: existing.status, cryptoCoin: existing.cryptoCoin || null, cryptoNetwork: existing.cryptoNetwork || null, cryptoWalletAddress: existing.cryptoWalletAddress || null };
+        return { orderNumber: existingNumber, subtotal: existing.subtotal, discount: existing.discount, couponDiscount: existing.couponDiscount || 0, promoDiscount: existing.promoDiscount || 0, pointsDiscount: existing.pointsDiscount || 0, pointsRedeemed: existing.pointsRedeemed || 0, items: existing.items || [], tax: existing.tax, taxRate: existing.taxRate, shippingCost: existing.shippingCost, total: existing.total, status: existing.status, cryptoCoin: existing.cryptoCoin || null, cryptoNetwork: existing.cryptoNetwork || null, cryptoWalletAddress: existing.cryptoWalletAddress || null };
       }
     }
+    const checkoutPricing = normalizeCheckoutPricing(checkoutPricingSnap?.exists ? checkoutPricingSnap.data() : null);
+    if (!checkoutPricing) throw new HttpsError('failed-precondition', 'Checkout is temporarily unavailable. The Owner must configure and enable store tax and shipping first.');
     const rateData = rateSnap.exists ? rateSnap.data() : {};
     const windowStart = rateData.windowStart?.toMillis?.() || 0;
     const attemptCount = windowStart > nowMs - RATE_WINDOW_MS ? Number(rateData.count || 0) : 0;
@@ -265,8 +265,7 @@ exports.placeOrder = onCall({ region: 'us-central1', maxInstances: 20 }, async (
       pointsDiscount = Math.round(pointsRedeemed * POINT_VALUE * 100) / 100;
     }
     const taxable = Math.max(0, subtotal - discount - pointsDiscount);
-    const tax = Math.round(taxable * CHECKOUT_TAX_RATE * 100) / 100;
-    const total = Math.round((taxable + tax) * 100) / 100;
+    const { tax, taxRate, shippingCost, total } = calculateCheckoutTotals(taxable, checkoutPricing);
     if (!isPaymentMethodAllowed(total, data.paymentMethod)) {
       throw new HttpsError('failed-precondition', 'Bank transfer is required for orders of $20,000 or more.');
     }
@@ -276,7 +275,7 @@ exports.placeOrder = onCall({ region: 'us-central1', maxInstances: 20 }, async (
     }
     if (expectedTotal !== null && Math.abs(expectedTotal - total) >= 0.01) {
       throw new HttpsError('failed-precondition', 'Order totals changed. Review the updated total before placing your order.', {
-        quote: { listSubtotal, subtotal, promoDiscount, couponDiscount, pointsDiscount, pointsRedeemed, tax, total, items: lineItems },
+        quote: { listSubtotal, subtotal, promoDiscount, couponDiscount, pointsDiscount, pointsRedeemed, tax, taxRate, shippingCost, total, items: lineItems },
       });
     }
     const shipping = {
@@ -287,7 +286,7 @@ exports.placeOrder = onCall({ region: 'us-central1', maxInstances: 20 }, async (
     const order = {
       orderNumber, uid, email, shipping, items: lineItems, paymentMethod: data.paymentMethod,
       listSubtotal, subtotal, promoDiscount, couponDiscount, discount, coupon: couponCode || null, pointsDiscount, pointsRedeemed,
-      tax, taxRate: CHECKOUT_TAX_RATE, shippingCost: 0, total,
+      tax, taxRate, shippingCost, total,
       status: 'awaiting_payment', paymentStatus: 'pending',
       cryptoVerified: false, createdAt: Timestamp.now(),
       paymentExpiresAt: Timestamp.fromMillis(nowMs + 24 * 60 * 60 * 1000),
@@ -326,7 +325,7 @@ exports.placeOrder = onCall({ region: 'us-central1', maxInstances: 20 }, async (
       couponDoc[couponCode] = { ...coupon, used: Number(coupon.used || 0) + 1 };
       tx.set(couponRef, { codes: couponDoc }, { merge: true });
     }
-    return { orderNumber, listSubtotal, subtotal, promoDiscount, couponDiscount, discount, pointsDiscount, pointsRedeemed, items: lineItems, tax, total, status: order.status, cryptoCoin: order.cryptoCoin || null, cryptoNetwork: order.cryptoNetwork || null, cryptoWalletAddress: order.cryptoWalletAddress || null };
+    return { orderNumber, listSubtotal, subtotal, promoDiscount, couponDiscount, discount, pointsDiscount, pointsRedeemed, items: lineItems, tax, taxRate, shippingCost, total, status: order.status, cryptoCoin: order.cryptoCoin || null, cryptoNetwork: order.cryptoNetwork || null, cryptoWalletAddress: order.cryptoWalletAddress || null };
   });
 });
 
