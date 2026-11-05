@@ -94,3 +94,12 @@ test('legacy admin claim retains owner access', async () => {
   await assertSucceeds(getDoc(doc(owner(), 'blogPosts/post-1')));
   await assertSucceeds(getDoc(doc(owner(), 'auditLog/entry-1')));
 });
+
+
+test('manual checkout pricing is publicly readable but only an Owner can write it', async () => {
+  const publicDb = env.unauthenticatedContext().firestore();
+  await assertSucceeds(getDoc(doc(publicDb, 'siteSettings/checkoutPricing')));
+  await assertSucceeds(setDoc(doc(owner(), 'siteSettings/checkoutPricing'), { enabled: true, taxRate: 0.05, shippingCost: 10 }));
+  await assertFails(setDoc(doc(staff('finance'), 'siteSettings/checkoutPricing'), { enabled: true, taxRate: 0.05, shippingCost: 10 }));
+  await assertFails(setDoc(doc(staff('catalog'), 'siteSettings/checkoutPricing'), { enabled: false, taxRate: 0, shippingCost: 0 }));
+});

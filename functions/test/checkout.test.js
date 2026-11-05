@@ -1,6 +1,7 @@
 'use strict';
 
 const test = require('node:test');
+const { calculateCheckoutTotals, normalizeCheckoutPricing } = require('../checkout-pricing');
 const assert = require('node:assert/strict');
 const {
   calculateCouponDiscount,
@@ -80,4 +81,19 @@ test('coupon discounts honor assignment, minimums, expiration and caps', () => {
   assert.equal(calculateCouponDiscount(100, coupon, 'other@example.com'), 0);
   assert.equal(calculateCouponDiscount(100, { ...coupon, value: 150 }, 'buyer@example.com'), 100);
   assert.equal(calculateCouponDiscount(100, { ...coupon, expires: 'not-a-date' }, 'buyer@example.com'), 0);
+});
+
+
+test('checkout pricing fails closed unless enabled with bounded manual values', () => {
+  assert.equal(normalizeCheckoutPricing(null), null);
+  assert.equal(normalizeCheckoutPricing({ enabled: false, taxRate: 0.08, shippingCost: 0 }), null);
+  assert.equal(normalizeCheckoutPricing({ enabled: true, taxRate: 0.21, shippingCost: 0 }), null);
+  assert.equal(normalizeCheckoutPricing({ enabled: true, taxRate: 0.05, shippingCost: -1 }), null);
+  assert.deepEqual(normalizeCheckoutPricing({ enabled: true, taxRate: 0, shippingCost: 0 }), { enabled: true, taxRate: 0, shippingCost: 0 });
+});
+
+test('manual checkout totals tax discounted merchandise and add flat shipping', () => {
+  assert.deepEqual(calculateCheckoutTotals(100, { enabled: true, taxRate: 0.0875, shippingCost: 12.5 }), {
+    tax: 8.75, taxRate: 0.0875, shippingCost: 12.5, total: 121.25,
+  });
 });

@@ -641,6 +641,22 @@
 
                     <hr class="my-8 border-gray-200">
 
+                    <!-- ── Checkout Pricing ── -->
+                    <div id="settings-checkout-pricing" class="mb-10">
+                        <h2 class="text-lg font-bold text-brand-dark mb-1"><i class="fas fa-receipt mr-2 text-brand-blue"></i>Checkout Tax &amp; Shipping</h2>
+                        <p class="text-sm text-gray-600 mb-4">Enter the store’s manually approved flat settings. These are not destination-specific tax calculations or live carrier rates. The Owner is responsible for confirming applicable tax rules and delivery charges before enabling checkout.</p>
+                        <div class="max-w-2xl bg-blue-50 border border-blue-200 rounded-xl p-5 space-y-4">
+                            <label class="flex items-center gap-3 font-semibold text-sm"><input id="checkout-pricing-enabled" type="checkbox" class="w-4 h-4"> Enable checkout after saving</label>
+                            <div class="grid sm:grid-cols-2 gap-4">
+                                <div><label for="checkout-tax-percent" class="block text-xs font-semibold mb-1">Manual flat sales-tax rate (%)</label><input id="checkout-tax-percent" type="number" min="0" max="20" step="0.01" value="0" class="w-full px-3 py-2 border rounded-lg"><p class="text-xs text-gray-500 mt-1">Applied to discounted merchandise; shipping is excluded.</p></div>
+                                <div><label for="checkout-shipping-amount" class="block text-xs font-semibold mb-1">Flat shipping charge (USD)</label><input id="checkout-shipping-amount" type="number" min="0" max="10000" step="0.01" value="0" class="w-full px-3 py-2 border rounded-lg"><p class="text-xs text-gray-500 mt-1">Same charge for every eligible U.S. order.</p></div>
+                            </div>
+                            <p id="checkout-pricing-status" class="text-sm text-gray-700" role="status">Loading pricing settings…</p>
+                            <button onclick="saveCheckoutPricingSettings()" class="bg-brand-blue text-white px-5 py-2 rounded-full text-sm font-bold"><i class="fas fa-save mr-1"></i>Save Pricing Settings</button>
+                        </div>
+                    </div>
+                    <hr class="my-8 border-gray-200">
+
                     <!-- ── Crypto Wallets (existing) ── -->
                     <div id="settings-wallets">
                     <h2 class="text-lg font-bold text-brand-dark mb-6"><i class="fas fa-wallet mr-2"></i>Crypto Wallet Addresses</h2>
@@ -893,6 +909,8 @@
             var section = document.getElementById(id);
             if (section) section.classList.toggle('hidden', !catalogSettings);
         });
+        var pricingSettings = document.getElementById('settings-checkout-pricing');
+        if (pricingSettings) pricingSettings.classList.toggle('hidden', currentAdminRole !== 'owner');
         var walletSettings = document.getElementById('settings-wallets');
         if (walletSettings) walletSettings.classList.toggle('hidden', currentAdminRole !== 'owner' && currentAdminRole !== 'finance');
         var firstTab = ALL_TABS.find(adminCanSeeTab);
@@ -922,7 +940,7 @@
         if (role === 'owner') {
             loadProducts(); loadOrders(); loadCustomers(); loadTradeIns(); loadGiftCards(); loadRewards();
             loadReviews(); loadBlogPosts(); loadContacts(); loadCoupons(); loadAdminWallets();
-            loadPromoSettings(); loadAuditLog(); loadAnalytics(); loadAnnouncementSettings(); loadHeroSlides(); loadBundles();
+            loadPromoSettings(); loadAuditLog(); loadAnalytics(); loadAnnouncementSettings(); loadHeroSlides(); loadBundles(); loadCheckoutPricingSettings();
             return;
         }
         if (['orders', 'finance', 'support'].indexOf(role) !== -1) loadOrders();
@@ -937,6 +955,42 @@
         if (role === 'support') {
             loadTradeIns(); loadReviews(); loadContacts();
         }
+    }
+
+    function loadCheckoutPricingSettings() {
+        var status = document.getElementById('checkout-pricing-status');
+        db.collection('siteSettings').doc('checkoutPricing').get().then(function(doc) {
+            var data = doc.exists ? doc.data() : {};
+            document.getElementById('checkout-pricing-enabled').checked = data.enabled === true;
+            document.getElementById('checkout-tax-percent').value = Number.isFinite(Number(data.taxRate)) ? (Number(data.taxRate) * 100).toFixed(2) : '0';
+            document.getElementById('checkout-shipping-amount').value = Number.isFinite(Number(data.shippingCost)) ? Number(data.shippingCost).toFixed(2) : '0';
+            if (status) status.textContent = data.enabled === true ? 'Checkout is enabled with the saved manual settings.' : 'Checkout is currently paused until an Owner saves and enables approved pricing.';
+        }).catch(function(error) {
+            if (status) status.textContent = 'Could not load pricing settings: ' + (error.message || 'access denied');
+        });
+    }
+
+    function saveCheckoutPricingSettings() {
+        if (currentAdminRole !== 'owner') { alert('Only an Owner can change checkout pricing.'); return; }
+        var enabled = document.getElementById('checkout-pricing-enabled').checked;
+        var taxPercent = Number(document.getElementById('checkout-tax-percent').value);
+        var shippingCost = Number(document.getElementById('checkout-shipping-amount').value);
+        if (!Number.isFinite(taxPercent) || taxPercent < 0 || taxPercent > 20 || !Number.isFinite(shippingCost) || shippingCost < 0 || shippingCost > 10000) {
+            alert('Enter a tax rate from 0% to 20% and flat shipping from $0 to $10,000.'); return;
+        }
+        var warning = 'These are flat manual values, not destination-specific tax rules or carrier-calculated shipping. Confirm the amounts and applicable U.S. obligations before enabling checkout.';
+        if (!window.confirm('Save these settings?\n\n' + warning)) return;
+        var status = document.getElementById('checkout-pricing-status');
+        if (status) status.textContent = 'Saving…';
+        db.collection('siteSettings').doc('checkoutPricing').set({
+            enabled: enabled, taxRate: taxPercent / 100, shippingCost: Math.round(shippingCost * 100) / 100,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function() {
+            if (status) status.textContent = enabled ? 'Saved. Checkout is enabled with these manual values.' : 'Saved. Checkout remains paused.';
+            if (typeof logAudit === 'function') logAudit('checkout_pricing_updated', { enabled: enabled, taxRate: taxPercent / 100, shippingCost: shippingCost });
+        }).catch(function(error) {
+            if (status) status.textContent = 'Save failed: ' + (error.message || 'Only an Owner can update checkout pricing.');
+        });
     }
 
     // ════════════════════════════════════════════

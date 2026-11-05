@@ -6,7 +6,7 @@
     "node": "22"
   },
   "scripts": {
-    "lint": "node --check index.js && node --check admin-roles.js && node --check scripts/set-admin-claim.js",
+    "lint": "node --check index.js && node --check checkout-pricing.js && node --check admin-roles.js && node --check scripts/set-admin-claim.js",
     "test": "node --test test/checkout.test.js test/security-contract.test.js test/admin-roles.test.js",
     "admin:claim": "node scripts/set-admin-claim.js",
     "test:rules": "node --test test/firestore-rules.test.js",
